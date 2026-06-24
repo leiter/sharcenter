@@ -8,6 +8,8 @@ object YouTubeUrlParser {
     // YouTube URL regex patterns - compiled once and reused
     private val WATCH_PATTERN = """(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})""".toRegex()
     private val SHORT_PATTERN = """(?:youtu\.be\/)([a-zA-Z0-9_-]{11})""".toRegex()
+    private val SHORTS_PATTERN = """(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})""".toRegex()
+    private val LIVE_PATTERN = """(?:youtube\.com\/live\/)([a-zA-Z0-9_-]{11})""".toRegex()
     private val EMBED_PATTERN = """(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})""".toRegex()
     private val V_PATTERN = """(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})""".toRegex()
 
@@ -18,6 +20,8 @@ object YouTubeUrlParser {
      * - https://www.youtube.com/watch?v=VIDEO_ID
      * - https://youtube.com/watch?v=VIDEO_ID
      * - https://youtu.be/VIDEO_ID
+     * - https://www.youtube.com/shorts/VIDEO_ID
+     * - https://www.youtube.com/live/VIDEO_ID
      * - https://www.youtube.com/embed/VIDEO_ID
      * - https://www.youtube.com/v/VIDEO_ID
      * - https://m.youtube.com/watch?v=VIDEO_ID
@@ -35,10 +39,16 @@ object YouTubeUrlParser {
         // Pattern 2: Short URL (youtu.be/VIDEO_ID)
         SHORT_PATTERN.find(cleanUrl)?.let { return it.groupValues[1] }
 
-        // Pattern 3: Embed URL (youtube.com/embed/VIDEO_ID)
+        // Pattern 3: Shorts URL (youtube.com/shorts/VIDEO_ID)
+        SHORTS_PATTERN.find(cleanUrl)?.let { return it.groupValues[1] }
+
+        // Pattern 4: Live URL (youtube.com/live/VIDEO_ID)
+        LIVE_PATTERN.find(cleanUrl)?.let { return it.groupValues[1] }
+
+        // Pattern 5: Embed URL (youtube.com/embed/VIDEO_ID)
         EMBED_PATTERN.find(cleanUrl)?.let { return it.groupValues[1] }
 
-        // Pattern 4: Old style URL (youtube.com/v/VIDEO_ID)
+        // Pattern 6: Old style URL (youtube.com/v/VIDEO_ID)
         V_PATTERN.find(cleanUrl)?.let { return it.groupValues[1] }
 
         return null

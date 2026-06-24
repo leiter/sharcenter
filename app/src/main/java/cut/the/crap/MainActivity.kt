@@ -17,6 +17,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import cut.the.crap.data.backup.DatabaseBackupManager
+import cut.the.crap.data.rest.YouTubeMetadataBackfiller
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.ShareLinksTask
 import cut.the.crap.intent.TwitterIntent
@@ -58,6 +59,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var jobQueueRepository: JobQueueRepository
 
+    @Inject
+    lateinit var youTubeMetadataBackfiller: YouTubeMetadataBackfiller
+
     override fun onCreate(savedInstanceState: Bundle?) {
 
         enableEdgeToEdge()
@@ -67,6 +71,11 @@ class MainActivity : ComponentActivity() {
         // Perform daily database backup if needed (first app start of the day)
         lifecycleScope.launch {
             databaseBackupManager.performDailyBackupIfNeeded()
+        }
+
+        // Backfill YouTube metadata for older links that were saved without it
+        lifecycleScope.launch {
+            youTubeMetadataBackfiller.backfillMissing()
         }
 
         // DEV: Submit test job to job queue server on app start

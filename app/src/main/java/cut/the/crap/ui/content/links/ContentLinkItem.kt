@@ -57,6 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
@@ -488,9 +489,13 @@ fun LinkListItem(
         ) {
             // YouTube thumbnail + title (left-aligned)
             if (thumbnailUrl != null) {
+                val youTubePlaceholder = painterResource(id = R.drawable.youtube)
                 AsyncImage(
                     model = thumbnailUrl,
                     contentDescription = "Video thumbnail",
+                    placeholder = youTubePlaceholder,
+                    error = youTubePlaceholder,
+                    fallback = youTubePlaceholder,
                     modifier = Modifier
                         .size(48.dp, 36.dp)
                         .clip(RoundedCornerShape(4.dp)),
