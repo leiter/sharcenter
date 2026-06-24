@@ -163,7 +163,7 @@ class PostsViewModelTest {
     }
 
     @Test
-    fun `clear content text clears editor and updates database`() = runTest {
+    fun `clear content text clears editor but leaves the list item untouched`() = runTest {
         val existingItem = TestData.activeContentItem(id = 1, text = "Original")
         contentItemRepository.setItems(listOf(existingItem))
 
@@ -178,11 +178,15 @@ class PostsViewModelTest {
         viewModel.consumeAction(TextAction.ClearContentText)
         advanceUntilIdle()
 
+        // Editor is reset to a fresh, empty post...
         val state = viewModel.screenState.value
         assertThat(state.focusedContentText.newText).isEmpty()
 
+        // ...but the previously focused item is left intact in the list (not cleared),
+        // just deactivated so the empty editor is the new active post.
         val item = contentItemRepository.getById(1)
-        assertThat(item?.text).isEmpty()
+        assertThat(item?.text).isEqualTo("Original")
+        assertThat(contentItemRepository.getActiveItem()).isNull()
     }
 
     @Test

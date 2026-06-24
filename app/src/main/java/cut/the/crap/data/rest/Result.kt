@@ -13,10 +13,14 @@ sealed class Result<out T> {
      * Represents a failed API response
      * @param message Human-readable error message
      * @param exception The underlying exception (optional)
+     * @param retryable Whether the failure is transient (network/server) and worth
+     *        retrying later. False for permanent failures such as a deleted/private
+     *        resource or a malformed request that will never succeed.
      */
     data class Error(
         val message: String,
-        val exception: Throwable? = null
+        val exception: Throwable? = null,
+        val retryable: Boolean = true
     ) : Result<Nothing>()
 
     /**
