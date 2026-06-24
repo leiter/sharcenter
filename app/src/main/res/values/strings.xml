@@ -1,0 +1,135 @@
+
+<resources>
+    <string name="app_name">ShareCenter</string>
+
+    <string name="context_menu_insert">Insert</string>
+    <string name="context_menu_edit">Edit</string>
+    <string name="context_menu_open">Open</string>
+    <string name="context_menu_clipboard">Clipboard</string>
+    <string name="context_menu_comment_quote">Comment/Quote</string>
+    <string name="context_menu_post_twitter">Post on Twitter</string>
+    <string name="context_menu_delete">Delete</string>
+    <string name="menu_fire_job">Fire Job</string>
+
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_abort">Abort</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_delete">Delete</string>
+
+    <!-- Screen Titles -->
+    <string name="screen_posts">Posts</string>
+    <string name="screen_links">Links</string>
+    <string name="screen_profile">Profile</string>
+
+    <!-- Date Filter -->
+    <string name="date_filter_title">Date Filter</string>
+    <string name="date_filter_start_date">Start Date</string>
+    <string name="date_filter_end_date">End Date</string>
+    <string name="date_filter_error_end_before_start">End date cannot be before start date</string>
+
+    <!-- Handle/Tag Selection Dialog -->
+    <string name="tag_dialog_add_handle">Add Handle</string>
+    <string name="tag_dialog_add_tag">Add Tag</string>
+    <string name="tag_dialog_add_keyword">Add Keyword</string>
+    <string name="tag_dialog_delete_handles">Delete Handles</string>
+    <string name="tag_dialog_delete_tags">Delete Tags</string>
+    <string name="tag_dialog_delete_keywords">Delete Keywords</string>
+    <string name="tag_dialog_select_handles">Select Accounts</string>
+    <string name="tag_dialog_select_tags">Select Hashtags</string>
+    <string name="tag_dialog_select_keywords">Select Keywords</string>
+    <string name="tag_dialog_select_items">Select Items</string>
+    <string name="tag_dialog_placeholder_handle">\@username</string>
+    <string name="tag_dialog_placeholder_tag">#hashtag</string>
+    <string name="tag_dialog_placeholder_keyword">keyword</string>
+    <string name="tag_dialog_back_to_list">Back to list</string>
+    <string name="tag_dialog_delete_mode">Delete mode</string>
+    <string name="tag_dialog_add_new">Add new</string>
+    <string name="tag_dialog_reverse_list">Reverse list</string>
+    <string name="tag_dialog_undo">UNDO</string>
+    <string name="tag_dialog_enter_handle">Enter handle</string>
+    <string name="tag_dialog_enter_tag">Enter tag</string>
+    <string name="tag_dialog_prefix_help_handle">The \@ prefix will be added automatically if not present.</string>
+    <string name="tag_dialog_prefix_help_tag">The # prefix will be added automatically if not present.</string>
+    <string name="tag_dialog_search_placeholder">Search…</string>
+    <string name="tag_dialog_search">Search</string>
+    <string name="tag_dialog_no_items">No items yet. Click + to add.</string>
+    <string name="tag_dialog_no_matching_items">No matching items found.</string>
+    <string name="tag_dialog_selected">Selected</string>
+    <string name="tag_dialog_not_selected">Not selected</string>
+    <string name="tag_dialog_remove_from_favorites">Remove from favorites</string>
+    <string name="tag_dialog_add_to_favorites">Add to favorites</string>
+    <string name="tag_dialog_selected_for_deletion">%d selected for deletion</string>
+    <string name="tag_dialog_selected_count">%d selected</string>
+    <string name="tag_dialog_delete">Delete</string>
+    <string name="tag_dialog_button_add">ADD</string>
+    <string name="tag_dialog_button_delete">DELETE (%d)</string>
+    <string name="tag_dialog_button_select_items">SELECT ITEMS TO DELETE</string>
+    <string name="tag_dialog_item_deleted">%s deleted</string>
+    <string name="tag_dialog_items_deleted">%d items deleted</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_posts_screen">Posts Screen</string>
+    <string name="settings_links_screen">Links Screen</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_display">Display</string>
+    <string name="settings_data_management">Data Management</string>
+    <string name="settings_about">About</string>
+    <string name="settings_developer_options">Developer Options</string>
+    <string name="settings_default_date_range">Default Date Range</string>
+    <string name="settings_default_favorite_filter">Default Favorite Filter</string>
+    <string name="settings_default_sort_order">Default Sort Order</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_timestamp_format">Timestamp Format</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_show_performance_metrics">Show Performance Metrics</string>
+    <string name="settings_show_performance_metrics_desc">Display FPS and memory usage</string>
+    <string name="settings_disable_developer_mode">Disable Developer Mode</string>
+    <string name="settings_disable_developer_mode_desc">Hide developer options</string>
+    <string name="settings_import_export">Import &amp; Export</string>
+    <string name="settings_import_export_desc">Manage your data backup and restore</string>
+
+    <!-- Date Range Presets -->
+    <string name="date_range_preset_7_days">7 Days</string>
+    <string name="date_range_preset_30_days">30 Days</string>
+    <string name="date_range_preset_90_days">90 Days</string>
+    <string name="date_range_preset_all_time">All Time</string>
+    <string name="date_range_preset_custom">Custom</string>
+
+    <!-- Theme Preferences -->
+    <string name="theme_preference_system">System Default</string>
+    <string name="theme_preference_light">Light</string>
+    <string name="theme_preference_dark">Dark</string>
+
+    <!-- Timestamp Formats -->
+    <string name="timestamp_format_relative">Relative (2 hours ago)</string>
+    <string name="timestamp_format_absolute">Absolute (Jan 1, 2025)</string>
+
+    <!-- Favorite Filter Presets -->
+    <string name="favorite_filter_preset_all">All Items</string>
+    <string name="favorite_filter_preset_favorites_only">Favorites Only</string>
+    <string name="favorite_filter_preset_non_favorites_only">Non-Favorites Only</string>
+
+    <!-- Sort Order Presets -->
+    <string name="sort_order_preset_by_order">By Order/Position</string>
+    <string name="sort_order_preset_by_date">By Date (Most Recent)</string>
+
+    <!-- Settings Dialog Titles -->
+    <string name="settings_dialog_posts_date_range">Posts Default Date Range</string>
+    <string name="settings_dialog_links_date_range">Links Default Date Range</string>
+    <string name="settings_dialog_posts_favorite_filter">Posts Default Favorite Filter</string>
+    <string name="settings_dialog_links_favorite_filter">Links Default Favorite Filter</string>
+    <string name="settings_dialog_posts_sort_order">Posts Default Sort Order</string>
+    <string name="settings_dialog_links_sort_order">Links Default Sort Order</string>
+
+    <!-- Loading and Empty States -->
+    <string name="loading_links">Loading links…</string>
+    <string name="loading_posts">Loading posts…</string>
+    <string name="empty_links_title">No links yet</string>
+    <string name="empty_links_message">Add your first link using the + button</string>
+    <string name="empty_links_filtered_message">No links match your current filters</string>
+    <string name="empty_posts_title">No posts yet</string>
+    <string name="empty_posts_message">Create your first post using the + button</string>
+    <string name="empty_posts_filtered_message">No posts match your current filters</string>
+
+</resources>
