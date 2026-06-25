@@ -42,6 +42,7 @@ class SettingsRepository @Inject constructor(
         val X_CT0_TOKEN = stringPreferencesKey("x_ct0_token")
         val BACKUP_FREQUENCY = stringPreferencesKey("backup_frequency")
         val BACKUP_RETENTION = stringPreferencesKey("backup_retention")
+        val EDIT_SHARED_LINK_BEFORE_SAVE = booleanPreferencesKey("edit_shared_link_before_save")
     }
 
     // Flow to read settings
@@ -106,7 +107,8 @@ class SettingsRepository @Inject constructor(
                 ),
                 backupRetention = BackupRetention.valueOf(
                     preferences[PreferencesKeys.BACKUP_RETENTION] ?: BackupRetention.KEEP_ALL.name
-                )
+                ),
+                editSharedLinkBeforeSave = preferences[PreferencesKeys.EDIT_SHARED_LINK_BEFORE_SAVE] ?: false
             )
         }
 
@@ -138,6 +140,7 @@ class SettingsRepository @Inject constructor(
             settings.xCt0Token?.let { preferences[PreferencesKeys.X_CT0_TOKEN] = it }
             preferences[PreferencesKeys.BACKUP_FREQUENCY] = settings.backupFrequency.name
             preferences[PreferencesKeys.BACKUP_RETENTION] = settings.backupRetention.name
+            preferences[PreferencesKeys.EDIT_SHARED_LINK_BEFORE_SAVE] = settings.editSharedLinkBeforeSave
         }
     }
 

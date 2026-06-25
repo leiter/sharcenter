@@ -105,6 +105,16 @@
     <string name="backup_retention_10">Keep last 10</string>
     <string name="backup_retention_30">Keep last 30</string>
 
+    <!-- Sharing -->
+    <string name="settings_sharing">Sharing</string>
+    <string name="settings_edit_shared_link">Edit links before saving</string>
+    <string name="settings_edit_shared_link_desc">When sharing a link to the app, show an editable dialog before it is saved</string>
+    <string name="share_edit_dialog_title">Save link</string>
+    <string name="share_edit_dialog_link_label">Link</string>
+    <string name="share_edit_dialog_keywords_label">Keywords (comma-separated)</string>
+    <string name="share_edit_dialog_save">Save</string>
+    <string name="share_edit_dialog_cancel">Cancel</string>
+
     <!-- Date Range Presets -->
     <string name="date_range_preset_7_days">7 Days</string>
     <string name="date_range_preset_30_days">30 Days</string>

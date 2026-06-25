@@ -6,7 +6,24 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.data.domain.ContentLinkRepository
@@ -18,6 +35,9 @@ import cut.the.crap.tools.UrlResolver
 import cut.the.crap.tools.parseSocialMediaUrl
 import kotlinx.coroutines.Dispatchers
 import cut.the.crap.ui.XLoginActivity
+import cut.the.crap.ui.components.api.ChipsType
+import cut.the.crap.ui.content.settings.ThemePreference
+import cut.the.crap.ui.theme.MyAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -166,54 +186,141 @@ class ShareReceiverActivity : ComponentActivity() {
 
     private fun saveUrlAndFinish(url: String, wasResolved: Boolean) {
         lifecycleScope.launch {
-            val contentLink = ContentLink(link = url)
-            contentRepository.insert(contentLink)
-
-            val message = if (wasResolved) {
-                "Link resolved and saved"
+            val settings = settingsRepository.settingsFlow.first()
+            if (settings.editSharedLinkBeforeSave) {
+                // Let the user review/edit the link (and add keywords) before it's saved.
+                showEditDialog(url, wasResolved, settings.themePreference)
             } else {
-                "Link saved"
+                insertAndFinish(url, keywords = emptyList(), wasResolved = wasResolved)
             }
-            Toast.makeText(this@ShareReceiverActivity, message, Toast.LENGTH_SHORT).show()
-
-            // Fetch YouTube metadata before finishing (lifecycleScope cancels on finish)
-            if (YouTubeUrlParser.isYouTubeUrl(url)) {
-                try {
-                    val result = kotlinx.coroutines.withContext(Dispatchers.IO) {
-                        youTubeRepository.getVideoMetadata(url)
-                    }
-                    if (result is cut.the.crap.data.rest.Result.Success) {
-                        val recentItems = contentRepository.byTimeRange(
-                            start = contentLink.added - 1000,
-                            end = contentLink.added + 1000
-                        )
-                        val dbItem = recentItems.firstOrNull { it.link == url }
-                        if (dbItem != null) {
-                            val type = parseSocialMediaUrl(url)?.contentType ?: "video"
-                            val updated = LinkMetadata.setYouTubeMetadata(
-                                dbItem,
-                                channelName = result.data.channelName,
-                                videoTitle = result.data.title,
-                                thumbnailUrl = result.data.thumbnailUrl,
-                                contentType = type
-                            )
-                            contentRepository.update(updated)
-                            Log.d(TAG, "YouTube metadata saved for: $url")
-                        }
-                    } else if (result is cut.the.crap.data.rest.Result.Error) {
-                        Log.e(TAG, "YouTube metadata fetch failed: ${result.message}")
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "YouTube metadata fetch error", e)
-                }
-            }
-
-            finish()
         }
+    }
+
+    /**
+     * Renders an editable dialog over the transparent activity. On save the (possibly
+     * edited) link and keywords are inserted; on cancel nothing is saved.
+     */
+    private fun showEditDialog(url: String, wasResolved: Boolean, themePreference: ThemePreference) {
+        setContent {
+            MyAppTheme(themePreference = themePreference) {
+                ShareEditDialog(
+                    initialUrl = url,
+                    onSave = { editedUrl, keywords ->
+                        lifecycleScope.launch {
+                            insertAndFinish(editedUrl, keywords, wasResolved)
+                        }
+                    },
+                    onCancel = { finish() }
+                )
+            }
+        }
+    }
+
+    private suspend fun insertAndFinish(url: String, keywords: List<String>, wasResolved: Boolean) {
+        var contentLink = ContentLink(link = url)
+        if (keywords.isNotEmpty()) {
+            contentLink = LinkMetadata.setTags(contentLink, keywords, ChipsType.KeyWords)
+        }
+        contentRepository.insert(contentLink)
+
+        val message = if (wasResolved) {
+            "Link resolved and saved"
+        } else {
+            "Link saved"
+        }
+        Toast.makeText(this@ShareReceiverActivity, message, Toast.LENGTH_SHORT).show()
+
+        // Fetch YouTube metadata before finishing (lifecycleScope cancels on finish)
+        if (YouTubeUrlParser.isYouTubeUrl(url)) {
+            try {
+                val result = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                    youTubeRepository.getVideoMetadata(url)
+                }
+                if (result is cut.the.crap.data.rest.Result.Success) {
+                    val recentItems = contentRepository.byTimeRange(
+                        start = contentLink.added - 1000,
+                        end = contentLink.added + 1000
+                    )
+                    val dbItem = recentItems.firstOrNull { it.link == url }
+                    if (dbItem != null) {
+                        val type = parseSocialMediaUrl(url)?.contentType ?: "video"
+                        val updated = LinkMetadata.setYouTubeMetadata(
+                            dbItem,
+                            channelName = result.data.channelName,
+                            videoTitle = result.data.title,
+                            thumbnailUrl = result.data.thumbnailUrl,
+                            contentType = type
+                        )
+                        contentRepository.update(updated)
+                        Log.d(TAG, "YouTube metadata saved for: $url")
+                    }
+                } else if (result is cut.the.crap.data.rest.Result.Error) {
+                    Log.e(TAG, "YouTube metadata fetch failed: ${result.message}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "YouTube metadata fetch error", e)
+            }
+        }
+
+        finish()
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleIncomingShare(intent)
     }
+}
+
+/**
+ * Dialog shown before saving a shared link when the user has opted in. Lets them edit
+ * the link URL and add comma-separated keywords. [onSave] receives the edited URL and
+ * the parsed (trimmed, non-blank) keyword list; [onCancel] discards without saving.
+ */
+@Composable
+private fun ShareEditDialog(
+    initialUrl: String,
+    onSave: (url: String, keywords: List<String>) -> Unit,
+    onCancel: () -> Unit
+) {
+    var url by remember { mutableStateOf(initialUrl) }
+    var keywordsText by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onCancel,
+        title = { Text(stringResource(R.string.share_edit_dialog_title)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = url,
+                    onValueChange = { url = it },
+                    label = { Text(stringResource(R.string.share_edit_dialog_link_label)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = keywordsText,
+                    onValueChange = { keywordsText = it },
+                    label = { Text(stringResource(R.string.share_edit_dialog_keywords_label)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val keywords = keywordsText.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                    onSave(url.trim(), keywords)
+                },
+                enabled = url.isNotBlank()
+            ) {
+                Text(stringResource(R.string.share_edit_dialog_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancel) {
+                Text(stringResource(R.string.share_edit_dialog_cancel))
+            }
+        }
+    )
 }

@@ -179,6 +179,9 @@ data class AppSettings(
     val backupFrequency: BackupFrequency = BackupFrequency.DAILY,
     val backupRetention: BackupRetention = BackupRetention.KEEP_ALL,
 
+    // Sharing: when true, show an editable dialog before saving a shared link
+    val editSharedLinkBeforeSave: Boolean = false,
+
     // Developer
     val developerMode: Boolean = false,
     val showPerformanceMetrics: Boolean = false,

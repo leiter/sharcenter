@@ -402,6 +402,23 @@ fun SettingsScreen(
                 )
             }
 
+            // Sharing Section
+            item {
+                SettingsSectionHeader(title = stringResource(R.string.settings_sharing))
+            }
+
+            item {
+                SettingsSwitchItem(
+                    icon = Icons.Default.Share,
+                    title = stringResource(R.string.settings_edit_shared_link),
+                    subtitle = stringResource(R.string.settings_edit_shared_link_desc),
+                    checked = currentSettings.editSharedLinkBeforeSave,
+                    onCheckedChange = { checked ->
+                        onSettingsChanged(currentSettings.copy(editSharedLinkBeforeSave = checked))
+                    }
+                )
+            }
+
             // About Section
             item {
                 SettingsSectionHeader(title = stringResource(R.string.settings_about))
