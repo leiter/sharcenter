@@ -40,6 +40,8 @@ class SettingsRepository @Inject constructor(
         val SHOW_PERFORMANCE_METRICS = booleanPreferencesKey("show_performance_metrics")
         val X_AUTH_TOKEN = stringPreferencesKey("x_auth_token")
         val X_CT0_TOKEN = stringPreferencesKey("x_ct0_token")
+        val BACKUP_FREQUENCY = stringPreferencesKey("backup_frequency")
+        val BACKUP_RETENTION = stringPreferencesKey("backup_retention")
     }
 
     // Flow to read settings
@@ -98,7 +100,13 @@ class SettingsRepository @Inject constructor(
                 developerMode = preferences[PreferencesKeys.DEVELOPER_MODE] ?: false,
                 showPerformanceMetrics = preferences[PreferencesKeys.SHOW_PERFORMANCE_METRICS] ?: false,
                 xAuthToken = preferences[PreferencesKeys.X_AUTH_TOKEN],
-                xCt0Token = preferences[PreferencesKeys.X_CT0_TOKEN]
+                xCt0Token = preferences[PreferencesKeys.X_CT0_TOKEN],
+                backupFrequency = BackupFrequency.valueOf(
+                    preferences[PreferencesKeys.BACKUP_FREQUENCY] ?: BackupFrequency.DAILY.name
+                ),
+                backupRetention = BackupRetention.valueOf(
+                    preferences[PreferencesKeys.BACKUP_RETENTION] ?: BackupRetention.KEEP_ALL.name
+                )
             )
         }
 
@@ -128,6 +136,8 @@ class SettingsRepository @Inject constructor(
             preferences[PreferencesKeys.SHOW_PERFORMANCE_METRICS] = settings.showPerformanceMetrics
             settings.xAuthToken?.let { preferences[PreferencesKeys.X_AUTH_TOKEN] = it }
             settings.xCt0Token?.let { preferences[PreferencesKeys.X_CT0_TOKEN] = it }
+            preferences[PreferencesKeys.BACKUP_FREQUENCY] = settings.backupFrequency.name
+            preferences[PreferencesKeys.BACKUP_RETENTION] = settings.backupRetention.name
         }
     }
 

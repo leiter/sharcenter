@@ -51,6 +51,8 @@ fun SettingsScreen(
     var showThemeDialog by remember { mutableStateOf(false) }
     var showTimestampFormatDialog by remember { mutableStateOf(false) }
     var showXCredentialsDialog by remember { mutableStateOf(false) }
+    var showBackupFrequencyDialog by remember { mutableStateOf(false) }
+    var showBackupRetentionDialog by remember { mutableStateOf(false) }
     var developerTapCount by remember { mutableIntStateOf(0) }
     var pendingRestoreUri by remember { mutableStateOf<android.net.Uri?>(null) }
 
@@ -183,6 +185,28 @@ fun SettingsScreen(
             onConfirm = { format ->
                 onSettingsChanged(currentSettings.copy(timestampFormat = format))
                 showTimestampFormatDialog = false
+            }
+        )
+    }
+
+    if (showBackupFrequencyDialog) {
+        BackupFrequencyDialog(
+            currentFrequency = currentSettings.backupFrequency,
+            onDismiss = { showBackupFrequencyDialog = false },
+            onConfirm = { frequency ->
+                onSettingsChanged(currentSettings.copy(backupFrequency = frequency))
+                showBackupFrequencyDialog = false
+            }
+        )
+    }
+
+    if (showBackupRetentionDialog) {
+        BackupRetentionDialog(
+            currentRetention = currentSettings.backupRetention,
+            onDismiss = { showBackupRetentionDialog = false },
+            onConfirm = { retention ->
+                onSettingsChanged(currentSettings.copy(backupRetention = retention))
+                showBackupRetentionDialog = false
             }
         )
     }
@@ -348,6 +372,33 @@ fun SettingsScreen(
                     onClick = {
                         restoreFilePickerLauncher.launch(arrayOf("*/*"))
                     }
+                )
+            }
+
+            item {
+                SettingsItem(
+                    icon = Icons.Default.Schedule,
+                    title = stringResource(R.string.settings_backup_frequency),
+                    subtitle = stringResource(currentSettings.backupFrequency.displayNameResId),
+                    onClick = { showBackupFrequencyDialog = true }
+                )
+            }
+
+            item {
+                SettingsItem(
+                    icon = Icons.Default.DeleteSweep,
+                    title = stringResource(R.string.settings_backup_retention),
+                    subtitle = stringResource(currentSettings.backupRetention.displayNameResId),
+                    onClick = { showBackupRetentionDialog = true }
+                )
+            }
+
+            item {
+                SettingsItem(
+                    icon = Icons.Default.FolderOpen,
+                    title = stringResource(R.string.settings_manage_backups),
+                    subtitle = stringResource(R.string.settings_manage_backups_desc),
+                    onClick = { navController.navigate("backup_management") }
                 )
             }
 
@@ -837,6 +888,94 @@ private fun XCredentialsDialog(
                 TextButton(onClick = onDismiss) {
                     Text(stringResource(R.string.dialog_cancel))
                 }
+            }
+        }
+    )
+}
+
+@Composable
+private fun BackupFrequencyDialog(
+    currentFrequency: BackupFrequency,
+    onDismiss: () -> Unit,
+    onConfirm: (BackupFrequency) -> Unit
+) {
+    var selected by remember { mutableStateOf(currentFrequency) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_backup_frequency)) },
+        text = {
+            Column {
+                BackupFrequency.entries.forEach { frequency ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { selected = frequency }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = selected == frequency,
+                            onClick = { selected = frequency }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(frequency.displayNameResId))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(selected) }) {
+                Text(stringResource(R.string.dialog_ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun BackupRetentionDialog(
+    currentRetention: BackupRetention,
+    onDismiss: () -> Unit,
+    onConfirm: (BackupRetention) -> Unit
+) {
+    var selected by remember { mutableStateOf(currentRetention) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_backup_retention)) },
+        text = {
+            Column {
+                BackupRetention.entries.forEach { retention ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { selected = retention }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = selected == retention,
+                            onClick = { selected = retention }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(retention.displayNameResId))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(selected) }) {
+                Text(stringResource(R.string.dialog_ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_cancel))
             }
         }
     )

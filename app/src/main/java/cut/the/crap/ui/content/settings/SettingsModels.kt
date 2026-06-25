@@ -129,6 +129,29 @@ enum class SortOrderPreset(val displayNameResId: Int) {
 }
 
 /**
+ * How often automatic backups run on app start.
+ * [intervalDays] is the minimum number of calendar days between automatic backups;
+ * [OFF] disables automatic backups entirely.
+ */
+enum class BackupFrequency(val displayNameResId: Int, val intervalDays: Int) {
+    OFF(R.string.backup_frequency_off, Int.MAX_VALUE),
+    DAILY(R.string.backup_frequency_daily, 1),
+    WEEKLY(R.string.backup_frequency_weekly, 7),
+    MONTHLY(R.string.backup_frequency_monthly, 30)
+}
+
+/**
+ * Retention policy applied after each successful backup.
+ * [keepCount] is the number of most-recent backups to keep (null = keep all).
+ */
+enum class BackupRetention(val displayNameResId: Int, val keepCount: Int?) {
+    KEEP_ALL(R.string.backup_retention_all, null),
+    KEEP_5(R.string.backup_retention_5, 5),
+    KEEP_10(R.string.backup_retention_10, 10),
+    KEEP_30(R.string.backup_retention_30, 30)
+}
+
+/**
  * Settings data class
  */
 data class AppSettings(
@@ -151,6 +174,10 @@ data class AppSettings(
     // Content Filtering
     val showFavoritesOnly: Boolean = false, // Deprecated - kept for migration
     val autoHideOldItemsDays: Int? = null, // null = disabled
+
+    // Database backups
+    val backupFrequency: BackupFrequency = BackupFrequency.DAILY,
+    val backupRetention: BackupRetention = BackupRetention.KEEP_ALL,
 
     // Developer
     val developerMode: Boolean = false,

@@ -48,5 +48,29 @@ notes) were deliberately **excluded** — only genuine dead code is listed.
 - [ ] `ui/content/settings/ImportExportScreen.kt` (~line 87) — "Placeholder buttons
       (disabled for now)". Placeholder/unfinished UI; confirm whether to keep.
 
+## Feature requests
+
+### Database backup management in Settings
+Currently backups are automatic-only: `DatabaseBackupManager` writes one `.db` per day to
+Downloads (`performDailyBackupIfNeeded`, triggered from `MainActivity.onCreate`), with manual
+backup/restore via `FileAction.BackupDatabase` / `FileAction.RestoreDatabase`. There is no way
+to configure cadence, prune old backups, or manage existing ones. Add a backup-management area
+to `ui/content/settings/SettingsScreen.kt`:
+
+- [x] **Configurable backup frequency** — `BackupFrequency` enum (off / daily / weekly / monthly)
+      added to `SettingsModels.kt`, persisted via `SettingsRepository` DataStore. `DatabaseBackupManager`
+      now injects `SettingsRepository`; `shouldPerformBackup()` reads the frequency and skips entirely
+      when set to OFF. Chosen via a radio dialog in the Settings → Data Management section.
+- [x] **Auto-delete / retention rule** — `BackupRetention` enum ("keep last N": all / 5 / 10 / 30)
+      persisted in settings. `applyRetentionPolicy()` runs after every successful backup (manual or
+      automatic) and deletes the oldest backups beyond N via `deleteBackups()`. MediaStore delete path
+      used on Android 10+; the app created these files so deletion needs no extra consent (noted in code).
+- [x] **Browse & multi-select delete** — `BackupManagementScreen` + `BackupViewModel` list all
+      `ShareCare_Backup_*.db` files (MediaStore query on Q+, file listing on legacy) with name/date/size,
+      checkbox multi-select, and a confirm-guarded bulk delete. Reachable via "Manage Backups" in Settings.
+
+Implemented: `BackupInfo` model, `listBackups()` and `deleteBackups(uris)` on `DatabaseBackupManager`;
+`BackupFrequency` + `BackupRetention` settings; new `backup_management` nav route and screen.
+
 ## Notes
 - Verify the project still compiles after the cleanup: `./gradlew assembleDebug`.

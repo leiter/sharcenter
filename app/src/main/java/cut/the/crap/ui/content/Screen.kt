@@ -18,6 +18,7 @@ import cut.the.crap.ui.content.posts.PostsScreen
 import cut.the.crap.ui.content.posts.updateContentItemSortOrders
 import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.links.LinkScreen
+import cut.the.crap.ui.content.settings.BackupManagementScreen
 import cut.the.crap.ui.content.settings.ImportExportScreen
 import cut.the.crap.ui.content.settings.SettingsScreen
 import cut.the.crap.ui.content.settings.SettingsViewModel
@@ -74,6 +75,11 @@ fun NavigationGraph(
         composable("import_export") {
             ImportExportScreen(
                 action = action,
+                navController = navController
+            )
+        }
+        composable("backup_management") {
+            BackupManagementScreen(
                 navController = navController
             )
         }

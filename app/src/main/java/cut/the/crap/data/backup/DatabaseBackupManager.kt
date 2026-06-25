@@ -1,5 +1,6 @@
 package cut.the.crap.data.backup
 
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
@@ -14,6 +15,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import cut.the.crap.data.db.AppDatabase
+import cut.the.crap.data.preferences.SettingsRepository
+import cut.the.crap.ui.content.settings.BackupFrequency
 import dagger.Lazy
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
@@ -26,13 +29,30 @@ import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Metadata for a single backup file stored in Downloads.
+ *
+ * @property uri location used to open/delete the file (a MediaStore content Uri on
+ *   Android 10+, or a `file://` Uri on Android 9 and below).
+ * @property displayName the file name, e.g. `ShareCare_Backup_2026-06-25_083000.db`.
+ * @property sizeBytes file size in bytes.
+ * @property lastModified last-modified time in epoch milliseconds.
+ */
+data class BackupInfo(
+    val uri: Uri,
+    val displayName: String,
+    val sizeBytes: Long,
+    val lastModified: Long
+)
+
 private val Context.backupDataStore: DataStore<Preferences> by preferencesDataStore(name = "backup_preferences")
 
 @Singleton
 class DatabaseBackupManager @Inject constructor(
     @ApplicationContext private val context: Context,
     // Lazy so injecting the manager doesn't eagerly open the database.
-    private val database: Lazy<AppDatabase>
+    private val database: Lazy<AppDatabase>,
+    private val settingsRepository: SettingsRepository
 ) {
     private object PreferencesKeys {
         val LAST_BACKUP_TIMESTAMP = longPreferencesKey("last_backup_timestamp")
@@ -42,6 +62,7 @@ class DatabaseBackupManager @Inject constructor(
         private const val TAG = "DatabaseBackupManager"
         private const val DATABASE_NAME = "app_database"
         private const val BACKUP_PREFIX = "ShareCare_Backup"
+        private const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000
 
         // Keep in sync with the @Database(version = ...) value in AppDatabase.
         // A backup whose user_version is higher than this would require a
@@ -50,44 +71,54 @@ class DatabaseBackupManager @Inject constructor(
     }
 
     /**
-     * Checks if a backup is needed (first app start of the day) and performs it if necessary.
+     * Checks if an automatic backup is due (based on the user's configured
+     * [BackupFrequency]) and performs it if necessary.
      * @return true if backup was performed, false otherwise
      */
     suspend fun performDailyBackupIfNeeded(): Boolean {
         return try {
+            val frequency = settingsRepository.settingsFlow.first().backupFrequency
+            if (frequency == BackupFrequency.OFF) {
+                Log.d(TAG, "Automatic backups are disabled.")
+                return false
+            }
+
             val lastBackupTimestamp = getLastBackupTimestamp()
             val currentTime = System.currentTimeMillis()
 
-            if (shouldPerformBackup(lastBackupTimestamp, currentTime)) {
-                Log.d(TAG, "Daily backup needed. Last backup: ${formatTimestamp(lastBackupTimestamp)}")
+            if (shouldPerformBackup(lastBackupTimestamp, currentTime, frequency)) {
+                Log.d(TAG, "Backup needed ($frequency). Last backup: ${formatTimestamp(lastBackupTimestamp)}")
                 performBackup(currentTime)
                 true
             } else {
-                Log.d(TAG, "Daily backup not needed. Last backup: ${formatTimestamp(lastBackupTimestamp)}")
+                Log.d(TAG, "Backup not needed ($frequency). Last backup: ${formatTimestamp(lastBackupTimestamp)}")
                 false
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error during daily backup check", e)
+            Log.e(TAG, "Error during automatic backup check", e)
             false
         }
     }
 
     /**
-     * Determines if a backup should be performed based on last backup timestamp.
-     * Backup is needed if:
-     * - Never backed up before (lastBackupTimestamp == 0)
-     * - Last backup was on a different day
+     * Determines if a backup should be performed based on the last backup timestamp
+     * and the configured [frequency]. Backup is needed if:
+     * - Never backed up before (lastBackupTimestamp == 0), or
+     * - At least [BackupFrequency.intervalDays] calendar days have elapsed since the
+     *   last backup.
      */
-    private fun shouldPerformBackup(lastBackupTimestamp: Long, currentTime: Long): Boolean {
+    private fun shouldPerformBackup(
+        lastBackupTimestamp: Long,
+        currentTime: Long,
+        frequency: BackupFrequency
+    ): Boolean {
         if (lastBackupTimestamp == 0L) {
             return true // Never backed up before
         }
 
-        // Check if last backup was on a different day
-        val lastBackupDate = getDateWithoutTime(lastBackupTimestamp)
-        val currentDate = getDateWithoutTime(currentTime)
-
-        return lastBackupDate < currentDate
+        val elapsedDays =
+            (getDateWithoutTime(currentTime) - getDateWithoutTime(lastBackupTimestamp)) / MILLIS_PER_DAY
+        return elapsedDays >= frequency.intervalDays
     }
 
     /**
@@ -126,6 +157,8 @@ class DatabaseBackupManager @Inject constructor(
                 // Update last backup timestamp
                 saveLastBackupTimestamp(timestamp)
                 Log.i(TAG, "Database backup successful: $backupFileName")
+                // Prune old backups according to the configured retention policy.
+                applyRetentionPolicy()
                 Result.success(backupFileName)
             } else {
                 Log.e(TAG, "Database backup failed", backupResult.exceptionOrNull())
@@ -201,6 +234,130 @@ class DatabaseBackupManager @Inject constructor(
         context.backupDataStore.edit { preferences ->
             preferences[PreferencesKeys.LAST_BACKUP_TIMESTAMP] = timestamp
         }
+    }
+
+    /**
+     * Lists all existing `ShareCare_Backup_*.db` files in Downloads, newest first.
+     * Returns an empty list if none exist or the query fails.
+     */
+    suspend fun listBackups(): List<BackupInfo> {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                queryMediaStoreBackups()
+            } else {
+                listLegacyBackups()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error listing backups", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * Deletes the given backup files.
+     *
+     * Note: on Android 10+ the app can delete MediaStore files it created without a
+     * prompt. Deleting files created by another app would throw a
+     * `RecoverableSecurityException` requiring user consent — that is not handled here
+     * because all `ShareCare_Backup_*.db` files are created by this app.
+     *
+     * @return [Result.success] with the number of files actually deleted, or
+     *         [Result.failure] if the operation could not be carried out at all.
+     */
+    suspend fun deleteBackups(uris: List<Uri>): Result<Int> {
+        return try {
+            var deleted = 0
+            for (uri in uris) {
+                try {
+                    val removed = if (uri.scheme == "file") {
+                        if (uri.path?.let { File(it).delete() } == true) 1 else 0
+                    } else {
+                        context.contentResolver.delete(uri, null, null)
+                    }
+                    if (removed > 0) deleted++
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to delete backup: $uri", e)
+                }
+            }
+            Log.i(TAG, "Deleted $deleted of ${uris.size} backups")
+            Result.success(deleted)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error deleting backups", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Applies the user's retention policy by deleting the oldest backups beyond the
+     * configured "keep last N" count. A null count means keep everything.
+     */
+    private suspend fun applyRetentionPolicy() {
+        val keepCount = settingsRepository.settingsFlow.first().backupRetention.keepCount ?: return
+        if (keepCount <= 0) return
+
+        val backups = listBackups() // newest first
+        if (backups.size <= keepCount) return
+
+        val toDelete = backups.drop(keepCount).map { it.uri }
+        Log.d(TAG, "Retention policy (keep $keepCount): pruning ${toDelete.size} old backups")
+        deleteBackups(toDelete)
+    }
+
+    /**
+     * Queries MediaStore Downloads for backup files (Android 10+).
+     */
+    private fun queryMediaStoreBackups(): List<BackupInfo> {
+        val collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI
+        val projection = arrayOf(
+            MediaStore.MediaColumns._ID,
+            MediaStore.MediaColumns.DISPLAY_NAME,
+            MediaStore.MediaColumns.SIZE,
+            MediaStore.MediaColumns.DATE_MODIFIED
+        )
+        val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} LIKE ?"
+        val selectionArgs = arrayOf("$BACKUP_PREFIX%")
+        val sortOrder = "${MediaStore.MediaColumns.DATE_MODIFIED} DESC"
+
+        val backups = mutableListOf<BackupInfo>()
+        context.contentResolver.query(collection, projection, selection, selectionArgs, sortOrder)?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
+            val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME)
+            val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE)
+            val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED)
+
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                backups += BackupInfo(
+                    uri = ContentUris.withAppendedId(collection, id),
+                    displayName = cursor.getString(nameColumn),
+                    sizeBytes = cursor.getLong(sizeColumn),
+                    // DATE_MODIFIED is in seconds since epoch; convert to millis.
+                    lastModified = cursor.getLong(dateColumn) * 1000
+                )
+            }
+        }
+        return backups
+    }
+
+    /**
+     * Lists backup files directly from the public Downloads directory (Android 9 and below).
+     */
+    private fun listLegacyBackups(): List<BackupInfo> {
+        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val files = downloadsDir.listFiles { file ->
+            file.isFile && file.name.startsWith(BACKUP_PREFIX)
+        } ?: return emptyList()
+
+        return files
+            .map { file ->
+                BackupInfo(
+                    uri = Uri.fromFile(file),
+                    displayName = file.name,
+                    sizeBytes = file.length(),
+                    lastModified = file.lastModified()
+                )
+            }
+            .sortedByDescending { it.lastModified }
     }
 
     /**

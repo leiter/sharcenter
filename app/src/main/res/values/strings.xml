@@ -88,6 +88,22 @@
     <string name="settings_disable_developer_mode_desc">Hide developer options</string>
     <string name="settings_import_export">Import &amp; Export</string>
     <string name="settings_import_export_desc">Manage your data backup and restore</string>
+    <string name="settings_backup_frequency">Automatic Backup Frequency</string>
+    <string name="settings_backup_retention">Keep Backups</string>
+    <string name="settings_manage_backups">Manage Backups</string>
+    <string name="settings_manage_backups_desc">Browse and delete saved backups</string>
+
+    <!-- Backup Frequency -->
+    <string name="backup_frequency_off">Off</string>
+    <string name="backup_frequency_daily">Daily</string>
+    <string name="backup_frequency_weekly">Weekly</string>
+    <string name="backup_frequency_monthly">Monthly</string>
+
+    <!-- Backup Retention -->
+    <string name="backup_retention_all">Keep all</string>
+    <string name="backup_retention_5">Keep last 5</string>
+    <string name="backup_retention_10">Keep last 10</string>
+    <string name="backup_retention_30">Keep last 30</string>
 
     <!-- Date Range Presets -->
     <string name="date_range_preset_7_days">7 Days</string>
