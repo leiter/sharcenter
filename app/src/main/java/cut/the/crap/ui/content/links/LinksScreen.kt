@@ -47,6 +47,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import cut.the.crap.R
 import cut.the.crap.data.domain.ContentLink
+import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.data.storage.provideOutputStream
 import cut.the.crap.mockedLinkItems
 import cut.the.crap.ui.components.BottomNavigationBar
@@ -226,29 +227,66 @@ fun LinkScreen(
     val keyWordList = currentScreenState.keyWordList
 
     if (showKeywordDialog && currentEditingLink != null) {
-        // Show KeywordSelectionDialog with the appropriate type
+        val masterList = when (currentKeywordType) {
+            cut.the.crap.ui.components.api.ChipsType.Handle -> handleList
+            cut.the.crap.ui.components.api.ChipsType.Tag -> tagList
+            cut.the.crap.ui.components.api.ChipsType.KeyWords -> keyWordList
+            else -> emptyList()
+        }
+
+        // Track the selected tag *texts* for this link, seeded from its current
+        // description. Text-based (not id-based) so a freshly added keyword selects
+        // immediately, before the master list round-trips through the repository.
+        var selectedTexts by remember(currentEditingLink.id, currentKeywordType) {
+            mutableStateOf(
+                when (currentKeywordType) {
+                    cut.the.crap.ui.components.api.ChipsType.Handle ->
+                        LinkMetadata.getHandles(currentEditingLink)
+                    cut.the.crap.ui.components.api.ChipsType.Tag ->
+                        LinkMetadata.getHashtags(currentEditingLink)
+                    cut.the.crap.ui.components.api.ChipsType.KeyWords ->
+                        LinkMetadata.getKeywords(currentEditingLink)
+                    else -> emptyList()
+                }.toSet()
+            )
+        }
+
         cut.the.crap.ui.components.KeywordSelectionDialog(
             type = currentKeywordType,
-            items = when (currentKeywordType) {
-                cut.the.crap.ui.components.api.ChipsType.Handle -> handleList
-                cut.the.crap.ui.components.api.ChipsType.Tag -> tagList
-                cut.the.crap.ui.components.api.ChipsType.KeyWords -> keyWordList
-                else -> emptyList()
-            },
-            selectedItems = emptySet(), // TODO: Parse from currentEditingLink.description
+            items = masterList,
+            selectedItems = masterList.filter { it.text in selectedTexts }.map { it.id }.toSet(),
             onItemToggle = { keyword ->
-                // TODO: Handle keyword toggle
+                selectedTexts = if (keyword.text in selectedTexts) {
+                    selectedTexts - keyword.text
+                } else {
+                    selectedTexts + keyword.text
+                }
             },
             onConfirm = {
-                // TODO: Save selected keywords to description
-                // Close dialog
+                // Write the chosen tags back onto the link, reusing the same persistence
+                // action the inline remove-chips use.
+                val updated = LinkMetadata.setTags(
+                    currentEditingLink, selectedTexts.toList(), currentKeywordType
+                )
+                actionHandler(ContentLinkAction.EditSearchHint(currentEditingLink, updated.description))
+                // Close dialog (id == -1 sentinel)
                 actionHandler(ContentLinkAction.ManageKeywords(ContentLink(), currentKeywordType))
             },
             onDismiss = {
-                // Close the keyword dialog
                 actionHandler(ContentLinkAction.ManageKeywords(ContentLink(), currentKeywordType))
             },
-            onAdd = actionHandler
+            onAdd = { addAction ->
+                // Forward to the ViewModel (persists new hashtags/keywords to the master
+                // list; deletes pass through too) and, for new entries, select them here.
+                actionHandler(addAction)
+                val addedText = when (addAction) {
+                    is cut.the.crap.ui.components.api.KeywordAction.AddHandle -> addAction.text
+                    is cut.the.crap.ui.components.api.KeywordAction.AddTag -> addAction.text
+                    is cut.the.crap.ui.components.api.KeywordAction.AddKeyWord -> addAction.text
+                    else -> null
+                }
+                addedText?.let { selectedTexts = selectedTexts + it }
+            }
         )
     }
 

@@ -53,7 +53,7 @@ class LinksViewModel @Inject constructor(
     private val repository: MessageRepository,
     @ApplicationContext internal val context: Context,
     private val settingsRepository: SettingsRepository,
-    private val keywordRepository: cut.the.crap.data.domain.KeywordRepository,
+    internal val keywordRepository: cut.the.crap.data.domain.KeywordRepository,
     internal val jobQueueRepository: JobQueueRepository,
     internal val youTubeRepository: YouTubeRepository
 ) : ViewModel() {

@@ -120,6 +120,43 @@ object LinkMetadata {
         return contentLink.copy(description = newDescription)
     }
 
+    /**
+     * Replaces the entire set of tags of the given [type] with [tags], preserving the
+     * link's metadata and the other two tag categories. Entries are trimmed, blanks
+     * dropped, and duplicates removed. Returns the link with an updated description
+     * (empty string if nothing remains).
+     */
+    fun setTags(contentLink: ContentLink, tags: List<String>, type: ChipsType): ContentLink {
+        val parsed = getParsed(contentLink)
+        var handles = parsed.handles
+        var hashtags = parsed.hashtags
+        var keywords = parsed.keywords
+
+        val cleaned = tags.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+        when (type) {
+            ChipsType.Handle -> handles = cleaned
+            ChipsType.Tag -> hashtags = cleaned
+            ChipsType.KeyWords -> keywords = cleaned
+            else -> keywords = cleaned
+        }
+
+        if (parsed.metadata.isEmpty() && handles.isEmpty() && hashtags.isEmpty() && keywords.isEmpty()) {
+            return contentLink.copy(description = "")
+        }
+
+        val delimiters = DescriptionParser.chooseDelimiters(
+            parsed.metadata, handles, hashtags, keywords
+        )
+        val newDescription = DescriptionParser.serialize(
+            metadata = parsed.metadata,
+            handles = handles,
+            hashtags = hashtags,
+            keywords = keywords,
+            delimiters = delimiters,
+        )
+        return contentLink.copy(description = newDescription)
+    }
+
     fun removeTag(contentLink: ContentLink, tag: String, type: ChipsType): ContentLink {
         val parsed = getParsed(contentLink)
         val handles = parsed.handles.toMutableList()

@@ -1,6 +1,8 @@
 package cut.the.crap.ui.content.links
 
 import androidx.lifecycle.viewModelScope
+import cut.the.crap.data.domain.KeyWord
+import cut.the.crap.data.domain.KeywordType
 import cut.the.crap.ui.components.DateType
 import cut.the.crap.ui.components.FilterState
 import cut.the.crap.ui.components.MyEditDialogStyle
@@ -326,7 +328,23 @@ internal fun LinksViewModel.handleUiAction(action: UiAction) {
 internal fun LinksViewModel.handleKeywordAction(action: KeywordAction) {
     when (action) {
         is KeywordAction.AddHandle -> {
-            // Not needed - usernames are extracted from visible links
+            // Handles are derived from existing links' usernames, so there's no master
+            // list to persist to. The new handle is still written onto the edited link
+            // by the dialog's onConfirm (see LinksScreen).
+        }
+
+        is KeywordAction.AddTag -> {
+            // Persist a new hashtag to the master list so it's reusable across links.
+            viewModelScope.launch {
+                keywordRepository.insert(KeyWord(text = action.text, type = KeywordType.HASHTAG))
+            }
+        }
+
+        is KeywordAction.AddKeyWord -> {
+            // Persist a new keyword to the master list so it's reusable across links.
+            viewModelScope.launch {
+                keywordRepository.insert(KeyWord(text = action.text, type = KeywordType.TAG))
+            }
         }
 
         is KeywordAction.ToggleHandleSelection -> {
