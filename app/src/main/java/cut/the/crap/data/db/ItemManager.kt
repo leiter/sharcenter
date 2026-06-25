@@ -2,6 +2,7 @@ package cut.the.crap.data.db
 
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.data.domain.ContentLinkRepository
+import cut.the.crap.tools.DescriptionParser
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,13 +69,35 @@ class ItemManager(private val repository: ContentLinkRepository) {
         repository.getItems(
             includeFavourite = queryConfig.filterState.includeFavourite,
             includeHidden = queryConfig.filterState.includeHidden,
-            linkSubstring = queryConfig.linkSubstring,
+            // Search is applied in-memory below so it can match the item's keywords/
+            // handles/hashtags (stored in `description`), not just the link URL.
+            linkSubstring = null,
             sortByListPosition = queryConfig.sortState.sortValue.toBoolean(),
             sortByDate = queryConfig.sortState.sortValue.toBoolean(),
             startTime = queryConfig.filterState.timeFrameStart,
             endTime = queryConfig.filterState.timeFrameEnd
 
-        ).map { items -> if (queryConfig.sortState.reverse) items.reversed() else items }
+        ).map { items ->
+            val query = queryConfig.linkSubstring
+            val matched = if (query.isNullOrBlank()) {
+                items
+            } else {
+                items.filter { it.matchesSearch(query) }
+            }
+            if (queryConfig.sortState.reverse) matched.reversed() else matched
+        }
+    }
+
+    /**
+     * Whether this link matches the search [query] (case-insensitive). Matches the link
+     * URL or any of the item's tags — handles, hashtags, or keywords — parsed from the
+     * serialized `description`.
+     */
+    private fun ContentLink.matchesSearch(query: String): Boolean {
+        if (link.contains(query, ignoreCase = true)) return true
+        val parsed = DescriptionParser.parse(description)
+        return (parsed.handles + parsed.hashtags + parsed.keywords)
+            .any { it.contains(query, ignoreCase = true) }
     }
 
     fun triggerReload(){
