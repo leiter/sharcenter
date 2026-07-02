@@ -137,6 +137,27 @@ class PostsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Inserts each generated motivational post as a draft (inactive) ContentItem so they
+     * appear in the Posts list for review before sending. [onDone] is invoked on the main
+     * dispatcher once all drafts are persisted.
+     */
+    fun createDraftPosts(texts: List<String>, onDone: () -> Unit = {}) {
+        val drafts = texts.filter { it.isNotBlank() }
+        if (drafts.isEmpty()) {
+            onDone()
+            return
+        }
+        viewModelScope.launch {
+            drafts.forEach { text ->
+                contentItemRepository.insert(
+                    cut.the.crap.data.domain.ContentItem(text = text, isActive = false)
+                )
+            }
+            onDone()
+        }
+    }
+
     internal var activeItemId: Int? = null
 
     init {

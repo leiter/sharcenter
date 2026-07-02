@@ -119,14 +119,21 @@ private fun EciDetailsDto.toStatistics(year: Int, number: String): EciStatistics
         )
     }.sortedBy { it.countryName }
 
+    // Localised signing links keyed by lower-case language code (e.g. "de" -> ".../?lg=de").
+    val supportLinks = linguisticVersions.mapNotNull { version ->
+        version.supportLink?.let { version.languageCode.lowercase() to it }
+    }.toMap()
+
     return EciStatistics(
         year = year,
         number = number,
         registrationNumber = comRegNum,
         status = status,
+        deadline = deadline,
         totalSignatures = sosReport?.totalSignatures ?: rows.sumOf { it.signatures },
         paperUpdateDate = sosReport?.updateDate,
         onlineUpdateDate = sosReport?.onlineSosUpdateDate,
-        rows = rows
+        rows = rows,
+        supportLinks = supportLinks
     )
 }

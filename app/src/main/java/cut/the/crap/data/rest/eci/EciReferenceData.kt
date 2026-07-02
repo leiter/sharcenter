@@ -86,6 +86,62 @@ internal object EciReferenceData {
     fun countryName(countryCode: String): String =
         COUNTRY_NAMES[countryCode.lowercase()] ?: countryCode.uppercase()
 
+    /**
+     * Official EU languages per member state, keyed by lower-case country code. Only the EU's
+     * 24 official languages are listed (so Luxembourgish, Turkish, etc. are excluded), since
+     * those are the languages the petition offers a localised signing page in. Order is the
+     * country's primary language first.
+     */
+    private val OFFICIAL_LANGUAGES = mapOf(
+        "at" to listOf("de"),
+        "be" to listOf("nl", "fr", "de"),
+        "bg" to listOf("bg"),
+        "cy" to listOf("el"),
+        "cz" to listOf("cs"),
+        "de" to listOf("de"),
+        "dk" to listOf("da"),
+        "ee" to listOf("et"),
+        "es" to listOf("es"),
+        "fi" to listOf("fi", "sv"),
+        "fr" to listOf("fr"),
+        "gr" to listOf("el"),
+        "hr" to listOf("hr"),
+        "hu" to listOf("hu"),
+        "ie" to listOf("ga", "en"),
+        "it" to listOf("it"),
+        "lt" to listOf("lt"),
+        "lu" to listOf("fr", "de"),
+        "lv" to listOf("lv"),
+        "mt" to listOf("mt", "en"),
+        "nl" to listOf("nl"),
+        "pl" to listOf("pl"),
+        "pt" to listOf("pt"),
+        "ro" to listOf("ro"),
+        "se" to listOf("sv"),
+        "si" to listOf("sl"),
+        "sk" to listOf("sk")
+    )
+
+    /**
+     * Official EU languages (lower-case codes) for a country, primary first. Falls back to
+     * English if the country is unknown, so a post can always be generated.
+     */
+    fun officialLanguages(countryCode: String): List<String> =
+        OFFICIAL_LANGUAGES[countryCode.lowercase()] ?: listOf("en")
+
+    /**
+     * Regional-indicator flag emoji for a 2-letter country code (e.g. "DE" -> 🇩🇪).
+     * Returns an empty string for anything that isn't a plain 2-letter code.
+     */
+    fun flagEmoji(countryCode: String): String {
+        val code = countryCode.trim().uppercase()
+        if (code.length != 2 || code.any { it !in 'A'..'Z' }) return ""
+        val base = 0x1F1E6 // regional indicator symbol letter A
+        val first = base + (code[0] - 'A')
+        val second = base + (code[1] - 'A')
+        return String(Character.toChars(first)) + String(Character.toChars(second))
+    }
+
     /** Parses a "dd/MM/yyyy" date, or returns null if it is missing/malformed. */
     fun parseDate(value: String?): LocalDate? = value?.let {
         runCatching { LocalDate.parse(it, REGISTRATION_DATE_FORMAT) }.getOrNull()

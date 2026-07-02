@@ -25,8 +25,27 @@ internal data class EciDetailsDto(
     @SerialName("status")
     val status: String? = null,
 
+    /** Collection deadline, formatted "dd/MM/yyyy". */
+    @SerialName("deadline")
+    val deadline: String? = null,
+
+    /** One entry per official language, each carrying a localised signing link. */
+    @SerialName("linguisticVersions")
+    val linguisticVersions: List<EciLinguisticVersionDto> = emptyList(),
+
     @SerialName("sosReport")
     val sosReport: EciSosReportDto? = null
+)
+
+@Serializable
+internal data class EciLinguisticVersionDto(
+    /** Language code, upper-case (e.g. "DE"). */
+    @SerialName("languageCode")
+    val languageCode: String,
+
+    /** Localised petition signing page, e.g. "https://eci.ec.europa.eu/055/public/?lg=de". */
+    @SerialName("supportLink")
+    val supportLink: String? = null
 )
 
 /** "Statements of support" report — the per-country signature statistics. */
@@ -70,6 +89,24 @@ internal data class EciSosEntryDto(
 // ---------------------------------------------------------------------------
 
 /**
+ * Which campaign band a country falls into, driving whether — and how — we motivate more
+ * signatures for it.
+ */
+enum class EciBand {
+    /** Below the national threshold: push to reach 100%. */
+    BELOW_THRESHOLD,
+
+    /** Threshold met but under 2×: build a safety margin against verification losses. */
+    BUILDING_MARGIN,
+
+    /** At or above 2× the threshold: safe, no post needed. */
+    SAFE,
+
+    /** No threshold known (non-EU code / unknown table): not targetable. */
+    UNKNOWN
+}
+
+/**
  * One row of the "Number of signatures per country" table.
  *
  * @property countryCode ISO alpha-2 code, upper-case (e.g. "DE").
@@ -92,6 +129,40 @@ data class EciCountrySignatures(
      */
     val thresholdFraction: Double?
         get() = threshold?.takeIf { it > 0 }?.let { signatures.toDouble() / it }
+
+    /** The campaign band this country falls into (see [EciBand]). */
+    val band: EciBand
+        get() {
+            val fraction = thresholdFraction ?: return EciBand.UNKNOWN
+            return when {
+                fraction < 1.0 -> EciBand.BELOW_THRESHOLD
+                fraction < 2.0 -> EciBand.BUILDING_MARGIN
+                else -> EciBand.SAFE
+            }
+        }
+
+    /**
+     * The signature target for the current band: the threshold for [EciBand.BELOW_THRESHOLD],
+     * twice the threshold for [EciBand.BUILDING_MARGIN], or `null` when there is nothing to aim for.
+     */
+    val aim: Int?
+        get() = when (band) {
+            EciBand.BELOW_THRESHOLD -> threshold
+            EciBand.BUILDING_MARGIN -> threshold?.let { it * 2 }
+            else -> null
+        }
+
+    /** Signatures still needed to reach [aim] (never negative), or `null` when there is no aim. */
+    val remainingToAim: Long?
+        get() = aim?.let { (it - signatures).coerceAtLeast(0) }
+
+    /** Progress toward [aim] in the range 0..1, or `null` when there is no aim. */
+    val progressToAim: Double?
+        get() = aim?.takeIf { it > 0 }?.let { (signatures.toDouble() / it).coerceAtMost(1.0) }
+
+    /** True when a motivational post applies (below threshold or building the margin). */
+    val isEligibleForPost: Boolean
+        get() = band == EciBand.BELOW_THRESHOLD || band == EciBand.BUILDING_MARGIN
 }
 
 /**
@@ -105,8 +176,19 @@ data class EciStatistics(
     val number: String,
     val registrationNumber: String?,
     val status: String?,
+    val deadline: String?,
     val totalSignatures: Long,
     val paperUpdateDate: String?,
     val onlineUpdateDate: String?,
-    val rows: List<EciCountrySignatures>
-)
+    val rows: List<EciCountrySignatures>,
+    /** Localised signing links keyed by lower-case language code (e.g. "de" -> ".../?lg=de"). */
+    val supportLinks: Map<String, String>
+) {
+    /** True while signatures can still be collected (ongoing and not past the deadline). */
+    val isCollectionOpen: Boolean
+        get() = status.equals("ONGOING", ignoreCase = true)
+
+    /** Countries a motivational post applies to (below threshold or building the margin). */
+    val eligibleRows: List<EciCountrySignatures>
+        get() = rows.filter { it.isEligibleForPost }
+}

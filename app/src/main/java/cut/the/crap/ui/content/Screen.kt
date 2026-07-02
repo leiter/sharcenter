@@ -21,6 +21,7 @@ import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.links.LinkScreen
 import cut.the.crap.ui.content.settings.BackupManagementScreen
 import cut.the.crap.ui.content.settings.ImportExportScreen
+import cut.the.crap.ui.content.eci.EciPostComposerScreen
 import cut.the.crap.ui.content.eci.EciStatisticsScreen
 import cut.the.crap.ui.content.settings.SettingsScreen
 import cut.the.crap.ui.content.settings.SettingsViewModel
@@ -92,6 +93,13 @@ fun NavigationGraph(
             EciStatisticsScreen(
                 navController = navController,
                 statistics = postsViewModel.eciStatistics.collectAsState().value
+            )
+        }
+        composable("eci_post_composer") {
+            EciPostComposerScreen(
+                navController = navController,
+                statistics = postsViewModel.eciStatistics.collectAsState().value,
+                onCreateDrafts = { texts -> postsViewModel.createDraftPosts(texts) }
             )
         }
     }
