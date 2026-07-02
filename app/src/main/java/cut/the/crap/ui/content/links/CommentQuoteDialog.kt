@@ -28,7 +28,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import cut.the.crap.R
 import androidx.compose.ui.window.Dialog
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.mockedLinkItems
@@ -67,7 +69,7 @@ fun CommentQuoteDialog(
             ) {
                 // Title
                 Text(
-                    text = "Comment or Quote",
+                    text = stringResource(R.string.links_comment_quote_title),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -139,8 +141,8 @@ fun CommentQuoteDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(120.dp),
-                    label = { Text("Your comment or quote") },
-                    placeholder = { Text("Enter your text here...") },
+                    label = { Text(stringResource(R.string.links_comment_quote_label)) },
+                    placeholder = { Text(stringResource(R.string.links_comment_quote_placeholder)) },
                     maxLines = 5,
                     textStyle = MaterialTheme.typography.bodyMedium
                 )
@@ -154,7 +156,7 @@ fun CommentQuoteDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.dialog_cancel))
                     }
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -169,10 +171,10 @@ fun CommentQuoteDialog(
                         ) {
                             androidx.compose.material3.Icon(
                                 imageVector = Icons.Filled.FormatQuote,
-                                contentDescription = "Quote",
+                                contentDescription = stringResource(R.string.links_quote),
                                 modifier = Modifier.padding(end = 4.dp)
                             )
-                            Text("Quote")
+                            Text(stringResource(R.string.links_quote))
                         }
                     }
 
@@ -188,10 +190,10 @@ fun CommentQuoteDialog(
                         ) {
                             androidx.compose.material3.Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Comment,
-                                contentDescription = "Comment",
+                                contentDescription = stringResource(R.string.links_comment),
                                 modifier = Modifier.padding(end = 4.dp)
                             )
-                            Text("Comment")
+                            Text(stringResource(R.string.links_comment))
                         }
                     }
                 }
@@ -230,7 +232,7 @@ private fun Preview(
             ) {
                 // Title
                 Text(
-                    text = "Comment or Quote",
+                    text = stringResource(R.string.links_comment_quote_title),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -302,8 +304,8 @@ private fun Preview(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(120.dp),
-                    label = { Text("Your comment or quote") },
-                    placeholder = { Text("Enter your text here...") },
+                    label = { Text(stringResource(R.string.links_comment_quote_label)) },
+                    placeholder = { Text(stringResource(R.string.links_comment_quote_placeholder)) },
                     maxLines = 5,
                     textStyle = MaterialTheme.typography.bodyMedium
                 )
@@ -317,7 +319,7 @@ private fun Preview(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = {}) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.dialog_cancel))
                     }
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -332,10 +334,10 @@ private fun Preview(
                         ) {
                             androidx.compose.material3.Icon(
                                 imageVector = Icons.Filled.FormatQuote,
-                                contentDescription = "Quote",
+                                contentDescription = stringResource(R.string.links_quote),
                                 modifier = Modifier.padding(end = 4.dp)
                             )
-                            Text("Quote")
+                            Text(stringResource(R.string.links_quote))
                         }
                     }
 
@@ -351,10 +353,10 @@ private fun Preview(
                         ) {
                             androidx.compose.material3.Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Comment,
-                                contentDescription = "Comment",
+                                contentDescription = stringResource(R.string.links_comment),
                                 modifier = Modifier.padding(end = 4.dp)
                             )
-                            Text("Comment")
+                            Text(stringResource(R.string.links_comment))
                         }
                     }
                 }

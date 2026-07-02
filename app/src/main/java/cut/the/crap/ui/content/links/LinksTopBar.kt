@@ -28,7 +28,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import cut.the.crap.R
 import cut.the.crap.ui.components.ActiveState
 import cut.the.crap.ui.components.FilterState
 import cut.the.crap.ui.components.MyChip
@@ -92,7 +94,7 @@ private fun FilterSection(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = "Active filters:",
+                    text = stringResource(R.string.links_active_filters),
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(top = 8.dp)
                 )
@@ -124,7 +126,7 @@ private fun FilterSection(
                         trailingIcon = {
                             Icon(
                                 imageVector = Icons.Filled.Close,
-                                contentDescription = "Remove filter",
+                                contentDescription = stringResource(R.string.links_cd_remove_filter),
                                 modifier = Modifier.padding(0.dp)
                             )
                         },
@@ -138,7 +140,7 @@ private fun FilterSection(
                 if (screenState.hiddenFilters.size > 1) {
                     AssistChip(
                         onClick = { action(TextAction.ClearHiddenFilters) },
-                        label = { Text("Clear all") },
+                        label = { Text(stringResource(R.string.links_clear_all)) },
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer
                         )
@@ -193,7 +195,7 @@ private fun SelectionModeTopBar(
                 IconButton(onClick = onExitSelectionMode) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = "Exit selection mode"
+                        contentDescription = stringResource(R.string.links_cd_exit_selection)
                     )
                 }
             },
@@ -213,9 +215,9 @@ private fun SelectionModeTopBar(
                             Icons.Filled.CheckCircle
                         },
                         contentDescription = if (allVisibleSelected) {
-                            "Deselect all"
+                            stringResource(R.string.links_deselect_all)
                         } else {
-                            "Select all filtered"
+                            stringResource(R.string.links_select_all_filtered)
                         },
                         tint = if (allVisibleSelected) {
                             MaterialTheme.colorScheme.error
@@ -341,7 +343,7 @@ fun linksTopBar(
                                 Icons.Filled.FilterList
                         ),
                         onClick = { action(UiAction.ExpandTextInput(!screenState.textInputExpanded, cut.the.crap.ui.components.api.Screen.Links)) },
-                        contentDescription = if (screenState.textInputExpanded) "Collapse filters" else "Expand filters",
+                        contentDescription = stringResource(if (screenState.textInputExpanded) R.string.posts_cd_collapse_filters else R.string.posts_cd_expand_filters),
                         showBadge = hasActiveFilters && !screenState.textInputExpanded
                     )
                 },

@@ -25,7 +25,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import cut.the.crap.R
 import cut.the.crap.ui.components.MySearchBar
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.TextAction
@@ -141,7 +143,7 @@ fun ListStatusBar(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Filled.FilterList,
-                        contentDescription = "Filtered",
+                        contentDescription = stringResource(R.string.links_cd_filtered),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
@@ -162,7 +164,7 @@ fun ListStatusBar(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Filled.CheckCircle,
-                            contentDescription = "Selected",
+                            contentDescription = stringResource(R.string.links_cd_selected),
                             tint = MaterialTheme.colorScheme.tertiary,
                             modifier = Modifier.size(18.dp)
                         )

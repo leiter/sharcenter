@@ -274,4 +274,28 @@
     <string name="posts_cd_load_stats">Load initiative statistics</string>
     <string name="posts_cd_create_item">Create new content item</string>
 
+    <!-- Links screen / top bar -->
+    <string name="links_active_filters">Active filters:</string>
+    <string name="links_clear_all">Clear all</string>
+    <string name="links_deselect_all">Deselect all</string>
+    <string name="links_select_all_filtered">Select all filtered</string>
+    <string name="links_cd_remove_filter">Remove filter</string>
+    <string name="links_cd_exit_selection">Exit selection mode</string>
+    <string name="links_cd_remove_handle">Remove handle</string>
+    <string name="links_cd_remove_hashtag">Remove hashtag</string>
+    <string name="links_cd_remove_keyword">Remove keyword</string>
+    <string name="links_cd_add_accounts">Add accounts</string>
+    <string name="links_cd_add_hashtags">Add hashtags</string>
+    <string name="links_cd_add_keywords">Add keywords</string>
+    <string name="links_cd_video_thumbnail">Video thumbnail</string>
+    <string name="links_cd_filtered">Filtered</string>
+    <string name="links_cd_selected">Selected</string>
+
+    <!-- Comment/Quote dialog -->
+    <string name="links_comment_quote_title">Comment or Quote</string>
+    <string name="links_comment_quote_label">Your comment or quote</string>
+    <string name="links_comment_quote_placeholder">Enter your text here…</string>
+    <string name="links_quote">Quote</string>
+    <string name="links_comment">Comment</string>
+
 </resources>

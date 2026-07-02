@@ -63,6 +63,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import cut.the.crap.R
@@ -201,7 +202,7 @@ fun LinkListItem(
                                 {
                                     Icon(
                                         imageVector = Icons.Filled.Delete,
-                                        contentDescription = "Remove handle",
+                                        contentDescription = stringResource(R.string.links_cd_remove_handle),
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -230,7 +231,7 @@ fun LinkListItem(
                                 {
                                     Icon(
                                         imageVector = Icons.Filled.Delete,
-                                        contentDescription = "Remove hashtag",
+                                        contentDescription = stringResource(R.string.links_cd_remove_hashtag),
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -259,7 +260,7 @@ fun LinkListItem(
                                 {
                                     Icon(
                                         imageVector = Icons.Filled.Delete,
-                                        contentDescription = "Remove keyword",
+                                        contentDescription = stringResource(R.string.links_cd_remove_keyword),
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -293,7 +294,7 @@ fun LinkListItem(
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.AlternateEmail,
-                                contentDescription = "Add accounts",
+                                contentDescription = stringResource(R.string.links_cd_add_accounts),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -311,7 +312,7 @@ fun LinkListItem(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Tag,
-                                contentDescription = "Add hashtags",
+                                contentDescription = stringResource(R.string.links_cd_add_hashtags),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -329,7 +330,7 @@ fun LinkListItem(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Numbers,
-                                contentDescription = "Add keywords",
+                                contentDescription = stringResource(R.string.links_cd_add_keywords),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -492,7 +493,7 @@ fun LinkListItem(
                 val youTubePlaceholder = painterResource(id = R.drawable.youtube)
                 AsyncImage(
                     model = thumbnailUrl,
-                    contentDescription = "Video thumbnail",
+                    contentDescription = stringResource(R.string.links_cd_video_thumbnail),
                     placeholder = youTubePlaceholder,
                     error = youTubePlaceholder,
                     fallback = youTubePlaceholder,
