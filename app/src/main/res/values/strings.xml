@@ -208,6 +208,8 @@
 
     <!-- ECI post composer -->
     <string name="eci_composer_title">Create posts</string>
+    <string name="eci_copy_post">Copy post to clipboard</string>
+    <string name="eci_post_copied">Post copied to clipboard</string>
     <string name="eci_not_collecting">This initiative is not currently collecting signatures.</string>
     <string name="eci_sort_label">Sort:</string>
     <string name="eci_label_colon">%1$s:</string>

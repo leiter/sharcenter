@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
@@ -37,11 +38,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.annotation.StringRes
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -80,11 +84,11 @@ fun EciPostComposerScreen(
 ) {
     val context = LocalContext.current
 
-    var filter by remember { mutableStateOf(CountryFilter.ELIGIBLE) }
+    var filter by remember { mutableStateOf(CountryFilter.BELOW) }
     var sort by remember { mutableStateOf(CountrySort.CLOSEST_TO_AIM) }
     var selected by remember { mutableStateOf<Set<String>>(emptySet()) }
-    var belowVariant by remember { mutableStateOf(0) }
-    var marginVariant by remember { mutableStateOf(0) }
+    var belowVariant by remember { mutableIntStateOf(0) }
+    var marginVariant by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     var expanded by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     val rows = statistics?.rows ?: emptyList()
@@ -306,6 +310,20 @@ private fun CountryRow(
         EciBand.UNKNOWN -> stringResource(R.string.eci_band_unknown)
     }
 
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+    val copyPost: (String) -> Unit = { text ->
+        clipboard.setText(AnnotatedString(text))
+        Toast.makeText(context, R.string.eci_post_copied, Toast.LENGTH_SHORT).show()
+    }
+
+    // One generated post per official language of the country.
+    val posts: List<EciGeneratedPost> = remember(row, statistics, belowVariant, marginVariant, eligible) {
+        if (eligible) EciPostGenerator.generateForCountry(row, statistics, belowVariant, marginVariant)
+        else emptyList()
+    }
+    val singleLanguage = posts.size == 1
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -341,6 +359,16 @@ private fun CountryRow(
                 )
             }
             if (eligible) {
+                // With a single language there's only one post, so offer copy directly
+                // in the header, to the left of the expand toggle.
+                if (singleLanguage) {
+                    IconButton(onClick = { copyPost(posts.first().text) }) {
+                        Icon(
+                            Icons.Filled.ContentCopy,
+                            contentDescription = stringResource(R.string.eci_copy_post)
+                        )
+                    }
+                }
                 IconButton(onClick = onToggleExpand) {
                     Icon(
                         if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
@@ -353,18 +381,26 @@ private fun CountryRow(
         }
 
         if (expanded && eligible) {
-            val posts: List<EciGeneratedPost> = EciPostGenerator.generateForCountry(
-                row, statistics, belowVariant, marginVariant
-            )
             Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
                 posts.forEach { post ->
-                    Text(
-                        post.language.uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            post.language.uppercase(),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f).padding(top = 8.dp)
+                        )
+                        // With multiple languages each post gets its own copy button.
+                        if (!singleLanguage) {
+                            IconButton(onClick = { copyPost(post.text) }) {
+                                Icon(
+                                    Icons.Filled.ContentCopy,
+                                    contentDescription = stringResource(R.string.eci_copy_post)
+                                )
+                            }
+                        }
+                    }
                     Text(
                         post.text,
                         style = MaterialTheme.typography.bodySmall,
