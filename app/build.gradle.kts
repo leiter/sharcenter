@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -12,7 +15,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "cut.the.crap"
+        applicationId = "cut.the.crap.sharecare"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -29,6 +32,21 @@ android {
         }
     }
 
+    val signingPropsFile = File("/home/mandroid/Videos/AA_FILES/sharecare_signature_prop")
+    val signingProps = Properties()
+    if (signingPropsFile.exists()) {
+        signingProps.load(FileInputStream(signingPropsFile))
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = signingProps["storeFile"]?.let { signingPropsFile.parentFile.resolve(it as String) }
+            storePassword = signingProps["storePassword"] as String?
+            keyAlias = signingProps["keyAlias"] as String?
+            keyPassword = signingProps["keyPassword"] as String?
+        }
+    }
+
     buildTypes {
         debug {
             // Debug API URL - typically points to local development server
@@ -36,6 +54,8 @@ android {
             buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.100:8080\"")
         }
         release {
+
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             // Production API URL - points to production server
             // TODO: Update this to your production server URL when deploying
