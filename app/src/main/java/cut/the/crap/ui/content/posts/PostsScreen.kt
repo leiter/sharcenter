@@ -44,6 +44,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import cut.the.crap.R
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -101,6 +103,10 @@ fun PostsScreen(
         }
     }
 
+    // Snackbar strings resolved here since showSnackbar runs outside composable scope.
+    val postClearedMessage = stringResource(R.string.posts_snackbar_cleared)
+    val deleteActionLabel = stringResource(R.string.dialog_delete)
+
     // Show a snackbar (with a Delete action) when the editor is cleared,
     // letting the user also delete the post that was detached from the editor.
     LaunchedEffect(Unit) {
@@ -108,8 +114,8 @@ fun PostsScreen(
             when (event) {
                 is PostsSnackbarEvent.OfferDeleteClearedItem -> {
                     val result = snackbarHostState.showSnackbar(
-                        message = "Post cleared",
-                        actionLabel = "Delete",
+                        message = postClearedMessage,
+                        actionLabel = deleteActionLabel,
                         duration = SnackbarDuration.Long
                     )
                     if (result == SnackbarResult.ActionPerformed) {
@@ -252,7 +258,7 @@ fun PostsScreen(
                                 else Icons.Filled.FilterList
                             ),
                             onClick = { action(UiAction.ExpandTextInput(!filterExpanded, cut.the.crap.ui.components.api.Screen.Posts)) },
-                            contentDescription = if (filterExpanded) "Collapse filters" else "Expand filters",
+                            contentDescription = stringResource(if (filterExpanded) R.string.posts_cd_collapse_filters else R.string.posts_cd_expand_filters),
                             showBadge = hasActiveFilters && !filterExpanded
                         )
 
@@ -272,7 +278,7 @@ fun PostsScreen(
                                     Icons.Filled.Key
                                 ),
                                 onClick = { onLoadEciStatistics() },
-                                contentDescription = "Load initiative statistics"
+                                contentDescription = stringResource(R.string.posts_cd_load_stats)
                             )
                         }
                     },
@@ -327,7 +333,7 @@ fun PostsScreen(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Add,
-                    contentDescription = "Create new content item"
+                    contentDescription = stringResource(R.string.posts_cd_create_item)
                 )
             }
         }

@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -116,7 +117,7 @@ fun ContentItemCard(
                     ) {
                         Icon(
                             imageVector = if (isExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                            contentDescription = if (isExpanded) "Collapse" else "Expand"
+                            contentDescription = stringResource(if (isExpanded) R.string.card_cd_collapse else R.string.card_cd_expand)
                         )
                     }
                 }
@@ -164,7 +165,7 @@ fun ContentItemCard(
                     ) {
                         Icon(
                             imageVector = if (contentItem.isFavorite) Icons.Filled.Star else Icons.Filled.StarOutline,
-                            contentDescription = "Toggle favorite"
+                            contentDescription = stringResource(R.string.card_cd_toggle_favorite)
                         )
                     }
 
@@ -175,7 +176,7 @@ fun ContentItemCard(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.CopyAll,
-                            contentDescription = "Copy to clipboard"
+                            contentDescription = stringResource(R.string.cd_copy_clipboard)
                         )
                     }
 
@@ -186,7 +187,7 @@ fun ContentItemCard(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
-                            contentDescription = "Load to editor"
+                            contentDescription = stringResource(R.string.card_cd_load_editor)
                         )
                     }
                 }

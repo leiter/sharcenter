@@ -248,4 +248,30 @@
         <item quantity="other">Create %d posts</item>
     </plurals>
 
+    <!-- Shared content descriptions -->
+    <string name="cd_copy_clipboard">Copy to clipboard</string>
+
+    <!-- Content editor -->
+    <string name="editor_title">Compose</string>
+    <string name="editor_placeholder">What\'s on your mind?</string>
+    <string name="editor_quick_actions">Quick actions:</string>
+    <string name="editor_cd_clear">Clear all text</string>
+    <string name="editor_cd_add_tag">Add tag</string>
+    <string name="editor_cd_attach">Attach files</string>
+    <string name="editor_cd_upload">Upload files</string>
+    <string name="editor_cd_paste">Paste from clipboard</string>
+
+    <!-- Content item card -->
+    <string name="card_cd_collapse">Collapse</string>
+    <string name="card_cd_expand">Expand</string>
+    <string name="card_cd_toggle_favorite">Toggle favorite</string>
+    <string name="card_cd_load_editor">Load to editor</string>
+
+    <!-- Posts screen -->
+    <string name="posts_snackbar_cleared">Post cleared</string>
+    <string name="posts_cd_collapse_filters">Collapse filters</string>
+    <string name="posts_cd_expand_filters">Expand filters</string>
+    <string name="posts_cd_load_stats">Load initiative statistics</string>
+    <string name="posts_cd_create_item">Create new content item</string>
+
 </resources>

@@ -31,12 +31,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import cut.the.crap.R
 import cut.the.crap.tools.TextValueWrapper
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.ChipsType
@@ -81,7 +84,7 @@ fun ContentEditor(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Compose",
+                    text = stringResource(R.string.editor_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -91,7 +94,7 @@ fun ContentEditor(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "$charCount chars",
+                        text = pluralStringResource(R.plurals.chars, charCount, charCount),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
@@ -109,7 +112,7 @@ fun ContentEditor(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Clear,
-                            contentDescription = "Clear all text",
+                            contentDescription = stringResource(R.string.editor_cd_clear),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -136,7 +139,7 @@ fun ContentEditor(
                 },
                 placeholder = {
                     Text(
-                        text = "What's on your mind?",
+                        text = stringResource(R.string.editor_placeholder),
                         style = MaterialTheme.typography.bodyLarge
                     )
                 },
@@ -156,7 +159,7 @@ fun ContentEditor(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Quick actions:",
+                    text = stringResource(R.string.editor_quick_actions),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp)
@@ -196,7 +199,7 @@ fun ContentEditor(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Tag,
-                        contentDescription = "Add tag",
+                        contentDescription = stringResource(R.string.editor_cd_add_tag),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -212,7 +215,7 @@ fun ContentEditor(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.AttachFile,
-                        contentDescription = "Attach files",
+                        contentDescription = stringResource(R.string.editor_cd_attach),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -231,7 +234,7 @@ fun ContentEditor(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.CloudUpload,
-                                contentDescription = "Upload files",
+                                contentDescription = stringResource(R.string.editor_cd_upload),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -265,7 +268,7 @@ fun ContentEditor(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.ContentPasteGo,
-                        contentDescription = "Paste from clipboard",
+                        contentDescription = stringResource(R.string.editor_cd_paste),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -283,7 +286,7 @@ fun ContentEditor(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.ContentCopy,
-                        contentDescription = "Copy to clipboard",
+                        contentDescription = stringResource(R.string.cd_copy_clipboard),
                         modifier = Modifier.size(20.dp)
                     )
                 }
