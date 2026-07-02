@@ -49,7 +49,7 @@ import cut.the.crap.R
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.data.storage.provideOutputStream
-import cut.the.crap.mockedLinkItems
+//import cut.the.crap.mockedLinkItems
 import cut.the.crap.ui.components.BottomNavigationBar
 import cut.the.crap.ui.components.DateFilterBottomSheet
 import cut.the.crap.ui.components.MenuItem
@@ -483,14 +483,14 @@ private fun Preview(
     @PreviewParameter(PreviewAppThemeProvider::class) theme: PreviewThemeWrapper,
 ) {
     theme {
-        val itemListFlow = MutableStateFlow(mockedLinkItems)
+//        val itemListFlow = MutableStateFlow(emptyList())  //mockedLinkItems
         val totalCountFlow = MutableStateFlow(3)
         val screenStateFlow = MutableStateFlow(LinksScreenState())
         val snackBarFlow = MutableSharedFlow<String>()
 
         LinkScreen(
             action = {},
-            itemList = itemListFlow,
+            itemList = MutableStateFlow(emptyList()),  // itemListFlow
             totalCount = totalCountFlow,
             screenState = screenStateFlow,
             navController = rememberNavController(),

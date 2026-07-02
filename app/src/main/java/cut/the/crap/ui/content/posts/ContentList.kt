@@ -34,7 +34,7 @@ import androidx.compose.ui.zIndex
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.unit.max
 import cut.the.crap.data.domain.ContentItem
-import cut.the.crap.mockedPostItems
+//import cut.the.crap.mockedPostItems
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.theme.PreviewAppThemeProvider
 import cut.the.crap.ui.theme.PreviewThemeWrapper
@@ -247,7 +247,7 @@ private fun Preview(
             ContentList(
                 action = {},
                 paddingValues = PaddingValues(0.dp),
-                contentItems = MutableStateFlow(mockedPostItems.take(3)),
+                contentItems = MutableStateFlow(emptyList()),  // mockedPostItems.take(3)
                 onContentItemsReordered = {},
             )
         }

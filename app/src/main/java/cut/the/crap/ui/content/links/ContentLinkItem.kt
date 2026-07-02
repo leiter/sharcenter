@@ -69,7 +69,7 @@ import coil.compose.AsyncImage
 import cut.the.crap.R
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.data.rest.YouTubeUrlParser
-import cut.the.crap.mockedLinkItems
+//import cut.the.crap.mockedLinkItems
 import cut.the.crap.tools.DescriptionParser
 import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.domainPainter
@@ -565,14 +565,14 @@ private fun Preview(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            (mockedLinkItems + mockedLinkItems).forEach {
-                LinkListItem(
-                    item = it,
-                    action = {},
-                    selectionState = Random.nextBoolean(),
-                    isChecked = Random.nextBoolean()
-                )
-            }
+//            (mockedLinkItems + mockedLinkItems).forEach {
+//                LinkListItem(
+//                    item = it,
+//                    action = {},
+//                    selectionState = Random.nextBoolean(),
+//                    isChecked = Random.nextBoolean()
+//                )
+//            }
 
         }
 
