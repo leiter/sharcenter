@@ -97,7 +97,7 @@ fun MySpeedDialFab(
             ) {
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.Close else Icons.Default.Add,
-                    contentDescription = "Speed Dial"
+                    contentDescription = stringResource(R.string.speed_dial_cd)
                 )
             }
         }
@@ -170,7 +170,7 @@ fun CircularSpeedDialFab() {
         ) {
             Icon(
                 imageVector = if (isExpanded) Icons.Default.Close else Icons.Default.Add,
-                contentDescription = "Speed Dial"
+                contentDescription = stringResource(R.string.speed_dial_cd)
             )
         }
     }

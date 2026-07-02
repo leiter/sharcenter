@@ -103,12 +103,12 @@ class ShareReceiverActivity : ComponentActivity() {
                     val imageUri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
                     Log.d(TAG, "Received image: $intent  $imageUri")
                     imageUri?.let {
-                        Toast.makeText(this, "Received image: ${intent.dataString}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, getString(R.string.share_toast_received_image, intent.dataString.toString()), Toast.LENGTH_LONG).show()
                     }
                     finish()
                 }
                 else -> {
-                    Toast.makeText(this, "Unsupported type: ${intent.type}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.share_toast_unsupported_type, intent.type.toString()), Toast.LENGTH_SHORT).show()
                     finish()
                 }
             }

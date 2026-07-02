@@ -338,4 +338,53 @@
     <string name="import_export_export">Export Data</string>
     <string name="import_export_import">Import Data</string>
 
+    <!-- Shared dialog action -->
+    <string name="dialog_save">Save</string>
+
+    <!-- Edit dialog -->
+    <string name="edit_entity_title">Edit entity</string>
+    <string name="edit_dialog_link_label">Edit Link</string>
+    <string name="edit_dialog_description_label">Edit description</string>
+    <string name="edit_dialog_hide">Hide</string>
+    <string name="edit_dialog_confirm_delete">Are you sure you want to delete this item?</string>
+
+    <!-- Shared components -->
+    <string name="search_cd_search">Search</string>
+    <string name="speed_dial_cd">Speed Dial</string>
+    <string name="keyword_cd_settings">Settings</string>
+    <string name="keyword_cd_clear_search">Clear search</string>
+    <string name="keyword_filter_all">Filter: All</string>
+    <string name="keyword_filter_favorites">Filter: Favorites</string>
+    <string name="keyword_filter_non_favorites">Filter: Non-favorites</string>
+    <string name="chip_from_prefix">From: </string>
+    <string name="chip_to_prefix">To: </string>
+
+    <!-- Try Me (developer) screen -->
+    <string name="tryme_export_plain">Export Database plain</string>
+    <string name="tryme_export_table">Export Database table</string>
+    <string name="tryme_import_lines">Import Lines</string>
+    <string name="tryme_import_table">Import table</string>
+    <string name="tryme_tweet_id">Tweet id</string>
+    <string name="tryme_tweet_url_param">Tweet url param</string>
+    <string name="tryme_tweet_comment">Tweet comment</string>
+    <string name="tryme_retweet">Retweet</string>
+    <string name="tryme_quote_tweet">Quote Tweet</string>
+    <string name="tryme_post_tweet">Post Tweet</string>
+
+    <!-- X login -->
+    <string name="xlogin_title">Login to X</string>
+    <string name="xlogin_logged_in_as">Logged in as \@%1$s</string>
+    <string name="xlogin_session_expired">Your X session has expired. Please log in again.</string>
+    <string name="xlogin_prompt">Log in to enable automatic URL resolution</string>
+
+    <!-- Share receiver -->
+    <string name="share_toast_received_image">Received image: %1$s</string>
+    <string name="share_toast_unsupported_type">Unsupported type: %1$s</string>
+
+    <!-- File helper -->
+    <string name="file_toast_source_missing">Source file does not exist</string>
+    <string name="file_toast_copied">File copied to Downloads</string>
+    <string name="file_toast_copy_failed">Failed to copy file</string>
+    <string name="file_toast_copy_error">Error copying file</string>
+
 </resources>

@@ -19,6 +19,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import cut.the.crap.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
@@ -75,9 +77,9 @@ class XLoginActivity : ComponentActivity() {
         lifecycleScope.launch {
             settingsRepository.updateXCredentials(authToken, ct0Token)
             val message = if (screenName != null) {
-                "Logged in as @$screenName"
+                getString(R.string.xlogin_logged_in_as, screenName)
             } else {
-                "X login successful"
+                getString(R.string.settings_toast_x_login_success)
             }
             Toast.makeText(this@XLoginActivity, message, Toast.LENGTH_SHORT).show()
             setResult(RESULT_LOGIN_SUCCESS)
@@ -99,17 +101,17 @@ private fun XLoginScreen(
     val context = LocalContext.current
 
     val reasonMessage = when (reason) {
-        XLoginActivity.REASON_AUTH_EXPIRED -> "Your X session has expired. Please log in again."
-        else -> "Log in to enable automatic URL resolution"
+        XLoginActivity.REASON_AUTH_EXPIRED -> stringResource(R.string.xlogin_session_expired)
+        else -> stringResource(R.string.xlogin_prompt)
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Login to X") },
+                title = { Text(stringResource(R.string.xlogin_title)) },
                 navigationIcon = {
                     IconButton(onClick = onCancel) {
-                        Icon(Icons.Default.Close, contentDescription = "Cancel")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.dialog_cancel))
                     }
                 }
             )

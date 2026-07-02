@@ -2,6 +2,7 @@ package cut.the.crap.data.storage
 
 import android.content.ContentValues
 import android.content.Context
+import cut.the.crap.R
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -52,7 +53,7 @@ class FileHelper(private val context: Context) {
     fun copyFileToDownloads(context: Context, sourceFileName: String) {
         val sourceFile = File(context.filesDir, sourceFileName)
         if (!sourceFile.exists()) {
-            Toast.makeText(context, "Source file does not exist", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.file_toast_source_missing), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -74,9 +75,9 @@ class FileHelper(private val context: Context) {
                     resolver.openOutputStream(it)?.use { outputStream ->
                         copy(sourceFile.inputStream(), outputStream)
                     }
-                    Toast.makeText(context, "File copied to Downloads", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.file_toast_copied), Toast.LENGTH_SHORT).show()
                 } ?: run {
-                    Toast.makeText(context, "Failed to copy file", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.file_toast_copy_failed), Toast.LENGTH_SHORT).show()
                 }
 
             } else {
@@ -90,11 +91,11 @@ class FileHelper(private val context: Context) {
                     }
                 }
 
-                Toast.makeText(context, "File copied to Downloads", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.file_toast_copied), Toast.LENGTH_SHORT).show()
             }
         } catch (e: IOException) {
             Log.e("FileCopy", "Error copying file: ${e.message}")
-            Toast.makeText(context, "Error copying file", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.file_toast_copy_error), Toast.LENGTH_SHORT).show()
         }
     }
 

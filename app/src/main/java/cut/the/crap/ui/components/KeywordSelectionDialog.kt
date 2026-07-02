@@ -221,7 +221,7 @@ fun KeywordSelectionDialog(
                         IconButton(onClick = { showOverflowMenu = true }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "Settings"
+                                contentDescription = stringResource(R.string.keyword_cd_settings)
                             )
                         }
 
@@ -249,9 +249,9 @@ fun KeywordSelectionDialog(
                                 text = {
                                     Text(
                                         when (favoriteFilter) {
-                                            FavoriteFilter.ALL -> "Filter: All"
-                                            FavoriteFilter.FAVORITES -> "Filter: Favorites"
-                                            FavoriteFilter.NON_FAVORITES -> "Filter: Non-favorites"
+                                            FavoriteFilter.ALL -> stringResource(R.string.keyword_filter_all)
+                                            FavoriteFilter.FAVORITES -> stringResource(R.string.keyword_filter_favorites)
+                                            FavoriteFilter.NON_FAVORITES -> stringResource(R.string.keyword_filter_non_favorites)
                                         }
                                     )
                                 },
@@ -377,7 +377,7 @@ fun KeywordSelectionDialog(
                                     IconButton(onClick = { searchQuery = "" }) {
                                         Icon(
                                             imageVector = Icons.Default.Clear,
-                                            contentDescription = "Clear search"
+                                            contentDescription = stringResource(R.string.keyword_cd_clear_search)
                                         )
                                     }
                                 }
@@ -506,7 +506,7 @@ fun KeywordSelectionDialog(
                                     IconButton(onClick = { searchQuery = "" }) {
                                         Icon(
                                             imageVector = Icons.Default.Clear,
-                                            contentDescription = "Clear search"
+                                            contentDescription = stringResource(R.string.keyword_cd_clear_search)
                                         )
                                     }
                                 }

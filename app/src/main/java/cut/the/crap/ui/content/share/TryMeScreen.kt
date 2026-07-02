@@ -28,6 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import cut.the.crap.R
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -128,7 +130,7 @@ fun TryMeScreen(
                     }
                 }
             ) {
-                Text(text = "Export Database plain")
+                Text(text = stringResource(R.string.tryme_export_plain))
             }
             ElevatedButton(
                 modifier = customButtonModifier,
@@ -136,7 +138,7 @@ fun TryMeScreen(
 
                 }
             ) {
-                Text(text = "Export Database table")
+                Text(text = stringResource(R.string.tryme_export_table))
             }
             ElevatedButton(
                 modifier = customButtonModifier,
@@ -144,7 +146,7 @@ fun TryMeScreen(
 
                 }
             ) {
-                Text(text = "Import Lines")
+                Text(text = stringResource(R.string.tryme_import_lines))
             }
             ElevatedButton(
                 modifier = customButtonModifier,
@@ -152,7 +154,7 @@ fun TryMeScreen(
 
                 }
             ) {
-                Text(text = "Import table")
+                Text(text = stringResource(R.string.tryme_import_table))
             }
 
             Spacer(modifier = Modifier.height(144.dp))
@@ -168,7 +170,7 @@ fun TryMeScreen(
                     },
                     modifier = Modifier.width(144.dp),
                     maxLines = 1,
-                    placeholder = { Text(text = "Tweet id")}
+                    placeholder = { Text(text = stringResource(R.string.tryme_tweet_id))}
                 )
                 TextField(
                     value = tweetUrl,
@@ -176,7 +178,7 @@ fun TryMeScreen(
                         updateTextField(id, TWEET_URL_PARAM)
                     },
                     maxLines = 1,
-                    placeholder = { Text(text = "Tweet url param")}
+                    placeholder = { Text(text = stringResource(R.string.tryme_tweet_url_param))}
 
                 )
             }
@@ -189,7 +191,7 @@ fun TryMeScreen(
                 modifier = Modifier
                     .height(144.dp)
                     .fillMaxWidth(),
-                placeholder = { Text(text = "Tweet comment")}
+                placeholder = { Text(text = stringResource(R.string.tryme_tweet_comment))}
             )
 
             TextButton(
@@ -198,14 +200,14 @@ fun TryMeScreen(
                     activity?.tweet(tweet) ?: Log.w("TryMeScreen", "Retweet didn't happen.")
                 }
             ) {
-                Text(text = "Retweet")
+                Text(text = stringResource(R.string.tryme_retweet))
             }
             TextButton(
                 onClick = {
                     activity?.tweet(TwitterIntent.QuoteTweet(tweetIdString, tweetComment))
                         ?: Log.w("TryMeScreen", "Quote didn't happen.")
             }) {
-                Text(text = "Quote Tweet")
+                Text(text = stringResource(R.string.tryme_quote_tweet))
             }
 
             TextButton(
@@ -213,7 +215,7 @@ fun TryMeScreen(
                     val tweet = TwitterIntent.PostTweet(tweetComment, tweetUrl)
                     activity?.tweet(tweet) ?: Log.w("TryMeScreen", "Post didn't happen.")
             }) {
-                Text(text = "Post Tweet")
+                Text(text = stringResource(R.string.tryme_post_tweet))
             }
 
         }

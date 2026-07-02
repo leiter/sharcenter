@@ -17,6 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import cut.the.crap.R
 import androidx.compose.ui.unit.dp
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.ui.components.api.Action
@@ -72,14 +74,18 @@ fun MyEditDialog(
                     onDismissRequest()
                 }
             ) {
-                Text(style.confirm ?: "Save")
+                val confirmRes = when (style) {
+                    is MyEditDialogStyle.OfferDelete -> R.string.dialog_delete
+                    else -> R.string.dialog_save
+                }
+                Text(stringResource(confirmRes))
             }
         },
         dismissButton = {
             TextButton(
                 onClick = onDismissRequest
             ) {
-                Text(style.dismiss ?: "Cancel")
+                Text(stringResource(R.string.dialog_cancel))
             }
         }
     )
@@ -87,13 +93,13 @@ fun MyEditDialog(
 
 @Composable
 private fun MyEditDialogStyle.renderTitle(): (@Composable () -> Unit)? {
-    if (this.title == null) return null
-    return {
-        when (this) {
-            is MyEditDialogStyle.EditEntity -> this.title?.let { Text(text = it) }
-            is MyEditDialogStyle.OfferDelete -> this.title?.let { Text(text = it)  }
-            is MyEditDialogStyle.ExportLinks -> this.title?.let { Text(text = it)  }
+    return when (this) {
+        is MyEditDialogStyle.EditEntity -> {
+            { Text(text = stringResource(R.string.edit_entity_title)) }
         }
+        // Delete/Export styles show no dialog title.
+        is MyEditDialogStyle.OfferDelete -> null
+        is MyEditDialogStyle.ExportLinks -> null
     }
 }
 
@@ -107,7 +113,7 @@ private fun MyEditDialogStyle.renderText(action: (Action) -> Unit): (@Composable
                     OutlinedTextField(
                         value = tweetItem.link,
                         onValueChange = { /* TODO: Add link edit action */ },
-                        label = { Text("Edit Link") },
+                        label = { Text(stringResource(R.string.edit_dialog_link_label)) },
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -116,7 +122,7 @@ private fun MyEditDialogStyle.renderText(action: (Action) -> Unit): (@Composable
                     OutlinedTextField(
                         value = tweetItem.description,
                         onValueChange = { /* TODO: Add description edit action */ },
-                        label = { Text("Edit description") },
+                        label = { Text(stringResource(R.string.edit_dialog_description_label)) },
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -135,11 +141,11 @@ private fun MyEditDialogStyle.renderText(action: (Action) -> Unit): (@Composable
                             },
                             ) { Icon(imageVector = Icons.Outlined.Check, contentDescription = "")
                         }
-                        Text(text = "Hide")
+                        Text(text = stringResource(R.string.edit_dialog_hide))
                     }
                 }
             }
-            is MyEditDialogStyle.OfferDelete -> { Text(text = "Are you sure you want to delete this item?") }
+            is MyEditDialogStyle.OfferDelete -> { Text(text = stringResource(R.string.edit_dialog_confirm_delete)) }
 
             is MyEditDialogStyle.ExportLinks -> TODO()
         }
