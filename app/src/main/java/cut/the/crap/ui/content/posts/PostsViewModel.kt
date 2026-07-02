@@ -9,6 +9,9 @@ import cut.the.crap.data.domain.KeywordRepository
 import cut.the.crap.data.domain.KeywordType
 import cut.the.crap.tools.TextValueWrapper
 import cut.the.crap.ui.components.FilterState
+import cut.the.crap.data.rest.Result
+import cut.the.crap.data.rest.eci.EciStatistics
+import cut.the.crap.data.rest.eci.EciStatisticsRepository
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.ContentItemAction
@@ -44,13 +47,32 @@ sealed interface PostsSnackbarEvent {
     data class OfferDeleteClearedItem(val itemId: Int) : PostsSnackbarEvent
 }
 
+/**
+ * One-shot events emitted while loading the European Citizens' Initiative statistics
+ * table from the top bar's key button.
+ */
+sealed interface EciUiEvent {
+    /** Statistics loaded and parsed successfully — navigate to the table screen. */
+    data object NavigateToTable : EciUiEvent
+
+    /** Loading failed — show [message] in a toast. */
+    data class ShowError(val message: String) : EciUiEvent
+}
+
 @HiltViewModel
 class PostsViewModel @Inject constructor(
     internal val keywordRepository: KeywordRepository,
     internal val contentItemRepository: ContentItemRepository,
     private val settingsRepository: cut.the.crap.data.preferences.SettingsRepository,
-    internal val jobQueueRepository: JobQueueRepository
+    internal val jobQueueRepository: JobQueueRepository,
+    private val eciStatisticsRepository: EciStatisticsRepository
 ) : ViewModel() {
+
+    companion object {
+        /** The European Citizens' Initiative whose statistics the key button loads. */
+        private const val ECI_INITIATIVE_URL =
+            "https://citizens-initiative.europa.eu/initiatives/details/2025/000005_en"
+    }
 
     internal val internalScreenState = MutableStateFlow(PostsScreenState())
 
@@ -81,6 +103,38 @@ class PostsViewModel @Inject constructor(
     // Helper for action handlers (in other files) to emit snackbar events
     internal suspend fun emitSnackBarEvent(event: PostsSnackbarEvent) {
         _snackBarEvents.emit(event)
+    }
+
+    // ECI statistics: loading flag, last loaded result, and one-shot nav/error events.
+    private val _eciLoading = MutableStateFlow(false)
+    val eciLoading: StateFlow<Boolean> = _eciLoading
+
+    private val _eciStatistics = MutableStateFlow<EciStatistics?>(null)
+    val eciStatistics: StateFlow<EciStatistics?> = _eciStatistics
+
+    private val _eciEvents = MutableSharedFlow<EciUiEvent>()
+    val eciEvents: SharedFlow<EciUiEvent> = _eciEvents.asSharedFlow()
+
+    /**
+     * Loads and parses the ECI statistics table. Toggles [eciLoading] for the button's
+     * spinner, then emits [EciUiEvent.NavigateToTable] on success or
+     * [EciUiEvent.ShowError] on failure. Ignores taps while a load is in flight.
+     */
+    fun loadEciStatistics() {
+        if (_eciLoading.value) return
+        _eciLoading.value = true
+        viewModelScope.launch {
+            when (val result = eciStatisticsRepository.getStatistics(ECI_INITIATIVE_URL)) {
+                is Result.Success -> {
+                    _eciStatistics.value = result.data
+                    _eciEvents.emit(EciUiEvent.NavigateToTable)
+                }
+                is Result.Error -> {
+                    _eciEvents.emit(EciUiEvent.ShowError(result.message))
+                }
+            }
+            _eciLoading.value = false
+        }
     }
 
     internal var activeItemId: Int? = null

@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -20,6 +21,7 @@ import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.links.LinkScreen
 import cut.the.crap.ui.content.settings.BackupManagementScreen
 import cut.the.crap.ui.content.settings.ImportExportScreen
+import cut.the.crap.ui.content.eci.EciStatisticsScreen
 import cut.the.crap.ui.content.settings.SettingsScreen
 import cut.the.crap.ui.content.settings.SettingsViewModel
 
@@ -51,7 +53,10 @@ fun NavigationGraph(
                 onContentItemsReordered = { items ->
                     postsViewModel.updateContentItemSortOrders(items)
                 },
-                snackBarEvents = postsViewModel.snackBarEvents
+                snackBarEvents = postsViewModel.snackBarEvents,
+                eciLoading = postsViewModel.eciLoading,
+                eciEvents = postsViewModel.eciEvents,
+                onLoadEciStatistics = postsViewModel::loadEciStatistics
             )
         }
         composable(Screen.Search.route) {
@@ -81,6 +86,12 @@ fun NavigationGraph(
         composable("backup_management") {
             BackupManagementScreen(
                 navController = navController
+            )
+        }
+        composable("eci_statistics") {
+            EciStatisticsScreen(
+                navController = navController,
+                statistics = postsViewModel.eciStatistics.collectAsState().value
             )
         }
     }

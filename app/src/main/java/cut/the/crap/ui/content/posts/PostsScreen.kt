@@ -27,8 +27,12 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -36,8 +40,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -76,8 +82,24 @@ fun PostsScreen(
     contentItems: StateFlow<List<ContentItem>>,
     onContentItemsReordered: (List<ContentItem>) -> Unit,
     snackBarEvents: SharedFlow<PostsSnackbarEvent> = MutableSharedFlow(),
+    eciLoading: StateFlow<Boolean> = MutableStateFlow(false),
+    eciEvents: SharedFlow<EciUiEvent> = MutableSharedFlow(),
+    onLoadEciStatistics: () -> Unit = {},
     ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    val isEciLoading by eciLoading.collectAsState()
+
+    // Navigate to the statistics table on success, or toast the error.
+    LaunchedEffect(Unit) {
+        eciEvents.collect { event ->
+            when (event) {
+                EciUiEvent.NavigateToTable -> navController.navigate("eci_statistics")
+                is EciUiEvent.ShowError ->
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     // Show a snackbar (with a Delete action) when the editor is cleared,
     // letting the user also delete the post that was detached from the editor.
@@ -234,15 +256,25 @@ fun PostsScreen(
                             showBadge = hasActiveFilters && !filterExpanded
                         )
 
-                        MyIconAction(
-                            iconPainter = rememberVectorPainter(
-                                Icons.Filled.Key
-                            ),
-                            onClick = { //action()
-                                 },
-                            contentDescription = if (filterExpanded) "Collapse filters" else "Expand filters",
-                            showBadge = hasActiveFilters && !filterExpanded
-                        )
+                        if (isEciLoading) {
+                            Box(
+                                modifier = Modifier.size(48.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        } else {
+                            MyIconAction(
+                                iconPainter = rememberVectorPainter(
+                                    Icons.Filled.Key
+                                ),
+                                onClick = { onLoadEciStatistics() },
+                                contentDescription = "Load initiative statistics"
+                            )
+                        }
                     },
                     navigationIcon = {
 //                    FilledTonalIconButton(

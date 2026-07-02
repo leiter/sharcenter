@@ -1,5 +1,7 @@
 package cut.the.crap.data.rest
 
+import cut.the.crap.data.rest.eci.EciStatisticsRepository
+import cut.the.crap.data.rest.eci.EciStatisticsRepositoryImpl
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.JobQueueRepositoryImpl
 import dagger.Binds
@@ -25,4 +27,9 @@ abstract class RepositoryModule {
     abstract fun bindJobQueueRepository(
         impl: JobQueueRepositoryImpl
     ): JobQueueRepository
+
+    @Binds
+    abstract fun bindEciStatisticsRepository(
+        impl: EciStatisticsRepositoryImpl
+    ): EciStatisticsRepository
 }
