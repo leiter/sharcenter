@@ -199,6 +199,14 @@ private fun handleAction(
             }
         }
 
+        is TextAction.CopyContentText -> {
+            // Copy the current editor content to the clipboard
+            val currentText = postsViewModel.screenState.value.focusedContentText.newText
+            if (currentText.isNotEmpty()) {
+                copyToClipboard(activity, currentText)
+            }
+        }
+
         is ContentItemAction.PostOnTwitter -> {
             // Post the content as a new tweet on Twitter/X
             // TwitterIntent.PostTweet automatically extracts any URLs from the content to use as link preview

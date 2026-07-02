@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentPasteGo
 import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.Badge
@@ -85,11 +86,34 @@ fun ContentEditor(
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                Text(
-                    text = "$charCount chars",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "$charCount chars",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+
+                    // Clear all text button
+                    FilledTonalIconButton(
+                        onClick = {
+                            onValueChange(TextAction.ClearContentText)
+                        },
+                        modifier = Modifier.size(36.dp),
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Clear,
+                            contentDescription = "Clear all text",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -246,20 +270,20 @@ fun ContentEditor(
                     )
                 }
 
-                // Clear all text button
+                // Copy to clipboard button
                 FilledTonalIconButton(
                     onClick = {
-                        onValueChange(TextAction.ClearContentText)
+                        onValueChange(TextAction.CopyContentText)
                     },
                     modifier = Modifier.size(36.dp),
                     colors = IconButtonDefaults.filledTonalIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Clear,
-                        contentDescription = "Clear all text",
+                        imageVector = Icons.Filled.ContentCopy,
+                        contentDescription = "Copy to clipboard",
                         modifier = Modifier.size(20.dp)
                     )
                 }

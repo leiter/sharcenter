@@ -46,6 +46,7 @@ sealed interface TextAction : Action {
     data object ClearHiddenFilters : TextAction
     data class SetStartDateFilter(val timestamp: Long, val screen: Screen) : TextAction
     data object PasteFromClipboard : TextAction
+    data object CopyContentText : TextAction
     data object ClearContentText : TextAction
 }
 
