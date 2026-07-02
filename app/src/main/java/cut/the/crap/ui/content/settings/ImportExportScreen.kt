@@ -37,7 +37,7 @@ fun ImportExportScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.action_back)
                         )
                     }
                 },
@@ -69,13 +69,13 @@ fun ImportExportScreen(
             )
 
             Text(
-                text = "Import & Export",
+                text = stringResource(R.string.settings_import_export),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
-                text = "This feature is coming soon.\n\nYou'll be able to backup and restore your posts and links data here.",
+                text = stringResource(R.string.import_export_coming_soon),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -98,7 +98,7 @@ fun ImportExportScreen(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Export Data")
+                Text(stringResource(R.string.import_export_export))
             }
 
             OutlinedButton(
@@ -114,7 +114,7 @@ fun ImportExportScreen(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Import Data")
+                Text(stringResource(R.string.import_export_import))
             }
         }
     }

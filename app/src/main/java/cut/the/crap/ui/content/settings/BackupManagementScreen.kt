@@ -15,8 +15,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import cut.the.crap.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import cut.the.crap.data.backup.BackupInfo
@@ -50,11 +53,12 @@ fun BackupManagementScreen(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete backups?") },
+            title = { Text(stringResource(R.string.backup_delete_title)) },
             text = {
                 Text(
-                    "This will permanently delete ${selectedUris.size} backup" +
-                        (if (selectedUris.size == 1) "" else "s") + ". This cannot be undone."
+                    pluralStringResource(
+                        R.plurals.backup_delete_body, selectedUris.size, selectedUris.size
+                    )
                 )
             },
             confirmButton = {
@@ -64,15 +68,17 @@ fun BackupManagementScreen(
                     viewModel.deleteBackups(toDelete) { deleted ->
                         Toast.makeText(
                             context,
-                            "Deleted $deleted backup" + if (deleted == 1) "" else "s",
+                            context.resources.getQuantityString(
+                                R.plurals.backup_deleted, deleted, deleted
+                            ),
                             Toast.LENGTH_SHORT
                         ).show()
                     }
                     selectedUris = emptySet()
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.dialog_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
+                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.dialog_cancel)) }
             }
         )
     }
@@ -82,8 +88,8 @@ fun BackupManagementScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        if (inSelectionMode) "${selectedUris.size} selected"
-                        else "Manage Backups"
+                        if (inSelectionMode) stringResource(R.string.tag_dialog_selected_count, selectedUris.size)
+                        else stringResource(R.string.settings_manage_backups)
                     )
                 },
                 navigationIcon = {
@@ -93,7 +99,7 @@ fun BackupManagementScreen(
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.action_back)
                         )
                     }
                 },
@@ -102,7 +108,7 @@ fun BackupManagementScreen(
                         IconButton(onClick = { showDeleteConfirm = true }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete selected"
+                                contentDescription = stringResource(R.string.backup_cd_delete_selected)
                             )
                         }
                     }
@@ -202,12 +208,12 @@ private fun EmptyBackups(modifier: Modifier = Modifier) {
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = "No backups found",
+            text = stringResource(R.string.backup_empty_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = "Backups you create will appear here.",
+            text = stringResource(R.string.backup_empty_message),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center

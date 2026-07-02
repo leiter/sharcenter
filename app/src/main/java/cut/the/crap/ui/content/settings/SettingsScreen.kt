@@ -61,7 +61,7 @@ fun SettingsScreen(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == XLoginActivity.RESULT_LOGIN_SUCCESS) {
-            Toast.makeText(context, "X login successful", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.settings_toast_x_login_success), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -76,21 +76,18 @@ fun SettingsScreen(
     pendingRestoreUri?.let { uri ->
         AlertDialog(
             onDismissRequest = { pendingRestoreUri = null },
-            title = { Text("Restore database?") },
+            title = { Text(stringResource(R.string.settings_restore_title)) },
             text = {
-                Text(
-                    "This will replace ALL current data with the contents of the selected " +
-                        "backup, then restart the app. This cannot be undone."
-                )
+                Text(stringResource(R.string.settings_restore_body))
             },
             confirmButton = {
                 TextButton(onClick = {
                     action(FileAction.RestoreDatabase(uri))
                     pendingRestoreUri = null
-                }) { Text("Restore") }
+                }) { Text(stringResource(R.string.settings_restore_confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { pendingRestoreUri = null }) { Text("Cancel") }
+                TextButton(onClick = { pendingRestoreUri = null }) { Text(stringResource(R.string.dialog_cancel)) }
             }
         )
     }
@@ -356,8 +353,8 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     icon = Icons.Default.Backup,
-                    title = "Backup Database",
-                    subtitle = "Create a manual backup of your database",
+                    title = stringResource(R.string.settings_backup_database),
+                    subtitle = stringResource(R.string.settings_backup_database_desc),
                     onClick = {
                         action(FileAction.BackupDatabase)
                     }
@@ -367,8 +364,8 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     icon = Icons.Default.Restore,
-                    title = "Restore Database",
-                    subtitle = "Replace current data with a .db backup file",
+                    title = stringResource(R.string.settings_restore_database),
+                    subtitle = stringResource(R.string.settings_restore_database_desc),
                     onClick = {
                         restoreFilePickerLauncher.launch(arrayOf("*/*"))
                     }
@@ -465,7 +462,7 @@ fun SettingsScreen(
                     SettingsItem(
                         icon = Icons.Default.Key,
                         title = "X Login",
-                        subtitle = if (hasCredentials) "Logged in - tap to re-login" else "Not logged in - tap to login",
+                        subtitle = if (hasCredentials) stringResource(R.string.settings_x_logged_in) else stringResource(R.string.settings_x_not_logged_in),
                         onClick = {
                             val intent = XLoginActivity.createIntent(
                                 context,
@@ -481,8 +478,8 @@ fun SettingsScreen(
                     val hasCredentials = currentSettings.xAuthToken != null && currentSettings.xCt0Token != null
                     SettingsItem(
                         icon = Icons.Default.Edit,
-                        title = "Manual X Credentials",
-                        subtitle = if (hasCredentials) "Edit manually" else "Enter cookies manually",
+                        title = stringResource(R.string.settings_x_manual_credentials),
+                        subtitle = if (hasCredentials) stringResource(R.string.settings_x_edit_manually) else stringResource(R.string.settings_x_enter_manually),
                         onClick = { showXCredentialsDialog = true }
                     )
                 }
@@ -848,11 +845,11 @@ private fun XCredentialsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("X API Credentials") },
+        title = { Text(stringResource(R.string.settings_x_api_credentials)) },
         text = {
             Column {
                 Text(
-                    text = "Enter your X (Twitter) cookies from Firefox to enable /i/status/ URL resolution.",
+                    text = stringResource(R.string.settings_x_cookies_help),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -874,7 +871,7 @@ private fun XCredentialsDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Get these from Firefox cookies for x.com",
+                    text = stringResource(R.string.settings_x_cookies_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -884,7 +881,7 @@ private fun XCredentialsDialog(
             TextButton(
                 onClick = {
                     onConfirm(authToken, ct0Token)
-                    Toast.makeText(context, "X credentials saved", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.settings_toast_x_credentials_saved), Toast.LENGTH_SHORT).show()
                 }
             ) {
                 Text(stringResource(R.string.dialog_ok))
@@ -896,10 +893,10 @@ private fun XCredentialsDialog(
                     TextButton(
                         onClick = {
                             onConfirm("", "")
-                            Toast.makeText(context, "X credentials cleared", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.settings_toast_x_credentials_cleared), Toast.LENGTH_SHORT).show()
                         }
                     ) {
-                        Text("Clear", color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.settings_clear), color = MaterialTheme.colorScheme.error)
                     }
                 }
                 TextButton(onClick = onDismiss) {

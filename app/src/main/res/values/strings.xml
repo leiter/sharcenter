@@ -298,4 +298,44 @@
     <string name="links_quote">Quote</string>
     <string name="links_comment">Comment</string>
 
+    <!-- Settings: database restore &amp; X credentials -->
+    <string name="settings_restore_title">Restore database?</string>
+    <string name="settings_restore_body">This will replace ALL current data with the contents of the selected backup, then restart the app. This cannot be undone.</string>
+    <string name="settings_restore_confirm">Restore</string>
+    <string name="settings_backup_database">Backup Database</string>
+    <string name="settings_backup_database_desc">Create a manual backup of your database</string>
+    <string name="settings_restore_database">Restore Database</string>
+    <string name="settings_restore_database_desc">Replace current data with a .db backup file</string>
+    <string name="settings_x_logged_in">Logged in - tap to re-login</string>
+    <string name="settings_x_not_logged_in">Not logged in - tap to login</string>
+    <string name="settings_x_manual_credentials">Manual X Credentials</string>
+    <string name="settings_x_edit_manually">Edit manually</string>
+    <string name="settings_x_enter_manually">Enter cookies manually</string>
+    <string name="settings_x_api_credentials">X API Credentials</string>
+    <string name="settings_x_cookies_help">Enter your X (Twitter) cookies from Firefox to enable /i/status/ URL resolution.</string>
+    <string name="settings_x_cookies_hint">Get these from Firefox cookies for x.com</string>
+    <string name="settings_clear">Clear</string>
+    <string name="settings_toast_x_login_success">X login successful</string>
+    <string name="settings_toast_x_credentials_saved">X credentials saved</string>
+    <string name="settings_toast_x_credentials_cleared">X credentials cleared</string>
+
+    <!-- Backup management -->
+    <string name="backup_delete_title">Delete backups?</string>
+    <string name="backup_cd_delete_selected">Delete selected</string>
+    <string name="backup_empty_title">No backups found</string>
+    <string name="backup_empty_message">Backups you create will appear here.</string>
+    <plurals name="backup_delete_body">
+        <item quantity="one">This will permanently delete %d backup. This cannot be undone.</item>
+        <item quantity="other">This will permanently delete %d backups. This cannot be undone.</item>
+    </plurals>
+    <plurals name="backup_deleted">
+        <item quantity="one">Deleted %d backup</item>
+        <item quantity="other">Deleted %d backups</item>
+    </plurals>
+
+    <!-- Import / Export -->
+    <string name="import_export_coming_soon">This feature is coming soon.\n\nYou\'ll be able to backup and restore your posts and links data here.</string>
+    <string name="import_export_export">Export Data</string>
+    <string name="import_export_import">Import Data</string>
+
 </resources>
