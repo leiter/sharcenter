@@ -1,7 +1,9 @@
 package cut.the.crap.data.rest.task
 
 import android.util.Log
+import cut.the.crap.R
 import cut.the.crap.data.rest.Result
+import cut.the.crap.tools.StringProvider
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -71,7 +73,9 @@ interface JobQueueRepository {
 }
 
 @Singleton
-class JobQueueRepositoryImpl @Inject constructor() : JobQueueRepository {
+class JobQueueRepositoryImpl @Inject constructor(
+    private val strings: StringProvider
+) : JobQueueRepository {
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -119,31 +123,31 @@ class JobQueueRepositoryImpl @Inject constructor() : JobQueueRepository {
         } catch (e: ClientRequestException) {
             Log.e(TAG, "Client error: ${e.response.status}", e)
             Result.Error(
-                message = "Client error: ${e.response.status.value} - ${e.response.status.description}",
+                message = strings.get(R.string.error_client, e.response.status.value, e.response.status.description),
                 exception = e
             )
         } catch (e: ServerResponseException) {
             Log.e(TAG, "Server error: ${e.response.status}", e)
             Result.Error(
-                message = "Server error: ${e.response.status.value} - ${e.response.status.description}",
+                message = strings.get(R.string.error_server, e.response.status.value, e.response.status.description),
                 exception = e
             )
         } catch (e: SocketTimeoutException) {
             Log.e(TAG, "Request timed out", e)
             Result.Error(
-                message = "Request timed out. Please check your internet connection.",
+                message = strings.get(R.string.error_timeout),
                 exception = e
             )
         } catch (e: IOException) {
             Log.e(TAG, "Network error: ${e.message}", e)
             Result.Error(
-                message = "Network error: ${e.message ?: "Unable to connect to server"}",
+                message = strings.get(R.string.error_network, e.message ?: strings.get(R.string.error_network_fallback)),
                 exception = e
             )
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected error: ${e.message}", e)
             Result.Error(
-                message = "Unexpected error: ${e.message ?: "Unknown error occurred"}",
+                message = strings.get(R.string.error_unexpected, e.message ?: strings.get(R.string.error_unknown)),
                 exception = e
             )
         }
@@ -181,31 +185,31 @@ class JobQueueRepositoryImpl @Inject constructor() : JobQueueRepository {
         } catch (e: ClientRequestException) {
             Log.e(TAG, "Client error: ${e.response.status}", e)
             Result.Error(
-                message = "Client error: ${e.response.status.value} - ${e.response.status.description}",
+                message = strings.get(R.string.error_client, e.response.status.value, e.response.status.description),
                 exception = e
             )
         } catch (e: ServerResponseException) {
             Log.e(TAG, "Server error: ${e.response.status}", e)
             Result.Error(
-                message = "Server error: ${e.response.status.value} - ${e.response.status.description}",
+                message = strings.get(R.string.error_server, e.response.status.value, e.response.status.description),
                 exception = e
             )
         } catch (e: SocketTimeoutException) {
             Log.e(TAG, "Request timed out", e)
             Result.Error(
-                message = "Request timed out. Please check your internet connection.",
+                message = strings.get(R.string.error_timeout),
                 exception = e
             )
         } catch (e: IOException) {
             Log.e(TAG, "Network error: ${e.message}", e)
             Result.Error(
-                message = "Network error: ${e.message ?: "Unable to connect to server"}",
+                message = strings.get(R.string.error_network, e.message ?: strings.get(R.string.error_network_fallback)),
                 exception = e
             )
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected error: ${e.message}", e)
             Result.Error(
-                message = "Unexpected error: ${e.message ?: "Unknown error occurred"}",
+                message = strings.get(R.string.error_unexpected, e.message ?: strings.get(R.string.error_unknown)),
                 exception = e
             )
         }

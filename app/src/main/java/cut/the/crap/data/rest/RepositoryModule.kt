@@ -4,6 +4,8 @@ import cut.the.crap.data.rest.eci.EciStatisticsRepository
 import cut.the.crap.data.rest.eci.EciStatisticsRepositoryImpl
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.JobQueueRepositoryImpl
+import cut.the.crap.tools.AndroidStringProvider
+import cut.the.crap.tools.StringProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -32,4 +34,9 @@ abstract class RepositoryModule {
     abstract fun bindEciStatisticsRepository(
         impl: EciStatisticsRepositoryImpl
     ): EciStatisticsRepository
+
+    @Binds
+    abstract fun bindStringProvider(
+        impl: AndroidStringProvider
+    ): StringProvider
 }

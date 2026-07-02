@@ -18,12 +18,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import cut.the.crap.R
 import cut.the.crap.data.rest.eci.EciCountrySignatures
 import cut.the.crap.data.rest.eci.EciStatistics
 import cut.the.crap.ui.theme.PreviewAppThemeProvider
@@ -73,12 +75,15 @@ fun EciStatisticsTable(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Signatures per country",
+                text = stringResource(R.string.eci_table_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
             )
 
-            val subtitle = buildUpdateSubtitle(statistics)
+            val updatedText = statistics.onlineUpdateDate
+                ?.let { stringResource(R.string.eci_table_updated, it) }
+            val subtitle = listOfNotNull(statistics.registrationNumber, updatedText)
+                .takeIf { it.isNotEmpty() }?.joinToString(" · ")
             if (subtitle != null) {
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
@@ -95,10 +100,10 @@ fun EciStatisticsTable(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                HeaderCell("Country", WEIGHT_COUNTRY, TextAlign.Start)
-                HeaderCell("Signatures", WEIGHT_SIGNATURES, TextAlign.End)
-                HeaderCell("Threshold", WEIGHT_THRESHOLD, TextAlign.End)
-                HeaderCell("Percentage", WEIGHT_PERCENTAGE, TextAlign.End)
+                HeaderCell(stringResource(R.string.eci_col_country), WEIGHT_COUNTRY, TextAlign.Start)
+                HeaderCell(stringResource(R.string.eci_col_signatures), WEIGHT_SIGNATURES, TextAlign.End)
+                HeaderCell(stringResource(R.string.eci_col_threshold), WEIGHT_THRESHOLD, TextAlign.End)
+                HeaderCell(stringResource(R.string.eci_col_percentage), WEIGHT_PERCENTAGE, TextAlign.End)
             }
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -117,7 +122,7 @@ fun EciStatisticsTable(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 BodyCell(
-                    text = "Total",
+                    text = stringResource(R.string.eci_total),
                     weight = WEIGHT_COUNTRY,
                     align = TextAlign.Start,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -136,7 +141,7 @@ fun EciStatisticsTable(
             if (hasAfterSubmission) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "* Recorded after the initiative was submitted for verification.",
+                    text = stringResource(R.string.eci_after_submission_note),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
@@ -178,13 +183,13 @@ private fun CountryRow(
             color = MaterialTheme.colorScheme.onSurface
         )
         BodyCell(
-            text = row.threshold?.let { integerFormat.format(it) } ?: "N/A",
+            text = row.threshold?.let { integerFormat.format(it) } ?: stringResource(R.string.eci_not_available),
             weight = WEIGHT_THRESHOLD,
             align = TextAlign.End,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         BodyCell(
-            text = fraction?.let { percentFormat.format(it) } ?: "N/A",
+            text = fraction?.let { percentFormat.format(it) } ?: stringResource(R.string.eci_not_available),
             weight = WEIGHT_PERCENTAGE,
             align = TextAlign.End,
             color = percentageColor,
@@ -229,14 +234,6 @@ private fun RowScope.BodyCell(
         },
         color = color
     )
-}
-
-private fun buildUpdateSubtitle(statistics: EciStatistics): String? {
-    val parts = buildList {
-        statistics.registrationNumber?.let { add(it) }
-        statistics.onlineUpdateDate?.let { add("updated $it") }
-    }
-    return parts.takeIf { it.isNotEmpty() }?.joinToString(" · ")
 }
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)

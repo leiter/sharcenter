@@ -8,6 +8,8 @@ import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.serialization.ContentConvertException
+import cut.the.crap.R
+import cut.the.crap.tools.StringProvider
 import kotlinx.serialization.SerializationException
 import java.io.IOException
 import javax.inject.Inject
@@ -34,7 +36,8 @@ interface YouTubeRepository {
 }
 
 class YouTubeRepositoryImpl @Inject constructor(
-    private val client: HttpClient
+    private val client: HttpClient,
+    private val strings: StringProvider
 ) : YouTubeRepository {
 
     companion object {
@@ -44,12 +47,12 @@ class YouTubeRepositoryImpl @Inject constructor(
     override suspend fun getVideoMetadata(youtubeUrl: String): Result<YouTubeVideoMetadata> {
         // Validate it's a YouTube URL
         if (!YouTubeUrlParser.isYouTubeUrl(youtubeUrl)) {
-            return Result.Error("Invalid YouTube URL: $youtubeUrl", retryable = false)
+            return Result.Error(strings.get(R.string.yt_error_invalid_url, youtubeUrl), retryable = false)
         }
 
         // Extract video ID (e.g. community posts and channel URLs have none — never retry)
         val videoId = YouTubeUrlParser.extractVideoId(youtubeUrl)
-            ?: return Result.Error("Could not extract video ID from URL: $youtubeUrl", retryable = false)
+            ?: return Result.Error(strings.get(R.string.yt_error_no_video_id, youtubeUrl), retryable = false)
 
         return getVideoMetadataById(videoId)
     }
@@ -57,7 +60,7 @@ class YouTubeRepositoryImpl @Inject constructor(
     override suspend fun getVideoMetadataById(videoId: String): Result<YouTubeVideoMetadata> {
         // Validate video ID format (11 characters, alphanumeric with - and _)
         if (!videoId.matches(Regex("^[a-zA-Z0-9_-]{11}$"))) {
-            return Result.Error("Invalid YouTube video ID format: $videoId", retryable = false)
+            return Result.Error(strings.get(R.string.yt_error_invalid_video_id, videoId), retryable = false)
         }
 
         return try {
@@ -77,10 +80,10 @@ class YouTubeRepositoryImpl @Inject constructor(
         } catch (e: ClientRequestException) {
             // 4xx errors - likely video not found or private (permanent, do not retry)
             when (e.response.status.value) {
-                404 -> Result.Error("Video not found or is private", e, retryable = false)
-                401, 403 -> Result.Error("Video is not accessible", e, retryable = false)
+                404 -> Result.Error(strings.get(R.string.yt_error_not_found), e, retryable = false)
+                401, 403 -> Result.Error(strings.get(R.string.yt_error_not_accessible), e, retryable = false)
                 else -> Result.Error(
-                    "Client error: ${e.response.status.value} - ${e.response.status.description}",
+                    strings.get(R.string.error_client, e.response.status.value, e.response.status.description),
                     e,
                     retryable = false
                 )
@@ -88,22 +91,22 @@ class YouTubeRepositoryImpl @Inject constructor(
         } catch (e: ServerResponseException) {
             // 5xx errors - transient, worth retrying
             Result.Error(
-                "YouTube server error: ${e.response.status.value}",
+                strings.get(R.string.yt_error_server, e.response.status.value),
                 e
             )
         } catch (e: SocketTimeoutException) {
-            Result.Error("Request timed out. Please check your connection.", e)
+            Result.Error(strings.get(R.string.yt_error_timeout), e)
         } catch (e: ContentConvertException) {
             // YouTube returns a non-JSON body (e.g. "Not Found") with a 2xx status for
             // deleted/unavailable videos; Ktor wraps the parse failure here. Permanent.
-            Result.Error("Video unavailable", e, retryable = false)
+            Result.Error(strings.get(R.string.yt_error_unavailable), e, retryable = false)
         } catch (e: SerializationException) {
             // Defensive: a raw serialization failure is likewise permanent.
-            Result.Error("Video unavailable", e, retryable = false)
+            Result.Error(strings.get(R.string.yt_error_unavailable), e, retryable = false)
         } catch (e: IOException) {
-            Result.Error("Network error: ${e.message ?: "Unable to connect"}", e)
+            Result.Error(strings.get(R.string.error_network, e.message ?: strings.get(R.string.yt_error_connect_fallback)), e)
         } catch (e: Exception) {
-            Result.Error("Failed to fetch video metadata: ${e.message ?: "Unknown error"}", e)
+            Result.Error(strings.get(R.string.yt_error_fetch_failed, e.message ?: strings.get(R.string.error_unknown)), e)
         }
     }
 }

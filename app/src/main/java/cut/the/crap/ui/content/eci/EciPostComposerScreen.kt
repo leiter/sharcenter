@@ -36,12 +36,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.annotation.StringRes
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import cut.the.crap.R
 import cut.the.crap.data.rest.eci.EciBand
 import cut.the.crap.data.rest.eci.EciCountrySignatures
 import cut.the.crap.data.rest.eci.EciGeneratedPost
@@ -50,17 +54,17 @@ import cut.the.crap.data.rest.eci.EciReferenceData
 import cut.the.crap.data.rest.eci.EciStatistics
 import cut.the.crap.ui.content.Screen
 
-private enum class CountryFilter(val label: String) {
-    NONE("No filter"),
-    ELIGIBLE("All eligible"),
-    BELOW("Below threshold"),
-    MARGIN("Building margin")
+private enum class CountryFilter(@StringRes val labelRes: Int) {
+    NONE(R.string.eci_filter_none),
+    ELIGIBLE(R.string.eci_filter_eligible),
+    BELOW(R.string.eci_filter_below),
+    MARGIN(R.string.eci_filter_margin)
 }
 
-private enum class CountrySort(val label: String) {
-    CLOSEST_TO_AIM("Closest to aim"),
-    FEWEST_NEEDED("Signatures needed"),
-    ALPHABETICAL("A–Z")
+private enum class CountrySort(@StringRes val labelRes: Int) {
+    CLOSEST_TO_AIM(R.string.eci_sort_closest),
+    FEWEST_NEEDED(R.string.eci_sort_needed),
+    ALPHABETICAL(R.string.eci_sort_alpha)
 }
 
 /**
@@ -94,10 +98,13 @@ fun EciPostComposerScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Create posts") },
+                title = { Text(stringResource(R.string.eci_composer_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.action_back)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -120,7 +127,9 @@ fun EciPostComposerScreen(
                         onCreateDrafts(texts)
                         Toast.makeText(
                             context,
-                            "Created ${texts.size} draft" + if (texts.size == 1) "" else "s",
+                            context.resources.getQuantityString(
+                                R.plurals.eci_drafts_created, texts.size, texts.size
+                            ),
                             Toast.LENGTH_SHORT
                         ).show()
                         // Land on the Posts screen and drop the ECI screens from the back stack.
@@ -135,8 +144,10 @@ fun EciPostComposerScreen(
                         .padding(16.dp)
                 ) {
                     Text(
-                        if (totalPosts > 0) "Create $totalPosts post" + (if (totalPosts == 1) "" else "s")
-                        else "Select countries"
+                        if (totalPosts > 0) pluralStringResource(
+                            R.plurals.eci_create_posts_button, totalPosts, totalPosts
+                        )
+                        else stringResource(R.string.eci_select_countries)
                     )
                 }
             }
@@ -145,7 +156,7 @@ fun EciPostComposerScreen(
         if (statistics == null) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text(
-                    "No statistics available.",
+                    stringResource(R.string.eci_no_statistics),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -155,7 +166,7 @@ fun EciPostComposerScreen(
         Column(Modifier.fillMaxSize().padding(padding)) {
             if (!statistics.isCollectionOpen) {
                 Text(
-                    "This initiative is not currently collecting signatures.",
+                    stringResource(R.string.eci_not_collecting),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -169,7 +180,15 @@ fun EciPostComposerScreen(
                     FilterChip(
                         selected = filter == f,
                         onClick = { filter = f },
-                        label = { Text("${f.label} ($count)") },
+                        label = {
+                            Text(
+                                stringResource(
+                                    R.string.eci_filter_chip,
+                                    stringResource(f.labelRes),
+                                    count
+                                )
+                            )
+                        },
                         modifier = Modifier.padding(end = 8.dp)
                     )
                 }
@@ -178,7 +197,7 @@ fun EciPostComposerScreen(
             // Sort chips
             ChipRow {
                 Text(
-                    "Sort:",
+                    stringResource(R.string.eci_sort_label),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.CenterVertically).padding(end = 8.dp)
@@ -187,7 +206,7 @@ fun EciPostComposerScreen(
                     FilterChip(
                         selected = sort == s,
                         onClick = { sort = s },
-                        label = { Text(s.label) },
+                        label = { Text(stringResource(s.labelRes)) },
                         modifier = Modifier.padding(end = 8.dp)
                     )
                 }
@@ -197,10 +216,10 @@ fun EciPostComposerScreen(
             val hasBelow = visibleRows.any { it.band == EciBand.BELOW_THRESHOLD }
             val hasMargin = visibleRows.any { it.band == EciBand.BUILDING_MARGIN }
             if (hasBelow) {
-                VariantPicker("Push tone", belowVariant) { belowVariant = it }
+                VariantPicker(stringResource(R.string.eci_tone_push), belowVariant) { belowVariant = it }
             }
             if (hasMargin) {
-                VariantPicker("Margin tone", marginVariant) { marginVariant = it }
+                VariantPicker(stringResource(R.string.eci_tone_margin), marginVariant) { marginVariant = it }
             }
 
             Spacer(Modifier.size(4.dp))
@@ -250,7 +269,7 @@ private fun ChipRow(content: @Composable androidx.compose.foundation.layout.RowS
 private fun VariantPicker(label: String, selectedIndex: Int, onSelect: (Int) -> Unit) {
     ChipRow {
         Text(
-            "$label:",
+            stringResource(R.string.eci_label_colon, label),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.align(Alignment.CenterVertically).padding(end = 8.dp)
@@ -259,7 +278,7 @@ private fun VariantPicker(label: String, selectedIndex: Int, onSelect: (Int) -> 
             FilterChip(
                 selected = selectedIndex == i,
                 onClick = { onSelect(i) },
-                label = { Text("Variant ${i + 1}") },
+                label = { Text(stringResource(R.string.eci_variant, i + 1)) },
                 modifier = Modifier.padding(end = 8.dp)
             )
         }
@@ -281,10 +300,10 @@ private fun CountryRow(
     val flag = EciReferenceData.flagEmoji(row.countryCode)
     val percent = row.thresholdFraction?.let { " (${(it * 100).toInt()}%)" } ?: ""
     val bandLabel = when (row.band) {
-        EciBand.BELOW_THRESHOLD -> "Push"
-        EciBand.BUILDING_MARGIN -> "Margin"
-        EciBand.SAFE -> "Safe"
-        EciBand.UNKNOWN -> "—"
+        EciBand.BELOW_THRESHOLD -> stringResource(R.string.eci_band_push)
+        EciBand.BUILDING_MARGIN -> stringResource(R.string.eci_band_margin)
+        EciBand.SAFE -> stringResource(R.string.eci_band_safe)
+        EciBand.UNKNOWN -> stringResource(R.string.eci_band_unknown)
     }
 
     Card(
@@ -314,7 +333,8 @@ private fun CountryRow(
                 )
                 val remaining = row.remainingToAim
                 Text(
-                    text = if (remaining != null) "$bandLabel · +$remaining needed"
+                    text = if (remaining != null)
+                        stringResource(R.string.eci_row_needed, bandLabel, remaining)
                     else bandLabel,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -324,7 +344,9 @@ private fun CountryRow(
                 IconButton(onClick = onToggleExpand) {
                     Icon(
                         if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                        contentDescription = if (expanded) "Hide preview" else "Show preview"
+                        contentDescription = stringResource(
+                            if (expanded) R.string.eci_hide_preview else R.string.eci_show_preview
+                        )
                     )
                 }
             }
@@ -349,7 +371,7 @@ private fun CountryRow(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        "${post.text.length} chars",
+                        pluralStringResource(R.plurals.chars, post.text.length, post.text.length),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (post.text.length > 280) MaterialTheme.colorScheme.error
                         else MaterialTheme.colorScheme.onSurfaceVariant

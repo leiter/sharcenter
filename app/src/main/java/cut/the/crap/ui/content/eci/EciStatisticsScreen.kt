@@ -20,8 +20,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import cut.the.crap.R
 import cut.the.crap.data.rest.eci.EciStatistics
 import cut.the.crap.ui.components.BottomNavigationBar
 
@@ -39,12 +41,12 @@ fun EciStatisticsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Signatures by country") },
+                title = { Text(stringResource(R.string.eci_screen_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.action_back)
                         )
                     }
                 },
@@ -53,7 +55,7 @@ fun EciStatisticsScreen(
                         IconButton(onClick = { navController.navigate("eci_post_composer") }) {
                             Icon(
                                 imageVector = Icons.Filled.Campaign,
-                                contentDescription = "Create motivation posts"
+                                contentDescription = stringResource(R.string.eci_create_posts_cd)
                             )
                         }
                     }
@@ -74,7 +76,7 @@ fun EciStatisticsScreen(
         ) {
             if (statistics == null) {
                 Text(
-                    text = "No statistics available.",
+                    text = stringResource(R.string.eci_no_statistics),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.Center)

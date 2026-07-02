@@ -158,4 +158,94 @@
     <string name="empty_posts_message">Create your first post using the + button</string>
     <string name="empty_posts_filtered_message">No posts match your current filters</string>
 
+    <!-- Generic network/error messages (data layer) -->
+    <string name="error_client">Client error: %1$d - %2$s</string>
+    <string name="error_server">Server error: %1$d - %2$s</string>
+    <string name="error_timeout">Request timed out. Please check your internet connection.</string>
+    <string name="error_network">Network error: %1$s</string>
+    <string name="error_network_fallback">Unable to connect to server</string>
+    <string name="error_unexpected">Unexpected error: %1$s</string>
+    <string name="error_unknown">Unknown error occurred</string>
+
+    <!-- YouTube metadata errors -->
+    <string name="yt_error_invalid_url">Invalid YouTube URL: %1$s</string>
+    <string name="yt_error_no_video_id">Could not extract video ID from URL: %1$s</string>
+    <string name="yt_error_invalid_video_id">Invalid YouTube video ID format: %1$s</string>
+    <string name="yt_error_not_found">Video not found or is private</string>
+    <string name="yt_error_not_accessible">Video is not accessible</string>
+    <string name="yt_error_server">YouTube server error: %1$d</string>
+    <string name="yt_error_timeout">Request timed out. Please check your connection.</string>
+    <string name="yt_error_unavailable">Video unavailable</string>
+    <string name="yt_error_connect_fallback">Unable to connect</string>
+    <string name="yt_error_fetch_failed">Failed to fetch video metadata: %1$s</string>
+
+    <!-- ECI statistics errors -->
+    <string name="eci_error_unrecognised_url">Not a recognised initiative URL: %1$s</string>
+    <string name="eci_error_invalid_number">Invalid initiative number: %1$s</string>
+    <string name="eci_error_not_found">Initiative %1$s/%2$s not found</string>
+    <string name="eci_error_server">ECI register server error: %1$d</string>
+    <string name="eci_error_timeout">Request timed out. Please check your connection.</string>
+    <string name="eci_error_unexpected_response">Unexpected response from ECI register</string>
+    <string name="eci_error_parse">Could not parse ECI statistics</string>
+    <string name="eci_error_load_failed">Failed to load ECI statistics: %1$s</string>
+
+    <!-- Common actions -->
+    <string name="action_back">Back</string>
+
+    <!-- ECI statistics screen &amp; table -->
+    <string name="eci_screen_title">Signatures by country</string>
+    <string name="eci_table_title">Signatures per country</string>
+    <string name="eci_table_updated">updated %1$s</string>
+    <string name="eci_no_statistics">No statistics available.</string>
+    <string name="eci_create_posts_cd">Create motivation posts</string>
+    <string name="eci_col_country">Country</string>
+    <string name="eci_col_signatures">Signatures</string>
+    <string name="eci_col_threshold">Threshold</string>
+    <string name="eci_col_percentage">Percentage</string>
+    <string name="eci_not_available">N/A</string>
+    <string name="eci_total">Total</string>
+    <string name="eci_after_submission_note">* Recorded after the initiative was submitted for verification.</string>
+
+    <!-- ECI post composer -->
+    <string name="eci_composer_title">Create posts</string>
+    <string name="eci_not_collecting">This initiative is not currently collecting signatures.</string>
+    <string name="eci_sort_label">Sort:</string>
+    <string name="eci_label_colon">%1$s:</string>
+    <string name="eci_filter_chip">%1$s (%2$d)</string>
+    <string name="eci_select_countries">Select countries</string>
+    <string name="eci_variant">Variant %1$d</string>
+    <string name="eci_tone_push">Push tone</string>
+    <string name="eci_tone_margin">Margin tone</string>
+    <string name="eci_show_preview">Show preview</string>
+    <string name="eci_hide_preview">Hide preview</string>
+    <string name="eci_row_needed">%1$s · +%2$d needed</string>
+    <!-- Filter labels -->
+    <string name="eci_filter_none">No filter</string>
+    <string name="eci_filter_eligible">All eligible</string>
+    <string name="eci_filter_below">Below threshold</string>
+    <string name="eci_filter_margin">Building margin</string>
+    <!-- Sort labels -->
+    <string name="eci_sort_closest">Closest to aim</string>
+    <string name="eci_sort_needed">Signatures needed</string>
+    <string name="eci_sort_alpha">A–Z</string>
+    <!-- Band labels -->
+    <string name="eci_band_push">Push</string>
+    <string name="eci_band_margin">Margin</string>
+    <string name="eci_band_safe">Safe</string>
+    <string name="eci_band_unknown">—</string>
+
+    <!-- Plurals -->
+    <plurals name="chars">
+        <item quantity="one">%d char</item>
+        <item quantity="other">%d chars</item>
+    </plurals>
+    <plurals name="eci_drafts_created">
+        <item quantity="one">Created %d draft</item>
+        <item quantity="other">Created %d drafts</item>
+    </plurals>
+    <plurals name="eci_create_posts_button">
+        <item quantity="one">Create %d post</item>
+        <item quantity="other">Create %d posts</item>
+    </plurals>
+
 </resources>

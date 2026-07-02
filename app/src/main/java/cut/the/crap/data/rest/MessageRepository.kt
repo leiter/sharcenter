@@ -9,6 +9,8 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import cut.the.crap.R
+import cut.the.crap.tools.StringProvider
 import kotlinx.serialization.Serializable
 import java.io.IOException
 import javax.inject.Inject
@@ -21,7 +23,8 @@ interface MessageRepository {
 }
 
 class MessageRepositoryImpl @Inject constructor(
-    private val client: HttpClient
+    private val client: HttpClient,
+    private val strings: StringProvider
 ) : MessageRepository {
 
     override suspend fun postMessage(message: Message): Result<String> {
@@ -35,31 +38,31 @@ class MessageRepositoryImpl @Inject constructor(
         } catch (e: ClientRequestException) {
             // 4xx errors (client errors like 400 Bad Request, 404 Not Found)
             Result.Error(
-                message = "Client error: ${e.response.status.value} - ${e.response.status.description}",
+                message = strings.get(R.string.error_client, e.response.status.value, e.response.status.description),
                 exception = e
             )
         } catch (e: ServerResponseException) {
             // 5xx errors (server errors like 500 Internal Server Error)
             Result.Error(
-                message = "Server error: ${e.response.status.value} - ${e.response.status.description}",
+                message = strings.get(R.string.error_server, e.response.status.value, e.response.status.description),
                 exception = e
             )
         } catch (e: SocketTimeoutException) {
             // Timeout errors
             Result.Error(
-                message = "Request timed out. Please check your internet connection.",
+                message = strings.get(R.string.error_timeout),
                 exception = e
             )
         } catch (e: IOException) {
             // Network errors (no internet, connection refused, etc.)
             Result.Error(
-                message = "Network error: ${e.message ?: "Unable to connect to server"}",
+                message = strings.get(R.string.error_network, e.message ?: strings.get(R.string.error_network_fallback)),
                 exception = e
             )
         } catch (e: Exception) {
             // Any other unexpected errors
             Result.Error(
-                message = "Unexpected error: ${e.message ?: "Unknown error occurred"}",
+                message = strings.get(R.string.error_unexpected, e.message ?: strings.get(R.string.error_unknown)),
                 exception = e
             )
         }
