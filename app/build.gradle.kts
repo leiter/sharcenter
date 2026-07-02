@@ -82,7 +82,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.navigation:navigation-compose:2.9.5")
+    implementation("androidx.navigation:navigation-compose:2.9.8")
 
     val hiltVersion = "2.56.2"
     implementation ("androidx.hilt:hilt-navigation-compose:1.3.0")
@@ -92,7 +92,7 @@ dependencies {
     implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
 
-    val roomVersion = "2.8.3" // Check for the latest version
+    val roomVersion = "2.8.4" // Check for the latest version
     implementation("androidx.room:room-runtime:$roomVersion")
     kapt ("androidx.room:room-compiler:$roomVersion" )
     // Optional: Room Kotlin Extensions and Coroutines support
@@ -101,7 +101,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
 
     // DataStore for settings persistence
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
 
     implementation("io.ktor:ktor-client-core:2.3.5")
     implementation("io.ktor:ktor-client-okhttp:2.3.5") // or ktor-client-cio for other engines
