@@ -18,6 +18,7 @@ import cut.the.crap.ui.content.settings.DateRangePreset
 import cut.the.crap.ui.content.settings.FavoriteFilterPreset
 import cut.the.crap.ui.content.settings.SortOrderPreset
 import com.google.common.truth.Truth.assertThat
+import cut.the.crap.fake.FakeEciStaticRepository
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,6 +40,7 @@ class PostsViewModelTest {
     private lateinit var contentItemRepository: FakeContentItemRepository
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var jobQueueRepository: FakeJobQueueRepository
+    private lateinit var eciStatisticsRepository: FakeEciStaticRepository
     private lateinit var viewModel: PostsViewModel
 
     private val settingsFlow = MutableStateFlow(AppSettings())
@@ -48,6 +50,7 @@ class PostsViewModelTest {
         keywordRepository = FakeKeywordRepository()
         contentItemRepository = FakeContentItemRepository()
         jobQueueRepository = FakeJobQueueRepository()
+        eciStatisticsRepository = FakeEciStaticRepository()
 
         settingsRepository = mockk(relaxed = true)
         coEvery { settingsRepository.settingsFlow } returns settingsFlow
@@ -56,7 +59,8 @@ class PostsViewModelTest {
             keywordRepository = keywordRepository,
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
-            jobQueueRepository = jobQueueRepository
+            jobQueueRepository = jobQueueRepository,
+            eciStatisticsRepository = eciStatisticsRepository
         )
     }
 
@@ -84,7 +88,8 @@ class PostsViewModelTest {
             keywordRepository = keywordRepository,
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
-            jobQueueRepository = jobQueueRepository
+            jobQueueRepository = jobQueueRepository,
+            eciStatisticsRepository = eciStatisticsRepository
         )
         advanceUntilIdle()
 
@@ -104,7 +109,9 @@ class PostsViewModelTest {
             keywordRepository = keywordRepository,
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
-            jobQueueRepository = jobQueueRepository
+            jobQueueRepository = jobQueueRepository,
+            eciStatisticsRepository = eciStatisticsRepository
+
         )
         advanceUntilIdle()
 
@@ -149,7 +156,8 @@ class PostsViewModelTest {
             keywordRepository = keywordRepository,
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
-            jobQueueRepository = jobQueueRepository
+            jobQueueRepository = jobQueueRepository,
+            eciStatisticsRepository = eciStatisticsRepository
         )
         advanceUntilIdle()
 
@@ -171,7 +179,8 @@ class PostsViewModelTest {
             keywordRepository = keywordRepository,
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
-            jobQueueRepository = jobQueueRepository
+            jobQueueRepository = jobQueueRepository,
+            eciStatisticsRepository = eciStatisticsRepository
         )
         advanceUntilIdle()
 
@@ -211,7 +220,8 @@ class PostsViewModelTest {
             keywordRepository = keywordRepository,
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
-            jobQueueRepository = jobQueueRepository
+            jobQueueRepository = jobQueueRepository,
+            eciStatisticsRepository = eciStatisticsRepository
         )
         advanceUntilIdle()
 
@@ -274,7 +284,8 @@ class PostsViewModelTest {
             keywordRepository = keywordRepository,
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
-            jobQueueRepository = jobQueueRepository
+            jobQueueRepository = jobQueueRepository,
+            eciStatisticsRepository = eciStatisticsRepository
         )
         advanceUntilIdle()
 
