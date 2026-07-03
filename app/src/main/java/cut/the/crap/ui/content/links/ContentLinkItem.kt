@@ -351,8 +351,6 @@ fun LinkListItem(
             MyPopupMenu(
                 action = action,
                 menuItems = listOf(
-                    MenuItem(R.string.context_menu_insert, Icons.AutoMirrored.Filled.Input, TextAction.InsertText(item.link)),
-                    MenuItem(R.string.context_menu_edit, Icons.Filled.Edit, ContentLinkAction.EditSearchHint(item, item.description)),
                     MenuItem(R.string.context_menu_open, Icons.Filled.Link, ContentLinkAction.Open(item)),
                     MenuItem(R.string.context_menu_clipboard, Icons.Filled.CopyAll, ContentLinkAction.CopyToClipboard(item)),
                     MenuItem(R.string.context_menu_comment_quote, Icons.AutoMirrored.Filled.Comment, ContentLinkAction.ShowCommentQuoteDialog(item)),
