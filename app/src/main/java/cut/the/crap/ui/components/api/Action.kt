@@ -80,6 +80,7 @@ sealed interface ContentItemAction : Action {
     data class ToggleFavorite(val id: Int) : ContentItemAction
     data class CopyToClipboard(val contentItem: ContentItem) : ContentItemAction
     data class PostOnTwitter(val contentItem: ContentItem) : ContentItemAction
+    data class PostOnFacebook(val contentItem: ContentItem) : ContentItemAction
 }
 
 // ========== Handle/Tag/KeyWords Actions ==========

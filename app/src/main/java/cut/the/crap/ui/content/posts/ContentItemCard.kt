@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Input
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -196,8 +195,8 @@ fun ContentItemCard(
                 MyPopupMenu(
                     action = action,
                     menuItems = listOf(
-                        MenuItem(R.string.context_menu_insert, Icons.AutoMirrored.Filled.Input, TextAction.InsertText(contentItem.text)),
-                        MenuItem(R.string.context_menu_post_twitter, Icons.AutoMirrored.Filled.Send, ContentItemAction.PostOnTwitter(contentItem)),
+                        MenuItem(R.string.context_menu_post_twitter, iconRes = R.drawable.x, actionPayload = ContentItemAction.PostOnTwitter(contentItem)),
+                        MenuItem(R.string.context_menu_post_facebook, iconRes = R.drawable.facebook, actionPayload = ContentItemAction.PostOnFacebook(contentItem)),
                         MenuItem(R.string.context_menu_delete, Icons.Filled.Delete, ContentItemAction.Delete(contentItem.id))
                     )
                 )

@@ -20,6 +20,7 @@ import cut.the.crap.data.backup.DatabaseBackupManager
 import cut.the.crap.data.rest.YouTubeMetadataBackfiller
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.ShareLinksTask
+import cut.the.crap.intent.FacebookIntent
 import cut.the.crap.intent.TwitterIntent
 import cut.the.crap.tools.copyToClipboard
 import cut.the.crap.intent.extractTweetId
@@ -217,6 +218,19 @@ private fun handleAction(
             // Launch the Twitter/X intent
             activity.startActivity(
                 Intent(Intent.ACTION_VIEW, twitterIntent.url.toUri())
+            )
+        }
+
+        is ContentItemAction.PostOnFacebook -> {
+            // Share the content as a new post on Facebook
+            // FacebookIntent.SharePost automatically extracts any URLs from the content to use as link preview
+            val facebookIntent = FacebookIntent.SharePost(
+                text = action.contentItem.text
+            )
+
+            // Launch the Facebook intent
+            activity.startActivity(
+                Intent(Intent.ACTION_VIEW, facebookIntent.url.toUri())
             )
         }
 
