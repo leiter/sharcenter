@@ -228,6 +228,10 @@ private fun handleAction(
                 text = action.contentItem.text
             )
 
+            // Facebook's web sharer does not reliably prefill the post text, so copy it to the
+            // clipboard first so the user can paste it into the composer.
+            copyToClipboard(activity, action.contentItem.text)
+
             // Launch the Facebook intent
             activity.startActivity(
                 Intent(Intent.ACTION_VIEW, facebookIntent.url.toUri())
