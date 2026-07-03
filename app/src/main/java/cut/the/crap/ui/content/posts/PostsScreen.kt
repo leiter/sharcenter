@@ -13,8 +13,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -275,7 +275,7 @@ fun PostsScreen(
                         } else {
                             MyIconAction(
                                 iconPainter = rememberVectorPainter(
-                                    Icons.Filled.Key
+                                    Icons.Filled.BarChart
                                 ),
                                 onClick = { onLoadEciStatistics() },
                                 contentDescription = stringResource(R.string.posts_cd_load_stats)
