@@ -12,13 +12,13 @@ plugins {
 
 android {
     namespace = "cut.the.crap"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "cut.the.crap.sharecare"
         minSdk = 26
-        targetSdk = 36
-        versionCode = 1
+        targetSdk = 37
+        versionCode = 2
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -78,9 +78,6 @@ android {
         compose = true
         buildConfig = true
     }
-    composeOptions {
-//        kotlinCompilerExtensionVersion = "1.5.4"
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -96,7 +93,7 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.17.0")
-    implementation("androidx.activity:activity-compose:1.11.0")
+    implementation("androidx.activity:activity-compose:1.13.0")
     implementation(platform("androidx.compose:compose-bom:2025.10.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -133,19 +130,19 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
 
     // Coil for image loading (thumbnails)
-    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     testImplementation("junit:junit:4.13.2")
     // Coroutines testing
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
     // MockK for Kotlin mocking
-    testImplementation("io.mockk:mockk:1.13.9")
+    testImplementation("io.mockk:mockk:1.14.11")
     // Turbine for Flow testing
-    testImplementation("app.cash.turbine:turbine:1.0.0")
+    testImplementation("app.cash.turbine:turbine:1.2.1")
     // Architecture components testing
     testImplementation("androidx.arch.core:core-testing:2.2.0")
     // Truth assertions for readability
-    testImplementation("com.google.truth:truth:1.1.5")
+    testImplementation("com.google.truth:truth:1.4.5")
 
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
