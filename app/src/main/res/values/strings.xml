@@ -226,10 +226,13 @@
     <string name="eci_filter_eligible">All eligible</string>
     <string name="eci_filter_below">Below threshold</string>
     <string name="eci_filter_margin">Building margin</string>
+    <string name="eci_filter_reached">Threshold reached</string>
     <!-- Sort labels -->
     <string name="eci_sort_closest">Closest to aim</string>
     <string name="eci_sort_needed">Signatures needed</string>
     <string name="eci_sort_alpha">A–Z</string>
+    <string name="eci_sort_percentage">Percentage</string>
+    <string name="eci_sort_signatures">Signatures</string>
     <!-- Band labels -->
     <string name="eci_band_push">Push</string>
     <string name="eci_band_margin">Margin</string>

@@ -48,7 +48,11 @@ private const val WEIGHT_PERCENTAGE = 1.3f
 @Composable
 fun EciStatisticsTable(
     statistics: EciStatistics,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    // The rows to render (already filtered/sorted by the caller). Defaults to all rows.
+    rows: List<EciCountrySignatures> = statistics.rows,
+    // Total to show in the footer, matching [rows]. Defaults to the initiative-wide total.
+    totalSignatures: Long = statistics.totalSignatures
 ) {
     // NumberFormat instances are relatively expensive; keep them across recompositions.
     val integerFormat = remember { NumberFormat.getIntegerInstance() }
@@ -58,7 +62,7 @@ fun EciStatisticsTable(
             maximumFractionDigits = 2
         }
     }
-    val hasAfterSubmission = statistics.rows.any { it.afterSubmission }
+    val hasAfterSubmission = rows.any { it.afterSubmission }
 
     Card(
         modifier = modifier
@@ -109,7 +113,7 @@ fun EciStatisticsTable(
             Spacer(modifier = Modifier.height(6.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
 
-            statistics.rows.forEach { row ->
+            rows.forEach { row ->
                 CountryRow(row, integerFormat, percentFormat)
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
             }
@@ -129,7 +133,7 @@ fun EciStatisticsTable(
                     emphasised = true
                 )
                 BodyCell(
-                    text = integerFormat.format(statistics.totalSignatures),
+                    text = integerFormat.format(totalSignatures),
                     weight = WEIGHT_SIGNATURES,
                     align = TextAlign.End,
                     color = MaterialTheme.colorScheme.onSurface,
