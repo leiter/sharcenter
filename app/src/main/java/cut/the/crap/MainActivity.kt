@@ -79,16 +79,18 @@ class MainActivity : ComponentActivity() {
             youTubeMetadataBackfiller.backfillMissing()
         }
 
-        // DEV: Submit test job to job queue server on app start
-        lifecycleScope.launch {
-            val testTask = ShareLinksTask(
-                links = listOf(
-                    "https://example.com/article1",
-                    "https://example.com/article2",
-                    "https://twitter.com/test/status/123"
+        // DEV: Submit test job to job queue server on app start (debug builds only)
+        if (BuildConfig.DEBUG) {
+            lifecycleScope.launch {
+                val testTask = ShareLinksTask(
+                    links = listOf(
+                        "https://example.com/article1",
+                        "https://example.com/article2",
+                        "https://twitter.com/test/status/123"
+                    )
                 )
-            )
-            jobQueueRepository.submitTask(testTask)
+                jobQueueRepository.submitTask(testTask)
+            }
         }
 
         setContent {
