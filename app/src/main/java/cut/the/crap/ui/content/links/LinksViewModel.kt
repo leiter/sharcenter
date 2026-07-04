@@ -325,19 +325,27 @@ class LinksViewModel @Inject constructor(
 
         // Parse the structured description to search in metadata + tag categories
         val parsed = DescriptionParser.parse(contentLink.description)
-        val allSearchable = parsed.metadata + parsed.handles + parsed.hashtags + parsed.keywords
-        val descriptionMatch = allSearchable.any { it.lowercase().contains(keywordLower) }
 
-        // For very short keywords (1-3 chars), assume it's a domain and match more precisely
+        // For very short keywords (1-3 chars), assume it's a domain/platform token (e.g. "x", "fb"
+        // from long-pressing a platform icon) and match precisely. A loose substring match is
+        // meaningless here: the letter "x" appears inside almost any video title, thumbnail URL, or
+        // channel name, which would wrongly keep every YouTube item when filtering to "x". So match
+        // on the URL domain, plus discrete tag tokens (handles/hashtags/keywords) that equal the
+        // keyword exactly — never a substring of the free-text metadata.
         if (keywordLower.length <= 3) {
             val domainPattern = Regex("""://(?:www\.)?([^/]+)""")
-            val domainMatch = domainPattern.find(link)
-            val domain = domainMatch?.groupValues?.get(1)?.lowercase() ?: ""
+            val domain = domainPattern.find(link)?.groupValues?.get(1)?.lowercase() ?: ""
+            val domainMatch = domain.split(".").any { it == keywordLower }
 
-            return domain.split(".").any { it == keywordLower } || descriptionMatch
+            val tagMatch = (parsed.handles + parsed.hashtags + parsed.keywords)
+                .any { it.lowercase() == keywordLower }
+
+            return domainMatch || tagMatch
         }
 
-        // For longer keywords, use substring matching
+        // For longer keywords, use substring matching across the link and all description fields
+        val allSearchable = parsed.metadata + parsed.handles + parsed.hashtags + parsed.keywords
+        val descriptionMatch = allSearchable.any { it.lowercase().contains(keywordLower) }
         return link.contains(keywordLower) || descriptionMatch
     }
 
