@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material3.Card
@@ -197,6 +198,7 @@ fun ContentItemCard(
                     menuItems = listOf(
                         MenuItem(R.string.context_menu_post_twitter, iconRes = R.drawable.x, actionPayload = ContentItemAction.PostOnTwitter(contentItem)),
                         MenuItem(R.string.context_menu_post_facebook, iconRes = R.drawable.facebook, actionPayload = ContentItemAction.PostOnFacebook(contentItem)),
+                        MenuItem(R.string.context_menu_share, Icons.Filled.Share, ContentItemAction.ShareViaSheet(contentItem)),
                         MenuItem(R.string.context_menu_delete, Icons.Filled.Delete, ContentItemAction.Delete(contentItem.id))
                     )
                 )

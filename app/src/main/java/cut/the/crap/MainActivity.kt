@@ -240,6 +240,19 @@ private fun handleAction(
             )
         }
 
+        is ContentItemAction.ShareViaSheet -> {
+            // Hand the post text to the native Android share sheet (ACTION_SEND). This exposes
+            // every installed app that accepts plain text — WhatsApp, LinkedIn, Bluesky,
+            // Mastodon, Telegram, etc. — without a dedicated intent class per network.
+            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, action.contentItem.text)
+            }
+            activity.startActivity(
+                Intent.createChooser(sendIntent, activity.getString(R.string.share_chooser_title))
+            )
+        }
+
         is ContentLinkAction.CreateComment -> {
             // Close the dialog first (better UX - dialog closes before leaving screen)
             linksViewModel.consumeAction(action)

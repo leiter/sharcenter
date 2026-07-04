@@ -9,7 +9,9 @@
     <string name="context_menu_comment_quote">Comment/Quote</string>
     <string name="context_menu_post_twitter">Post on Twitter</string>
     <string name="context_menu_post_facebook">Post on Facebook</string>
+    <string name="context_menu_share">Share…</string>
     <string name="context_menu_delete">Delete</string>
+    <string name="share_chooser_title">Share post via</string>
     <string name="menu_fire_job">Fire Job</string>
 
     <string name="dialog_cancel">Cancel</string>

@@ -81,6 +81,7 @@ sealed interface ContentItemAction : Action {
     data class CopyToClipboard(val contentItem: ContentItem) : ContentItemAction
     data class PostOnTwitter(val contentItem: ContentItem) : ContentItemAction
     data class PostOnFacebook(val contentItem: ContentItem) : ContentItemAction
+    data class ShareViaSheet(val contentItem: ContentItem) : ContentItemAction
 }
 
 // ========== Handle/Tag/KeyWords Actions ==========
