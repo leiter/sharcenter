@@ -9,8 +9,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -358,43 +361,53 @@ fun LinkListItem(
                 )
             )
         }
+        // When a thumbnail image is available, show it as a leading image that spans the
+        // height of the two rows below (account/type row + title/date row), pushing their
+        // content to the right. Falls back to the plain stacked rows when there is no image.
+        val hasThumbnail = thumbnailUrl != null
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (hasThumbnail) Modifier.height(IntrinsicSize.Min) else Modifier),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (hasThumbnail) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .aspectRatio(16f / 9f)
+                        .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
+                ) {
+                    val youTubePlaceholder = painterResource(id = R.drawable.youtube)
+                    AsyncImage(
+                        model = thumbnailUrl,
+                        contentDescription = stringResource(R.string.links_cd_video_thumbnail),
+                        placeholder = youTubePlaceholder,
+                        error = youTubePlaceholder,
+                        fallback = youTubePlaceholder,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(4.dp)),
+                        contentScale = ContentScale.Crop,
+                    )
+                    // Domain icon overlaid on the bottom-left corner of the thumbnail
+                    DomainIcon(
+                        domain = texts[0],
+                        action = action,
+                        modifier = Modifier.align(Alignment.BottomStart)
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            val hasDomain = texts[0].isNotBlank()
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .then(
-                        if (hasDomain) {
-                            Modifier.combinedClickable(
-                                onClick = { },
-                                onLongClick = {
-                                    action(TextAction.AddHiddenFilter(texts[0]))
-                                }
-                            )
-                        } else {
-                            Modifier
-                        }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = domainPainter(domain = texts[0]),
-                    modifier = Modifier
-                        .size(24.dp)
-                        .then(
-                            if (!hasDomain) {
-                                Modifier.alpha(0.5f)
-                            } else {
-                                Modifier
-                            }
-                        ),
-                    contentScale = ContentScale.Fit,
-                    contentDescription = if (hasDomain) "Long press to filter by domain" else "No domain available"
-                )
+            // Domain icon lives on the thumbnail (bottom-left) when there is one; otherwise show it here
+            if (!hasThumbnail) {
+                DomainIcon(domain = texts[0], action = action)
             }
 
 
@@ -408,6 +421,8 @@ fun LinkListItem(
             Text(
                 text = displayUsername ?: "No account",
                 textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
                 style = if (!hasUsername) {
                     MaterialTheme.typography.bodyMedium.copy(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -486,21 +501,6 @@ fun LinkListItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // YouTube thumbnail + title (left-aligned)
-            if (thumbnailUrl != null) {
-                val youTubePlaceholder = painterResource(id = R.drawable.youtube)
-                AsyncImage(
-                    model = thumbnailUrl,
-                    contentDescription = stringResource(R.string.links_cd_video_thumbnail),
-                    placeholder = youTubePlaceholder,
-                    error = youTubePlaceholder,
-                    fallback = youTubePlaceholder,
-                    modifier = Modifier
-                        .size(48.dp, 36.dp)
-                        .clip(RoundedCornerShape(4.dp)),
-                    contentScale = ContentScale.Crop,
-                )
-            }
             if (videoTitle != null) {
                 Text(
                     text = videoTitle,
@@ -548,6 +548,41 @@ fun LinkListItem(
                     )
             )
         }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DomainIcon(
+    domain: String,
+    action: (Action) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val hasDomain = domain.isNotBlank()
+    Box(
+        modifier = modifier
+            .size(48.dp)
+            .then(
+                if (hasDomain) {
+                    Modifier.combinedClickable(
+                        onClick = { },
+                        onLongClick = { action(TextAction.AddHiddenFilter(domain)) }
+                    )
+                } else {
+                    Modifier
+                }
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = domainPainter(domain = domain),
+            modifier = Modifier
+                .size(24.dp)
+                .then(if (!hasDomain) Modifier.alpha(0.5f) else Modifier),
+            contentScale = ContentScale.Fit,
+            contentDescription = if (hasDomain) "Long press to filter by domain" else "No domain available"
+        )
     }
 }
 
