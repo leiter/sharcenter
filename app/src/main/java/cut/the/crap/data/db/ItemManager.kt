@@ -89,12 +89,14 @@ class ItemManager(private val repository: ContentLinkRepository) {
     }
 
     /**
-     * Whether this link matches the search [query] (case-insensitive). Matches the link
-     * URL or any of the item's tags — handles, hashtags, or keywords — parsed from the
-     * serialized `description`.
+     * Whether this link matches the search [query] (case-insensitive). It is an OR match:
+     * the item matches if the query is contained in the link URL, the raw description text
+     * (which includes YouTube metadata such as channel name and video title), or any of the
+     * item's tags — handles, hashtags, or keywords — parsed from the serialized `description`.
      */
     private fun ContentLink.matchesSearch(query: String): Boolean {
         if (link.contains(query, ignoreCase = true)) return true
+        if (description.contains(query, ignoreCase = true)) return true
         val parsed = DescriptionParser.parse(description)
         return (parsed.handles + parsed.hashtags + parsed.keywords)
             .any { it.contains(query, ignoreCase = true) }
