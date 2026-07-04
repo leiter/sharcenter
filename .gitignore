@@ -18,3 +18,7 @@ local.properties
 tmp/
 __pycache__/
 #job_queue/
+
+# Claude Code skill files
+.agents/
+skills-lock.json
