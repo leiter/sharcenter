@@ -14,6 +14,13 @@
     <string name="context_menu_delete">Delete</string>
     <string name="share_chooser_title">Share post via</string>
     <string name="menu_fire_job">Fire Job</string>
+    <string name="links_bulk_favorite">Favorite selected</string>
+    <string name="links_bulk_tag_accounts">Tag accounts (@)</string>
+    <string name="links_bulk_tag_hashtags">Tag hashtags (#)</string>
+    <string name="links_bulk_tag_keywords">Tag keywords</string>
+    <string name="links_bulk_export">Export selected</string>
+    <string name="links_bulk_delete">Delete selected</string>
+    <string name="links_bulk_deselect">Deselect all</string>
 
     <string name="dialog_cancel">Cancel</string>
     <string name="dialog_abort">Abort</string>

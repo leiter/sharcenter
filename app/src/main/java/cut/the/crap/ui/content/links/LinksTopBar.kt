@@ -46,15 +46,20 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Tag
+import androidx.compose.material.icons.outlined.AlternateEmail
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
 import cut.the.crap.ui.components.MenuItem
 import cut.the.crap.ui.components.MyPopupMenu
+import cut.the.crap.ui.components.api.ChipsType
 import cut.the.crap.ui.components.api.FileAction
 import cut.the.crap.ui.components.api.ListAction
+import cut.the.crap.ui.components.api.Screen
 
 @Composable
 private fun FilterSection(
@@ -234,29 +239,44 @@ private fun SelectionModeTopBar(
                         action = action,
                         menuItems = listOf(
                             MenuItem(
-                                title = cut.the.crap.R.string.menu_fire_job,
-                                icon = Icons.Filled.Send,
-                                actionPayload = ListAction.FireJob
-                            ),
-                            MenuItem(
-                                title = cut.the.crap.R.string.app_name, // TODO: Add proper string resource
-                                icon = Icons.Filled.Download,
-                                actionPayload = FileAction.Export(null) // Will be intercepted
-                            ),
-                            MenuItem(
-                                title = cut.the.crap.R.string.app_name, // TODO: Add proper string resource
-                                icon = Icons.Filled.RemoveCircle,
-                                actionPayload = ListAction.DeselectAll
-                            ),
-                            MenuItem(
-                                title = cut.the.crap.R.string.app_name, // TODO: Add proper string resource
+                                title = R.string.links_bulk_favorite,
                                 icon = Icons.Filled.Favorite,
                                 actionPayload = ListAction.ToggleFavoritesForSelected
                             ),
                             MenuItem(
-                                title = cut.the.crap.R.string.context_menu_delete,
+                                title = R.string.links_bulk_tag_accounts,
+                                icon = Icons.Outlined.AlternateEmail,
+                                actionPayload = UiAction.ShowBulkTagDialog(ChipsType.Handle, Screen.Links)
+                            ),
+                            MenuItem(
+                                title = R.string.links_bulk_tag_hashtags,
+                                icon = Icons.Filled.Tag,
+                                actionPayload = UiAction.ShowBulkTagDialog(ChipsType.Tag, Screen.Links)
+                            ),
+                            MenuItem(
+                                title = R.string.links_bulk_tag_keywords,
+                                icon = Icons.Filled.Numbers,
+                                actionPayload = UiAction.ShowBulkTagDialog(ChipsType.KeyWords, Screen.Links)
+                            ),
+                            MenuItem(
+                                title = R.string.links_bulk_export,
+                                icon = Icons.Filled.Download,
+                                actionPayload = FileAction.Export(null) // Will be intercepted
+                            ),
+//                            MenuItem(
+//                                title = R.string.menu_fire_job,
+//                                icon = Icons.Filled.Send,
+//                                actionPayload = ListAction.FireJob
+//                            ),
+                            MenuItem(
+                                title = R.string.links_bulk_delete,
                                 icon = Icons.Filled.Delete,
-                                actionPayload = ListAction.DeleteAll
+                                actionPayload = ListAction.DeleteSelected
+                            ),
+                            MenuItem(
+                                title = R.string.links_bulk_deselect,
+                                icon = Icons.Filled.RemoveCircle,
+                                actionPayload = ListAction.DeselectAll
                             )
                         )
                     )

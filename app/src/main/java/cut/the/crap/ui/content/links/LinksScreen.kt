@@ -290,6 +290,51 @@ fun LinkScreen(
         )
     }
 
+    // Bulk-tag dialog: applies one tag category to the whole current selection at once. Reuses the
+    // single-link keyword picker, but starts with an empty selection since bulk tagging is additive
+    // across links that each already carry different tags.
+    val bulkTagType = currentScreenState.bulkTagType
+    if (bulkTagType != null) {
+        val bulkMasterList = when (bulkTagType) {
+            cut.the.crap.ui.components.api.ChipsType.Handle -> handleList
+            cut.the.crap.ui.components.api.ChipsType.Tag -> tagList
+            cut.the.crap.ui.components.api.ChipsType.KeyWords -> keyWordList
+            else -> emptyList()
+        }
+        var bulkSelectedTexts by remember(bulkTagType) { mutableStateOf(emptySet<String>()) }
+
+        cut.the.crap.ui.components.KeywordSelectionDialog(
+            type = bulkTagType,
+            items = bulkMasterList,
+            selectedItems = bulkMasterList.filter { it.text in bulkSelectedTexts }.map { it.id }.toSet(),
+            onItemToggle = { keyword ->
+                bulkSelectedTexts = if (keyword.text in bulkSelectedTexts) {
+                    bulkSelectedTexts - keyword.text
+                } else {
+                    bulkSelectedTexts + keyword.text
+                }
+            },
+            onConfirm = {
+                actionHandler(ListAction.TagSelected(bulkTagType, bulkSelectedTexts.toList()))
+                actionHandler(UiAction.ShowBulkTagDialog(null, cut.the.crap.ui.components.api.Screen.Links))
+            },
+            onDismiss = {
+                actionHandler(UiAction.ShowBulkTagDialog(null, cut.the.crap.ui.components.api.Screen.Links))
+            },
+            onAdd = { addAction ->
+                // Persist a brand-new keyword to the master list and select it here immediately.
+                actionHandler(addAction)
+                val addedText = when (addAction) {
+                    is cut.the.crap.ui.components.api.KeywordAction.AddHandle -> addAction.text
+                    is cut.the.crap.ui.components.api.KeywordAction.AddTag -> addAction.text
+                    is cut.the.crap.ui.components.api.KeywordAction.AddKeyWord -> addAction.text
+                    else -> null
+                }
+                addedText?.let { bulkSelectedTexts = bulkSelectedTexts + it }
+            }
+        )
+    }
+
     val stateValue by itemList.collectAsState()
     val total by totalCount.collectAsState()
 

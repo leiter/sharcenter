@@ -32,6 +32,9 @@ data class LinksScreenState(
     val tagList: List<cut.the.crap.data.domain.KeyWord> = emptyList(),
     val keyWordList: List<cut.the.crap.data.domain.KeyWord> = emptyList(),
     val showKeywordSelectionDialog: Boolean = false,
+    // Non-null while the bulk-tag dialog is open; carries which tag category is being applied
+    // to the whole current selection.
+    val bulkTagType: cut.the.crap.ui.components.api.ChipsType? = null,
     val currentEditingLink: ContentLink? = null,
     val currentKeywordType: cut.the.crap.ui.components.api.ChipsType = cut.the.crap.ui.components.api.ChipsType.KeyWords,
     val filterStateList: List<FilterState> = listOf(

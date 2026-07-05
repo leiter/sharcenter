@@ -63,6 +63,8 @@ sealed interface UiAction : Action {
     data class ChipClicked(val index: Int, val type: ChipsType = ChipsType.Filter, val screen: Screen = Screen.Current) : UiAction
     data class ShowKeywordSelectionDialog(val type: ChipsType, val show: Boolean, val screen: Screen = Screen.Current) : UiAction
     data class ShowDateFilterSheet(val show: Boolean, val screen: Screen = Screen.Current) : UiAction
+    /** Open (non-null [type]) or close (null) the bulk-tag dialog for the current selection. */
+    data class ShowBulkTagDialog(val type: ChipsType?, val screen: Screen = Screen.Current) : UiAction
     data class SetDateFilter(val startTime: Long?, val endTime: Long?, val screen: Screen = Screen.Current) : UiAction
     data class ClearDateFilter(val dateType: cut.the.crap.ui.components.DateType, val screen: Screen = Screen.Current) : UiAction
     data class ExitSelectionMode(val screen: Screen = Screen.Current) : UiAction
@@ -117,6 +119,10 @@ sealed interface ListAction : Action {
     data object SelectAll : ListAction
     data object DeselectAll : ListAction
     data object ToggleFavoritesForSelected : ListAction
+    /** Delete only the currently selected items (leaves unselected items untouched). */
+    data object DeleteSelected : ListAction
+    /** Add [tags] of the given [type] to every currently selected item. */
+    data class TagSelected(val type: ChipsType, val tags: List<String>) : ListAction
     data object FireJob : ListAction
 }
 

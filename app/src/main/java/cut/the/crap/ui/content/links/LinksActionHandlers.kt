@@ -8,6 +8,7 @@ import cut.the.crap.ui.components.FilterState
 import cut.the.crap.ui.components.MyEditDialogStyle
 import cut.the.crap.data.rest.task.ShareLinksTask
 import cut.the.crap.ui.components.api.*
+import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.ensureTrailingSpace
 import cut.the.crap.tools.isForThisScreen
 import cut.the.crap.tools.normalizeToStartOfDay
@@ -309,6 +310,11 @@ internal fun LinksViewModel.handleUiAction(action: UiAction) {
             }
         }
 
+        is UiAction.ShowBulkTagDialog -> {
+            if (!this.isForThisScreen(action.screen)) return
+            internalScreenState.update { it.copy(bulkTagType = action.type) }
+        }
+
         is UiAction.ExitSelectionMode -> {
             if (!this.isForThisScreen(action.screen)) return
             // Exit selection mode and clear selections
@@ -419,20 +425,56 @@ internal fun LinksViewModel.handleListAction(action: ListAction) {
             }
         }
 
+        ListAction.DeleteSelected -> {
+            viewModelScope.launch {
+                val selectedIds = screenState.value.selectedItems
+                val toDelete = listState.value.filter { it.id in selectedIds }
+                toDelete.forEach { contentRepository.delete(it) }
+                // Selection is now empty; leave selection mode.
+                internalScreenState.update {
+                    it.copy(selectedItems = emptyList(), checkMarks = false)
+                }
+                if (toDelete.isNotEmpty()) {
+                    emitSnackBarMessage("Deleted ${toDelete.size} links")
+                }
+            }
+        }
+
         ListAction.ToggleFavoritesForSelected -> {
             viewModelScope.launch {
-                // Get all selected items from the current list
-//                val selectedItems = listState.value.filter { it.id in screenState.value.selectedItems }
-//
-//                // Check if all selected items are already favorited
-//                val allFavorited = selectedItems.all { it.favourite }
-//
-//                // Toggle: if all are favorited, unfavorite all; otherwise, favorite all
-//                val newFavoriteState = !allFavorited
-//
-//                selectedItems.forEach { item ->
-//                    updateContentLink(item.copy(favourite = newFavoriteState))
-//                }
+                val selectedIds = screenState.value.selectedItems
+                val selected = listState.value.filter { it.id in selectedIds }
+                if (selected.isEmpty()) return@launch
+                // Toggle as a group: if every selected item is already a favourite, clear them
+                // all; otherwise favourite them all. This makes the action predictable regardless
+                // of the mixed starting state.
+                val newFavourite = !selected.all { it.favourite }
+                selected.forEach { contentRepository.update(it.copy(favourite = newFavourite)) }
+                emitSnackBarMessage(
+                    if (newFavourite) "Favorited ${selected.size} links"
+                    else "Unfavorited ${selected.size} links"
+                )
+            }
+        }
+
+        is ListAction.TagSelected -> {
+            if (action.tags.isEmpty()) return
+            viewModelScope.launch {
+                val selectedIds = screenState.value.selectedItems
+                val selected = listState.value.filter { it.id in selectedIds }
+                selected.forEach { link ->
+                    // Add each chosen tag; addTag is idempotent, so tags already present are skipped.
+                    val updated = action.tags.fold(link) { acc, tag ->
+                        LinkMetadata.addTag(acc, tag, action.type)
+                    }
+                    if (updated.description != link.description) {
+                        contentRepository.update(updated)
+                    }
+                }
+                internalScreenState.update { it.copy(bulkTagType = null) }
+                if (selected.isNotEmpty()) {
+                    emitSnackBarMessage("Tagged ${selected.size} links")
+                }
             }
         }
 
