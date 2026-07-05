@@ -343,22 +343,22 @@ fun PostsScreen(
                 .fillMaxWidth()
                 .padding(top = paddingValues.calculateTopPadding())
         ) {
-            // Show ContentEditor when filter section is not expanded
-            if (!filterExpanded) {
-                ContentEditor(
-                    value = screenStateValue.focusedContentText,
-                    onValueChange = action,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    selectedFileCount = screenStateValue.selectedFileUris.size,
-                    isUploading = screenStateValue.isUploading,
-                    onPickFiles = {
-                        multipleFilesLauncher.launch(arrayOf("*/*"))
-                    },
-                    onUploadFiles = {
-                        action(UploadAction.StartUpload)
-                    }
-                )
-            }
+            // Keep the editor mounted at all times. The filter panel expands as an
+            // overlay in the top bar (see AnimatedVisibility above), so glancing at
+            // filters must not swap out — and lose — the in-progress draft.
+            ContentEditor(
+                value = screenStateValue.focusedContentText,
+                onValueChange = action,
+                modifier = Modifier.padding(horizontal = 16.dp),
+                selectedFileCount = screenStateValue.selectedFileUris.size,
+                isUploading = screenStateValue.isUploading,
+                onPickFiles = {
+                    multipleFilesLauncher.launch(arrayOf("*/*"))
+                },
+                onUploadFiles = {
+                    action(UploadAction.StartUpload)
+                }
+            )
 
             ContentList(
                 action = action,
