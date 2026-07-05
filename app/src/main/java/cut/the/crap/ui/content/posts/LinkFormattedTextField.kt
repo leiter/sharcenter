@@ -49,8 +49,16 @@ fun LinkFormattedTextField(
     placeholder: String? = null,
 ) {
     val contentColor = LocalContentColor.current
+    // Links use the primary accent; @handles/#tags reuse the accent families of the
+    // editor's @/# quick-action buttons (secondary = amber, tertiary = rose). These are
+    // the readable foreground members of those families — the buttons' *container* fills
+    // are too low-contrast to use as text on the surface.
     val linkColor = MaterialTheme.colorScheme.primary
-    val transformation = remember(linkColor) { LinkVisualTransformation(linkColor) }
+    val handleColor = MaterialTheme.colorScheme.secondary
+    val tagColor = MaterialTheme.colorScheme.tertiary
+    val transformation = remember(linkColor, handleColor, tagColor) {
+        LinkVisualTransformation(linkColor, handleColor, tagColor)
+    }
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     val uriHandler = LocalUriHandler.current
