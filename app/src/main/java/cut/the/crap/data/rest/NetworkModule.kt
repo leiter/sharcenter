@@ -22,9 +22,22 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    /**
+     * Shared JSON configuration, used both by the HTTP client's content negotiation and by
+     * the schema-driven [cut.the.crap.data.rest.parser.JsonSourceParser], so they agree on
+     * lenient/unknown-key handling.
+     */
     @Provides
     @Singleton
-    fun provideHttpClient(): HttpClient {
+    fun provideJson(): Json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        prettyPrint = true
+    }
+
+    @Provides
+    @Singleton
+    fun provideHttpClient(json: Json): HttpClient {
         return HttpClient(OkHttp) {
             // Default request configuration with base URL
             defaultRequest {
@@ -33,11 +46,7 @@ object NetworkModule {
 
             // Content Negotiation for JSON serialization
             install(ContentNegotiation) {
-                json(Json {
-                    ignoreUnknownKeys = true
-                    isLenient = true
-                    prettyPrint = true
-                })
+                json(json)
             }
 
             // Timeout configuration

@@ -2,15 +2,16 @@ package cut.the.crap.data.rest.eci
 
 import cut.the.crap.R
 import cut.the.crap.data.rest.Result
+import cut.the.crap.data.rest.parser.RawSource
+import cut.the.crap.data.rest.parser.SourceFormat
+import cut.the.crap.data.rest.parser.SourceParser
 import cut.the.crap.tools.StringProvider
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.get
-import io.ktor.serialization.ContentConvertException
-import kotlinx.serialization.SerializationException
+import io.ktor.client.statement.bodyAsText
 import java.io.IOException
 import javax.inject.Inject
 
@@ -45,7 +46,8 @@ interface EciStatisticsRepository {
 
 class EciStatisticsRepositoryImpl @Inject constructor(
     private val client: HttpClient,
-    private val strings: StringProvider
+    private val strings: StringProvider,
+    private val parsers: Set<@JvmSuppressWildcards SourceParser>,
 ) : EciStatisticsRepository {
 
     companion object {
@@ -73,9 +75,17 @@ class EciStatisticsRepositoryImpl @Inject constructor(
             return Result.Error(strings.get(R.string.eci_error_invalid_number, number), retryable = false)
         }
 
+        val url = "$DETAILS_ENDPOINT/$year/$number"
         return try {
-            val dto = client.get("$DETAILS_ENDPOINT/$year/$number").body<EciDetailsDto>()
-            Result.Success(dto.toStatistics(year, number))
+            val raw = client.get(url).bodyAsText()
+            val source = RawSource(content = raw, format = SourceFormat.JSON, url = url)
+            val parser = parsers.firstOrNull { it.supports(source.format) }
+                ?: return Result.Error(strings.get(R.string.eci_error_unexpected_response), retryable = false)
+
+            when (val parsed = parser.parse(source, EciSchema.SCHEMA)) {
+                is Result.Success -> Result.Success(EciStatisticsMapper.map(parsed.data, year, number))
+                is Result.Error -> parsed
+            }
         } catch (e: ClientRequestException) {
             when (e.response.status.value) {
                 404 -> Result.Error(strings.get(R.string.eci_error_not_found, year.toString(), number), e, retryable = false)
@@ -89,54 +99,10 @@ class EciStatisticsRepositoryImpl @Inject constructor(
             Result.Error(strings.get(R.string.eci_error_server, e.response.status.value), e)
         } catch (e: SocketTimeoutException) {
             Result.Error(strings.get(R.string.eci_error_timeout), e)
-        } catch (e: ContentConvertException) {
-            // A 2xx with a non-JSON/unexpected body (e.g. an error HTML page) — permanent.
-            Result.Error(strings.get(R.string.eci_error_unexpected_response), e, retryable = false)
-        } catch (e: SerializationException) {
-            Result.Error(strings.get(R.string.eci_error_parse), e, retryable = false)
         } catch (e: IOException) {
             Result.Error(strings.get(R.string.error_network, e.message ?: strings.get(R.string.error_network_fallback)), e)
         } catch (e: Exception) {
             Result.Error(strings.get(R.string.eci_error_load_failed, e.message ?: strings.get(R.string.error_unknown)), e)
         }
     }
-}
-
-/**
- * Maps the raw API payload into the domain table, applying the threshold table that
- * corresponds to the initiative's registration date and resolving country names.
- * Rows are ordered by country name, matching the portal.
- */
-private fun EciDetailsDto.toStatistics(year: Int, number: String): EciStatistics {
-    val registrationDate = EciReferenceData.parseDate(registrationDate)
-    val thresholds = EciReferenceData.thresholdsForRegistration(registrationDate)
-
-    val rows = (sosReport?.entry ?: emptyList()).map { entry ->
-        val code = entry.countryCodeType.uppercase()
-        EciCountrySignatures(
-            countryCode = code,
-            countryName = EciReferenceData.countryName(code),
-            signatures = entry.total,
-            threshold = thresholds[code.lowercase()],
-            afterSubmission = entry.afterSubmission
-        )
-    }.sortedBy { it.countryName }
-
-    // Localised signing links keyed by lower-case language code (e.g. "de" -> ".../?lg=de").
-    val supportLinks = linguisticVersions.mapNotNull { version ->
-        version.supportLink?.let { version.languageCode.lowercase() to it }
-    }.toMap()
-
-    return EciStatistics(
-        year = year,
-        number = number,
-        registrationNumber = comRegNum,
-        status = status,
-        deadline = deadline,
-        totalSignatures = sosReport?.totalSignatures ?: rows.sumOf { it.signatures },
-        paperUpdateDate = sosReport?.updateDate,
-        onlineUpdateDate = sosReport?.onlineSosUpdateDate,
-        rows = rows,
-        supportLinks = supportLinks
-    )
 }

@@ -1,91 +1,11 @@
 package cut.the.crap.data.rest.eci
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-
-/**
- * Raw JSON for a single initiative as returned by the European Citizens' Initiative
- * register API:
- *
- *     https://register.eci.ec.europa.eu/core/api/register/details/{year}/{number}
- *
- * Only the fields needed to build the "signatures per country" table are declared;
- * the client is configured with `ignoreUnknownKeys = true`, so the many other fields
- * (members, funding, logo, …) are simply ignored.
- */
-@Serializable
-internal data class EciDetailsDto(
-    @SerialName("comRegNum")
-    val comRegNum: String? = null,
-
-    /** Registration date, formatted "dd/MM/yyyy". Selects which threshold table applies. */
-    @SerialName("registrationDate")
-    val registrationDate: String? = null,
-
-    @SerialName("status")
-    val status: String? = null,
-
-    /** Collection deadline, formatted "dd/MM/yyyy". */
-    @SerialName("deadline")
-    val deadline: String? = null,
-
-    /** One entry per official language, each carrying a localised signing link. */
-    @SerialName("linguisticVersions")
-    val linguisticVersions: List<EciLinguisticVersionDto> = emptyList(),
-
-    @SerialName("sosReport")
-    val sosReport: EciSosReportDto? = null
-)
-
-@Serializable
-internal data class EciLinguisticVersionDto(
-    /** Language code, upper-case (e.g. "DE"). */
-    @SerialName("languageCode")
-    val languageCode: String,
-
-    /** Localised petition signing page, e.g. "https://eci.ec.europa.eu/055/public/?lg=de". */
-    @SerialName("supportLink")
-    val supportLink: String? = null
-)
-
-/** "Statements of support" report — the per-country signature statistics. */
-@Serializable
-internal data class EciSosReportDto(
-    @SerialName("totalSignatures")
-    val totalSignatures: Long? = null,
-
-    /** Date paper signatures were last reported by the organisers ("dd/MM/yyyy"). */
-    @SerialName("updateDate")
-    val updateDate: String? = null,
-
-    /** Timestamp of the last online signature count ("dd/MM/yyyy HH:mm"). */
-    @SerialName("onlineSosUpdateDate")
-    val onlineSosUpdateDate: String? = null,
-
-    @SerialName("entry")
-    val entry: List<EciSosEntryDto> = emptyList()
-)
-
-@Serializable
-internal data class EciSosEntryDto(
-    /** ISO 3166-1 alpha-2 country code, e.g. "DE", "FR". */
-    @SerialName("countryCodeType")
-    val countryCodeType: String,
-
-    /** Number of statements of support (online + reported paper) for this country. */
-    @SerialName("total")
-    val total: Long,
-
-    /**
-     * True when the count was recorded after the initiative was submitted for
-     * verification. The portal marks such figures with an asterisk.
-     */
-    @SerialName("afterSubmission")
-    val afterSubmission: Boolean = false
-)
-
 // ---------------------------------------------------------------------------
-// Domain models exposed to the rest of the app
+// Domain models exposed to the rest of the app.
+//
+// The raw register-API payload is no longer modelled as DTOs here: the generic,
+// schema-driven parser (see `EciSchema` + `cut.the.crap.data.rest.parser`) extracts the
+// needed fields, and `EciStatisticsMapper` turns that into the domain models below.
 // ---------------------------------------------------------------------------
 
 /**

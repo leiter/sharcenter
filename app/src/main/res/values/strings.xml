@@ -202,6 +202,10 @@
     <string name="eci_error_parse">Could not parse ECI statistics</string>
     <string name="eci_error_load_failed">Failed to load ECI statistics: %1$s</string>
 
+    <!-- Generic source-parser errors -->
+    <string name="parser_error_parse">Could not parse the source data</string>
+    <string name="parser_error_html_unsupported">HTML source parsing is not supported yet</string>
+
     <!-- Common actions -->
     <string name="action_back">Back</string>
 
