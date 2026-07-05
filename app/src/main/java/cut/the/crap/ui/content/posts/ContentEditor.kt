@@ -27,8 +27,6 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -141,8 +139,8 @@ fun ContentEditor(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Text input field
-            OutlinedTextField(
+            // Text input field — underlines http(s) URLs and opens the tapped link.
+            LinkFormattedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(140.dp),
@@ -157,16 +155,7 @@ fun ContentEditor(
                         )
                     )
                 },
-                placeholder = {
-                    Text(
-                        text = stringResource(R.string.editor_placeholder),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                    focusedBorderColor = MaterialTheme.colorScheme.primary
-                ),
+                placeholder = stringResource(R.string.editor_placeholder),
                 textStyle = MaterialTheme.typography.bodyLarge
             )
 
