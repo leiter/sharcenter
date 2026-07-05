@@ -1,7 +1,7 @@
 package cut.the.crap.ui.content.links
 
 import android.content.Context
-import app.cash.turbine.test
+import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.data.preferences.SettingsRepository
 import cut.the.crap.fake.FakeContentLinkRepository
 import cut.the.crap.fake.FakeJobQueueRepository
@@ -10,23 +10,32 @@ import cut.the.crap.fake.FakeMessageRepository
 import cut.the.crap.fake.FakeYouTubeRepository
 import cut.the.crap.testutils.MainDispatcherRule
 import cut.the.crap.testutils.TestData
+import cut.the.crap.tools.DescriptionParser
 import cut.the.crap.ui.components.api.TextAction
 import cut.the.crap.ui.content.settings.AppSettings
+import cut.the.crap.ui.content.settings.DateRangePreset
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
 /**
  * Tests for LinksViewModel filter matching logic.
  * Covers short domain filters (OR/AND logic) and long keyword substring matching.
+ *
+ * `listState` is computed on `viewModelScope` (i.e. `Dispatchers.Main`), so each test runs on the
+ * rule's dispatcher via `runTest(mainDispatcherRule.testDispatcher)` to share a single scheduler —
+ * otherwise `advanceUntilIdle()` would not drive the ViewModel's flows. Because `listState` and
+ * `screenState` are subscriber-gated, [filteredLinksAfter] keeps both collected while it applies
+ * actions and reads the settled result.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class LinksViewModelFilterTest {
@@ -43,7 +52,10 @@ class LinksViewModelFilterTest {
     private lateinit var context: Context
     private lateinit var viewModel: LinksViewModel
 
-    private val settingsFlow = MutableStateFlow(AppSettings())
+    // ALL_TIME so the ViewModel's init does not apply a date-range filter that would drop test items.
+    private val settingsFlow = MutableStateFlow(
+        AppSettings(linksDateRangePreset = DateRangePreset.ALL_TIME)
+    )
 
     @Before
     fun setup() {
@@ -69,275 +81,262 @@ class LinksViewModelFilterTest {
         )
     }
 
+    /**
+     * Keep [LinksViewModel.listState] and [LinksViewModel.screenState] collected (both are hot,
+     * subscriber-gated flows), run [actions] against the live ViewModel, let every coroutine settle,
+     * then return the resulting filtered list.
+     *
+     * `screenState` must be subscribed before the actions run: `AddHiddenFilter` reads the current
+     * filter list from `screenState.value`, so without an active collector a second add would
+     * clobber the first.
+     */
+    private fun TestScope.filteredLinksAfter(actions: () -> Unit): List<ContentLink> {
+        val listJob = launch { viewModel.listState.collect { } }
+        val stateJob = launch { viewModel.screenState.collect { } }
+        advanceUntilIdle()
+        actions()
+        advanceUntilIdle()
+        val result = viewModel.listState.value
+        listJob.cancel()
+        stateJob.cancel()
+        return result
+    }
+
     // ========== Short Domain Filter Tests (<=3 chars) ==========
 
-    @Ignore("Filter logic test requires complex flow interaction - needs dispatcher injection")
     @Test
-    fun `short domain filter matches exact domain part - x matches x_com`() = runTest {
-        val links = listOf(
-            TestData.contentLink(id = 1, link = "https://x.com/user/status/123"),
-            TestData.contentLink(id = 2, link = "https://youtube.com/watch?v=abc"),
-            TestData.contentLink(id = 3, link = "https://example.com/page")
-        )
-        contentLinkRepository.setItems(links)
-        advanceUntilIdle()
+    fun `short domain filter matches exact domain part - x matches x_com`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val links = listOf(
+                TestData.contentLink(id = 1, link = "https://x.com/user/status/123"),
+                TestData.contentLink(id = 2, link = "https://youtube.com/watch?v=abc"),
+                TestData.contentLink(id = 3, link = "https://example.com/page")
+            )
+            contentLinkRepository.setItems(links)
 
-        viewModel.consumeAction(TextAction.AddHiddenFilter("x"))
-        advanceUntilIdle()
-
-        viewModel.listState.test {
-            val filtered = awaitItem()
+            val filtered = filteredLinksAfter {
+                viewModel.consumeAction(TextAction.AddHiddenFilter("x"))
+            }
             assertThat(filtered.map { it.id }).containsExactly(1)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 
-    @Ignore("Filter logic test requires complex flow interaction - needs dispatcher injection")
     @Test
-    fun `short domain filter matches fb_com`() = runTest {
-        val links = listOf(
-            TestData.contentLink(id = 1, link = "https://fb.com/post/123"),
-            TestData.contentLink(id = 2, link = "https://facebook.com/page"),
-            TestData.contentLink(id = 3, link = "https://example.com/fb/page") // should NOT match
-        )
-        contentLinkRepository.setItems(links)
-        advanceUntilIdle()
+    fun `short domain filter matches fb_com`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val links = listOf(
+                TestData.contentLink(id = 1, link = "https://fb.com/post/123"),
+                TestData.contentLink(id = 2, link = "https://facebook.com/page"),
+                TestData.contentLink(id = 3, link = "https://example.com/fb/page") // should NOT match
+            )
+            contentLinkRepository.setItems(links)
 
-        viewModel.consumeAction(TextAction.AddHiddenFilter("fb"))
-        advanceUntilIdle()
-
-        viewModel.listState.test {
-            val filtered = awaitItem()
+            val filtered = filteredLinksAfter {
+                viewModel.consumeAction(TextAction.AddHiddenFilter("fb"))
+            }
             assertThat(filtered.map { it.id }).containsExactly(1)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 
-    @Ignore("Filter logic test requires complex flow interaction - needs dispatcher injection")
     @Test
-    fun `short domain filter does not match substring in path`() = runTest {
-        val links = listOf(
-            TestData.contentLink(id = 1, link = "https://example.com/x/page"), // x in path, not domain
-            TestData.contentLink(id = 2, link = "https://x.com/user/status")   // x.com domain
-        )
-        contentLinkRepository.setItems(links)
-        advanceUntilIdle()
+    fun `short domain filter does not match substring in path`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val links = listOf(
+                TestData.contentLink(id = 1, link = "https://example.com/x/page"), // x in path, not domain
+                TestData.contentLink(id = 2, link = "https://x.com/user/status")   // x.com domain
+            )
+            contentLinkRepository.setItems(links)
 
-        viewModel.consumeAction(TextAction.AddHiddenFilter("x"))
-        advanceUntilIdle()
-
-        viewModel.listState.test {
-            val filtered = awaitItem()
+            val filtered = filteredLinksAfter {
+                viewModel.consumeAction(TextAction.AddHiddenFilter("x"))
+            }
             // Only id=2 should match (domain is x.com)
             assertThat(filtered.map { it.id }).containsExactly(2)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
+
+    @Test
+    fun `short domain filter does not match letter in youtube metadata`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            // Regression: filtering to "x" must not keep YouTube items just because the letter "x"
+            // appears in their free-text metadata (video title, channel, thumbnail URL).
+            val youtubeDescription = DescriptionParser.serialize(
+                metadata = listOf("Some Channel", "Amazing Video Extras", "https://i.ytimg.com/vi/abcXdef/hq.jpg"),
+                handles = emptyList(),
+                hashtags = emptyList(),
+                keywords = emptyList()
+            )
+            val links = listOf(
+                TestData.contentLink(id = 1, link = "https://x.com/user/status/1"),
+                TestData.contentLink(id = 2, link = "https://youtube.com/watch?v=abcXdef", description = youtubeDescription)
+            )
+            contentLinkRepository.setItems(links)
+
+            val filtered = filteredLinksAfter {
+                viewModel.consumeAction(TextAction.AddHiddenFilter("x"))
+            }
+            assertThat(filtered.map { it.id }).containsExactly(1)
+        }
 
     // ========== Long Keyword Filter Tests (>3 chars) ==========
 
-    @Ignore("Filter logic test requires complex flow interaction - needs dispatcher injection")
     @Test
-    fun `long keyword filter uses substring matching in link`() = runTest {
-        val links = listOf(
-            TestData.contentLink(id = 1, link = "https://x.com/testuser/status/1"),
-            TestData.contentLink(id = 2, link = "https://x.com/otheruser/status/2"),
-            TestData.contentLink(id = 3, link = "https://youtube.com/testuser")
-        )
-        contentLinkRepository.setItems(links)
-        advanceUntilIdle()
+    fun `long keyword filter uses substring matching in link`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val links = listOf(
+                TestData.contentLink(id = 1, link = "https://x.com/testuser/status/1"),
+                TestData.contentLink(id = 2, link = "https://x.com/otheruser/status/2"),
+                TestData.contentLink(id = 3, link = "https://youtube.com/testuser")
+            )
+            contentLinkRepository.setItems(links)
 
-        viewModel.consumeAction(TextAction.AddHiddenFilter("testuser"))
-        advanceUntilIdle()
-
-        viewModel.listState.test {
-            val filtered = awaitItem()
+            val filtered = filteredLinksAfter {
+                viewModel.consumeAction(TextAction.AddHiddenFilter("testuser"))
+            }
             assertThat(filtered.map { it.id }).containsExactly(1, 3)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 
-    @Ignore("Filter logic test requires complex flow interaction - needs dispatcher injection")
     @Test
-    fun `long keyword filter uses substring matching in description`() = runTest {
-        val links = listOf(
-            TestData.contentLink(id = 1, link = "https://x.com/user1", description = "Great content here"),
-            TestData.contentLink(id = 2, link = "https://x.com/user2", description = "Another post"),
-            TestData.contentLink(id = 3, link = "https://x.com/user3", description = "More content")
-        )
-        contentLinkRepository.setItems(links)
-        advanceUntilIdle()
+    fun `long keyword filter uses substring matching in description`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val links = listOf(
+                TestData.contentLink(id = 1, link = "https://x.com/user1", description = "Great content here"),
+                TestData.contentLink(id = 2, link = "https://x.com/user2", description = "Another post"),
+                TestData.contentLink(id = 3, link = "https://x.com/user3", description = "More content")
+            )
+            contentLinkRepository.setItems(links)
 
-        viewModel.consumeAction(TextAction.AddHiddenFilter("content"))
-        advanceUntilIdle()
-
-        viewModel.listState.test {
-            val filtered = awaitItem()
+            val filtered = filteredLinksAfter {
+                viewModel.consumeAction(TextAction.AddHiddenFilter("content"))
+            }
             assertThat(filtered.map { it.id }).containsExactly(1, 3)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 
     // ========== OR Logic for Username Filters ==========
 
-    @Ignore("Filter logic test requires complex flow interaction - needs dispatcher injection")
     @Test
-    fun `multiple username filters use OR logic - matches ANY`() = runTest {
-        val links = listOf(
-            TestData.contentLink(id = 1, link = "https://x.com/alice/status/1"),
-            TestData.contentLink(id = 2, link = "https://x.com/bob/status/2"),
-            TestData.contentLink(id = 3, link = "https://x.com/charlie/status/3")
-        )
-        contentLinkRepository.setItems(links)
-        advanceUntilIdle()
+    fun `multiple username filters use OR logic - matches ANY`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val links = listOf(
+                TestData.contentLink(id = 1, link = "https://x.com/alice/status/1"),
+                TestData.contentLink(id = 2, link = "https://x.com/bob/status/2"),
+                TestData.contentLink(id = 3, link = "https://x.com/charlie/status/3")
+            )
+            contentLinkRepository.setItems(links)
 
-        // Add username filters (>3 chars = OR logic)
-        viewModel.consumeAction(TextAction.AddHiddenFilter("alice"))
-        viewModel.consumeAction(TextAction.AddHiddenFilter("charlie"))
-        advanceUntilIdle()
-
-        viewModel.listState.test {
-            val filtered = awaitItem()
+            val filtered = filteredLinksAfter {
+                // Add username filters (>3 chars = OR logic)
+                viewModel.consumeAction(TextAction.AddHiddenFilter("alice"))
+                viewModel.consumeAction(TextAction.AddHiddenFilter("charlie"))
+            }
             // Should match alice OR charlie
             assertThat(filtered.map { it.id }).containsExactly(1, 3)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 
     // ========== AND Logic for Domain Filters ==========
 
-    @Ignore("Filter logic test requires complex flow interaction - needs dispatcher injection")
     @Test
-    fun `multiple short domain filters use AND logic - matches ALL`() = runTest {
-        val links = listOf(
-            TestData.contentLink(id = 1, link = "https://x.com/user", description = "x post"),
-            TestData.contentLink(id = 2, link = "https://fb.com/user", description = "fb post"),
-            TestData.contentLink(id = 3, link = "https://x.com/user", description = "also fb mention") // x.com but mentions fb
-        )
-        contentLinkRepository.setItems(links)
-        advanceUntilIdle()
+    fun `multiple short domain filters use AND logic - matches ALL`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            // Short filters match on the URL domain or an exact tag token. AND logic means an item
+            // must satisfy BOTH. A single URL has one domain, so id=3 satisfies both by being on the
+            // x.com domain AND carrying an "fb" hashtag.
+            val fbTagged = DescriptionParser.serialize(
+                metadata = emptyList(),
+                handles = emptyList(),
+                hashtags = listOf("fb"),
+                keywords = emptyList()
+            )
+            val links = listOf(
+                TestData.contentLink(id = 1, link = "https://x.com/user"),                       // x domain only
+                TestData.contentLink(id = 2, link = "https://fb.com/user"),                       // fb domain only
+                TestData.contentLink(id = 3, link = "https://x.com/user", description = fbTagged) // x domain + fb tag
+            )
+            contentLinkRepository.setItems(links)
 
-        // Add domain filters (<=3 chars = AND logic, but domain only matches in URL domain)
-        viewModel.consumeAction(TextAction.AddHiddenFilter("x"))
-        viewModel.consumeAction(TextAction.AddHiddenFilter("fb"))
-        advanceUntilIdle()
-
-        viewModel.listState.test {
-            val filtered = awaitItem()
-            // AND logic means items must match BOTH filters
-            // id=1: x.com domain matches "x", but "fb" check - description has "x post"
-            // id=2: fb.com domain matches "fb", but "x" check fails
-            // id=3: x.com domain matches "x", description has "fb"
-            // For short filters, it checks domain or description
-            // So id=3 should pass both: x.com matches "x", description contains "fb"
+            val filtered = filteredLinksAfter {
+                // Add domain filters (<=3 chars = AND logic)
+                viewModel.consumeAction(TextAction.AddHiddenFilter("x"))
+                viewModel.consumeAction(TextAction.AddHiddenFilter("fb"))
+            }
             assertThat(filtered.map { it.id }).containsExactly(3)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 
     // ========== Mixed Filters ==========
 
-    @Ignore("Filter logic test requires complex flow interaction - needs dispatcher injection")
     @Test
-    fun `mixed username and domain filters apply correct logic`() = runTest {
-        val links = listOf(
-            TestData.contentLink(id = 1, link = "https://x.com/alice/status/1"),
-            TestData.contentLink(id = 2, link = "https://fb.com/alice/post"),
-            TestData.contentLink(id = 3, link = "https://x.com/bob/status/2")
-        )
-        contentLinkRepository.setItems(links)
-        advanceUntilIdle()
+    fun `mixed username and domain filters apply correct logic`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val links = listOf(
+                TestData.contentLink(id = 1, link = "https://x.com/alice/status/1"),
+                TestData.contentLink(id = 2, link = "https://fb.com/alice/post"),
+                TestData.contentLink(id = 3, link = "https://x.com/bob/status/2")
+            )
+            contentLinkRepository.setItems(links)
 
-        // "alice" is a username filter (>3 chars, OR logic)
-        // "x" is a domain filter (<=3 chars, AND logic)
-        viewModel.consumeAction(TextAction.AddHiddenFilter("alice"))
-        viewModel.consumeAction(TextAction.AddHiddenFilter("x"))
-        advanceUntilIdle()
-
-        viewModel.listState.test {
-            val filtered = awaitItem()
+            val filtered = filteredLinksAfter {
+                // "alice" is a username filter (>3 chars, OR logic)
+                // "x" is a domain filter (<=3 chars, AND logic)
+                viewModel.consumeAction(TextAction.AddHiddenFilter("alice"))
+                viewModel.consumeAction(TextAction.AddHiddenFilter("x"))
+            }
             // Username filter "alice" (OR): matches 1 and 2
             // Domain filter "x" (AND): must match x.com domain
-            // Combined: (matches alice OR...) AND (matches x domain)
-            // Result: id=1 matches both (alice in URL, x.com domain)
+            // Combined: id=1 matches both (alice in URL, x.com domain)
             assertThat(filtered.map { it.id }).containsExactly(1)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 
     // ========== Clear Filters ==========
 
-    @Ignore("Filter logic test requires complex flow interaction - needs dispatcher injection")
     @Test
-    fun `clear filters shows all items again`() = runTest {
-        val links = TestData.contentLinks(5)
-        contentLinkRepository.setItems(links)
-        advanceUntilIdle()
+    fun `clear filters shows all items again`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val links = TestData.contentLinks(5)
+            contentLinkRepository.setItems(links)
 
-        // Add filter
-        viewModel.consumeAction(TextAction.AddHiddenFilter("user1"))
-        advanceUntilIdle()
-
-        // Clear filters
-        viewModel.consumeAction(TextAction.ClearHiddenFilters)
-        advanceUntilIdle()
-
-        viewModel.listState.test {
-            val filtered = awaitItem()
+            val filtered = filteredLinksAfter {
+                viewModel.consumeAction(TextAction.AddHiddenFilter("user1"))
+                viewModel.consumeAction(TextAction.ClearHiddenFilters)
+            }
             assertThat(filtered).hasSize(5)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 
     // ========== Case Insensitivity ==========
 
-    @Ignore("Filter logic test requires complex flow interaction - needs dispatcher injection")
     @Test
-    fun `filters are case insensitive`() = runTest {
-        val links = listOf(
-            TestData.contentLink(id = 1, link = "https://X.COM/USER/status/1"),
-            TestData.contentLink(id = 2, link = "https://x.com/user/status/2"),
-            TestData.contentLink(id = 3, link = "https://youtube.com/TestUser")
-        )
-        contentLinkRepository.setItems(links)
-        advanceUntilIdle()
+    fun `filters are case insensitive`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val links = listOf(
+                TestData.contentLink(id = 1, link = "https://X.COM/USER/status/1"),
+                TestData.contentLink(id = 2, link = "https://x.com/user/status/2"),
+                TestData.contentLink(id = 3, link = "https://youtube.com/TestUser")
+            )
+            contentLinkRepository.setItems(links)
 
-        viewModel.consumeAction(TextAction.AddHiddenFilter("testuser"))
-        advanceUntilIdle()
-
-        viewModel.listState.test {
-            val filtered = awaitItem()
+            val filtered = filteredLinksAfter {
+                viewModel.consumeAction(TextAction.AddHiddenFilter("testuser"))
+            }
             assertThat(filtered.map { it.id }).containsExactly(3)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 
     // ========== Empty Filters ==========
 
-    @Ignore("Filter logic test requires complex flow interaction - needs dispatcher injection")
     @Test
-    fun `no filters shows all items`() = runTest {
-        val links = TestData.contentLinks(5)
-        contentLinkRepository.setItems(links)
-        advanceUntilIdle()
+    fun `no filters shows all items`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val links = TestData.contentLinks(5)
+            contentLinkRepository.setItems(links)
 
-        viewModel.listState.test {
-            val filtered = awaitItem()
+            val filtered = filteredLinksAfter { }
             assertThat(filtered).hasSize(5)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 
     @Test
-    fun `adding duplicate filter does not create duplicates`() = runTest {
-        advanceUntilIdle()
+    fun `adding duplicate filter does not create duplicates`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            filteredLinksAfter {
+                viewModel.consumeAction(TextAction.AddHiddenFilter("testuser"))
+                viewModel.consumeAction(TextAction.AddHiddenFilter("testuser"))
+            }
 
-        viewModel.consumeAction(TextAction.AddHiddenFilter("testuser"))
-        viewModel.consumeAction(TextAction.AddHiddenFilter("testuser"))
-        advanceUntilIdle()
-
-        // Read from internalScreenState to avoid combined flow issues
-        val state = viewModel.internalScreenState.value
-        assertThat(state.hiddenFilters.count { it == "testuser" }).isEqualTo(1)
-    }
+            val state = viewModel.internalScreenState.value
+            assertThat(state.hiddenFilters.count { it == "testuser" }).isEqualTo(1)
+        }
 }
