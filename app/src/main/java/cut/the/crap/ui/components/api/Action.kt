@@ -53,6 +53,11 @@ sealed interface TextAction : Action {
     data object PasteFromClipboard : TextAction
     data object CopyContentText : TextAction
     data object ClearContentText : TextAction
+
+    // Editor-scoped overflow actions that operate on the current draft text
+    data object PostContentOnTwitter : TextAction
+    data object PostContentOnFacebook : TextAction
+    data object ShareContentViaSheet : TextAction
 }
 
 // ========== UI State Actions ==========

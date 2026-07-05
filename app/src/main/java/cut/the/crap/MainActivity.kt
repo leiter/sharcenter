@@ -257,6 +257,45 @@ private fun handleAction(
             }
         }
 
+        is TextAction.PostContentOnTwitter -> {
+            // Post the current draft text as a new tweet on Twitter/X
+            val currentText = postsViewModel.screenState.value.focusedContentText.newText
+            if (currentText.isNotEmpty()) {
+                val twitterIntent = TwitterIntent.PostTweet(text = currentText)
+                activity.startActivity(
+                    Intent(Intent.ACTION_VIEW, twitterIntent.url.toUri())
+                )
+            }
+        }
+
+        is TextAction.PostContentOnFacebook -> {
+            // Share the current draft text as a new post on Facebook
+            val currentText = postsViewModel.screenState.value.focusedContentText.newText
+            if (currentText.isNotEmpty()) {
+                val facebookIntent = FacebookIntent.SharePost(text = currentText)
+                // Facebook's web sharer does not reliably prefill the post text, so copy it to the
+                // clipboard first so the user can paste it into the composer.
+                copyToClipboard(activity, currentText)
+                activity.startActivity(
+                    Intent(Intent.ACTION_VIEW, facebookIntent.url.toUri())
+                )
+            }
+        }
+
+        is TextAction.ShareContentViaSheet -> {
+            // Hand the current draft text to the native Android share sheet (ACTION_SEND).
+            val currentText = postsViewModel.screenState.value.focusedContentText.newText
+            if (currentText.isNotEmpty()) {
+                val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, currentText)
+                }
+                activity.startActivity(
+                    Intent.createChooser(sendIntent, activity.getString(R.string.share_chooser_title))
+                )
+            }
+        }
+
         is ContentItemAction.PostOnTwitter -> {
             // Post the content as a new tweet on Twitter/X
             // TwitterIntent.PostTweet automatically extracts any URLs from the content to use as link preview

@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentPasteGo
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
@@ -41,6 +43,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import cut.the.crap.R
 import cut.the.crap.tools.TextValueWrapper
+import cut.the.crap.ui.components.MenuItem
+import cut.the.crap.ui.components.MyPopupMenu
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.ChipsType
 import cut.the.crap.ui.components.api.Screen
@@ -83,22 +87,10 @@ fun ContentEditor(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(R.string.editor_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = pluralStringResource(R.plurals.chars, charCount, charCount),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                    )
-
                     // Clear all text button
                     FilledTonalIconButton(
                         onClick = {
@@ -116,6 +108,34 @@ fun ContentEditor(
                             modifier = Modifier.size(20.dp)
                         )
                     }
+
+                    Text(
+                        text = stringResource(R.string.editor_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = pluralStringResource(R.plurals.chars, charCount, charCount),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+
+                    // Overflow menu to the right of the char counter
+                    MyPopupMenu(
+                        action = onValueChange,
+                        menuItems = listOf(
+                            MenuItem(R.string.context_menu_post_twitter, iconRes = R.drawable.x, actionPayload = TextAction.PostContentOnTwitter),
+                            MenuItem(R.string.context_menu_post_facebook, iconRes = R.drawable.facebook, actionPayload = TextAction.PostContentOnFacebook),
+                            MenuItem(R.string.context_menu_share, Icons.Filled.Share, TextAction.ShareContentViaSheet),
+                            MenuItem(R.string.context_menu_delete, Icons.Filled.Delete, TextAction.ClearContentText)
+                        )
+                    )
                 }
             }
 
