@@ -214,20 +214,20 @@ fun ContentEditor(
                 }
 
                 // Attach file button
-                FilledTonalIconButton(
-                    onClick = onPickFiles,
-                    modifier = Modifier.size(36.dp),
-                    colors = IconButtonDefaults.filledTonalIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.AttachFile,
-                        contentDescription = stringResource(R.string.editor_cd_attach),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+//                FilledTonalIconButton(
+//                    onClick = onPickFiles,
+//                    modifier = Modifier.size(36.dp),
+//                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+//                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+//                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+//                    )
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Filled.AttachFile,
+//                        contentDescription = stringResource(R.string.editor_cd_attach),
+//                        modifier = Modifier.size(20.dp)
+//                    )
+//                }
 
                 // Upload button with badge (visible when files are selected)
                 if (selectedFileCount > 0) {
