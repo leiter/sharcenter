@@ -27,12 +27,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.data.domain.ContentLinkRepository
+import cut.the.crap.data.domain.KeyWord
+import cut.the.crap.data.domain.KeywordRepository
+import cut.the.crap.data.domain.KeywordType
 import cut.the.crap.data.preferences.SettingsRepository
 import cut.the.crap.data.rest.YouTubeRepository
 import cut.the.crap.data.rest.YouTubeUrlParser
 import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.UrlResolver
 import cut.the.crap.tools.parseSocialMediaUrl
+import cut.the.crap.tools.parseXUrl
 import kotlinx.coroutines.Dispatchers
 import cut.the.crap.ui.XLoginActivity
 import cut.the.crap.ui.components.api.ChipsType
@@ -56,6 +60,9 @@ class ShareReceiverActivity : ComponentActivity() {
 
     @Inject
     lateinit var youTubeRepository: YouTubeRepository
+
+    @Inject
+    lateinit var keywordRepository: KeywordRepository
 
     // Store pending URL for retry after login
     private var pendingUrl: String? = null
@@ -186,6 +193,12 @@ class ShareReceiverActivity : ComponentActivity() {
 
     private fun saveUrlAndFinish(url: String, wasResolved: Boolean) {
         lifecycleScope.launch {
+            // An X/Twitter profile share saves the handle only — the profile URL itself
+            // is never stored as a link, so bypass the edit dialog and link insert.
+            if (addXHandleIfProfile(url)) {
+                finish()
+                return@launch
+            }
             val settings = settingsRepository.settingsFlow.first()
             if (settings.editSharedLinkBeforeSave) {
                 // Let the user review/edit the link (and add keywords) before it's saved.
@@ -263,6 +276,34 @@ class ShareReceiverActivity : ComponentActivity() {
         }
 
         finish()
+    }
+
+    /**
+     * When [url] is an X/Twitter *profile* link, saves its handle as an `ACCOUNT`
+     * keyword — the same pool the handles dialog reads from — and returns `true` so the
+     * caller skips storing the profile URL as a link. Post links and non-X links return
+     * `false` and are saved normally. The handle is normalised to `@username` to match
+     * how the dialog displays and adds handles.
+     *
+     * Deduped case-insensitively: skipping an existing handle avoids the unique-index
+     * REPLACE from resetting its favorite/usage stats. A duplicate profile still returns
+     * `true` — the link is not saved either way.
+     */
+    private suspend fun addXHandleIfProfile(url: String): Boolean {
+        val info = parseXUrl(url) ?: return false
+        if (info.contentType != "profile") return false
+        val username = info.username?.takeIf { it.isNotBlank() } ?: return false
+        val handle = "@$username"
+        val existing = keywordRepository.getByType(KeywordType.ACCOUNT).first()
+        if (existing.any { it.text.equals(handle, ignoreCase = true) }) {
+            Log.d(TAG, "X handle already in pool, skipping: $handle")
+            Toast.makeText(this, getString(R.string.share_toast_handle_exists, handle), Toast.LENGTH_SHORT).show()
+        } else {
+            keywordRepository.insert(KeyWord(text = handle, type = KeywordType.ACCOUNT))
+            Log.d(TAG, "Added X handle to pool: $handle")
+            Toast.makeText(this, getString(R.string.share_toast_handle_saved, handle), Toast.LENGTH_SHORT).show()
+        }
+        return true
     }
 
     override fun onNewIntent(intent: Intent) {

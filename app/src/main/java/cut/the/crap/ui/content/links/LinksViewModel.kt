@@ -109,18 +109,22 @@ class LinksViewModel @Inject constructor(
         }
     }
 
-    // Extract handleList from all links - derived flow (no init block needed)
+    // handleList for the "Select Accounts" dialog: usernames derived from existing links
+    // merged with saved handles from the ACCOUNT keyword pool (e.g. shared X profiles).
     @OptIn(kotlinx.coroutines.FlowPreview::class)
     private val handleListFlow: StateFlow<List<KeyWord>> =
-        itemManager.filteredAndSortedItems
-            .debounce(300) // Wait 300ms after last emission to reduce redundant processing
-            .map { links ->
+        combine(
+            // Wait 300ms after last emission to reduce redundant processing
+            itemManager.filteredAndSortedItems.debounce(300),
+            keywordRepository.getByType(KeywordType.ACCOUNT)
+        ) { links, savedHandles -> links to savedHandles }
+            .map { (links, savedHandles) ->
                 // Process URLs in background thread to avoid blocking UI
                 withContext(Dispatchers.Default) {
-                    // Extract unique usernames from all links
+                    // Extract usernames from all links
                     // For YouTube: prefer channel name from description metadata
                     // For others: extract from URL path
-                    val usernames = links
+                    val derived = links
                         .asSequence()
                         .map { link ->
                             if (YouTubeUrlParser.isYouTubeUrl(link.link)) {
@@ -132,19 +136,27 @@ class LinksViewModel @Inject constructor(
                         }
                         .filter { it.isNotBlank() }
                         .distinct()
-                        .sorted()
                         .toList()
 
-                    // Convert usernames to HandleTag-like objects for the dialog
-                    usernames.mapIndexed { index, username ->
-                        KeyWord(
-                            id = index,
-                            text = username,
-                            type = KeywordType.ACCOUNT,
-                            isFavorite = false,
-                            usageCount = 0
-                        )
+                    // Merge link-derived usernames with saved handles, collapsing
+                    // duplicates case-insensitively and ignoring a leading "@" (derived
+                    // usernames have no prefix, saved handles are stored as "@name").
+                    // Link-derived entries win so their un-prefixed form still matches
+                    // link URLs when used as a filter in ConfirmHandleSelection.
+                    val byKey = LinkedHashMap<String, KeyWord>()
+                    derived.forEach { username ->
+                        byKey.getOrPut(username.removePrefix("@").lowercase()) {
+                            KeyWord(text = username, type = KeywordType.ACCOUNT)
+                        }
                     }
+                    savedHandles.forEach { handle ->
+                        byKey.getOrPut(handle.text.removePrefix("@").lowercase()) { handle }
+                    }
+
+                    // Sort alphabetically and assign sequential ids for stable dialog keys.
+                    byKey.values
+                        .sortedBy { it.text.removePrefix("@").lowercase() }
+                        .mapIndexed { index, keyWord -> keyWord.copy(id = index) }
                 }
             }
             .stateIn(

@@ -398,6 +398,8 @@
     <!-- Share receiver -->
     <string name="share_toast_received_image">Received image: %1$s</string>
     <string name="share_toast_unsupported_type">Unsupported type: %1$s</string>
+    <string name="share_toast_handle_saved">Handle %1$s saved</string>
+    <string name="share_toast_handle_exists">Handle %1$s already saved</string>
 
     <!-- File helper -->
     <string name="file_toast_source_missing">Source file does not exist</string>
