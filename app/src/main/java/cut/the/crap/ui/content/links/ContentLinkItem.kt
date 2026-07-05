@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material.icons.filled.Tag
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.AlternateEmail
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Edit
@@ -79,6 +80,7 @@ import cut.the.crap.tools.formatTimestampWithLocalizedFormatter
 import cut.the.crap.tools.getDisplayName
 import cut.the.crap.tools.parseSocialMediaUrl
 import cut.the.crap.tools.prepareUrlInformation
+import cut.the.crap.tools.profileUrl
 import cut.the.crap.ui.components.MenuItem
 import cut.the.crap.ui.components.MyPopupMenu
 import cut.the.crap.ui.components.api.Action
@@ -311,15 +313,29 @@ fun LinkListItem(
                 }
             }
 
+            // Channel / user profile URL derived from the link. Null when the link carries no
+            // handle to resolve (e.g. a bare YouTube video), in which case no profile menu item
+            // is offered at all.
+            val profileUrl = socialInfo?.profileUrl()
             MyPopupMenu(
                 action = action,
-                menuItems = listOf(
-                    MenuItem(R.string.context_menu_open, Icons.Filled.Link, ContentLinkAction.Open(item)),
-                    MenuItem(R.string.context_menu_compose_post, Icons.AutoMirrored.Filled.Send, ContentLinkAction.ComposePost(item)),
-                    MenuItem(R.string.context_menu_clipboard, Icons.Filled.CopyAll, ContentLinkAction.CopyToClipboard(item)),
-                    MenuItem(R.string.context_menu_comment_quote, Icons.AutoMirrored.Filled.Comment, ContentLinkAction.ShowCommentQuoteDialog(item)),
-                    MenuItem(R.string.context_menu_delete, Icons.Filled.Delete, ContentLinkAction.OfferDelete(item))
-                )
+                menuItems = buildList {
+                    add(MenuItem(R.string.context_menu_open, Icons.Filled.Link, ContentLinkAction.Open(item)))
+                    if (profileUrl != null) {
+                        val isChannel = socialInfo.platform.equals("youtube", ignoreCase = true)
+                        add(
+                            MenuItem(
+                                if (isChannel) R.string.context_menu_show_channel else R.string.context_menu_show_profile,
+                                Icons.Outlined.AccountCircle,
+                                ContentLinkAction.OpenProfile(item, profileUrl)
+                            )
+                        )
+                    }
+                    add(MenuItem(R.string.context_menu_compose_post, Icons.AutoMirrored.Filled.Send, ContentLinkAction.ComposePost(item)))
+                    add(MenuItem(R.string.context_menu_clipboard, Icons.Filled.CopyAll, ContentLinkAction.CopyToClipboard(item)))
+                    add(MenuItem(R.string.context_menu_comment_quote, Icons.AutoMirrored.Filled.Comment, ContentLinkAction.ShowCommentQuoteDialog(item)))
+                    add(MenuItem(R.string.context_menu_delete, Icons.Filled.Delete, ContentLinkAction.OfferDelete(item)))
+                }
             )
         }
         // When a thumbnail image is available, show it as a leading image that spans the

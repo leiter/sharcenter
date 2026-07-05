@@ -7,6 +7,8 @@
     <string name="context_menu_open">Open</string>
     <string name="context_menu_compose_post">Compose post</string>
     <string name="context_menu_clipboard">Clipboard</string>
+    <string name="context_menu_show_profile">Show profile</string>
+    <string name="context_menu_show_channel">Show channel</string>
     <string name="context_menu_comment_quote">Comment/Quote</string>
     <string name="context_menu_post_twitter">Post on Twitter</string>
     <string name="context_menu_post_facebook">Post on Facebook</string>

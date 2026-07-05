@@ -168,6 +168,9 @@ private fun handleAction(
         is ContentLinkAction.Open -> activity.startActivity(
             Intent(Intent.ACTION_VIEW, action.item.link.toUri())
         )
+        is ContentLinkAction.OpenProfile -> activity.startActivity(
+            Intent(Intent.ACTION_VIEW, action.url.toUri())
+        )
         is ContentLinkAction.CopyToClipboard -> copyToClipboard(activity, action.item.link)
 
         is ContentLinkAction.ComposePost -> {

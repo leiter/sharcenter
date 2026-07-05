@@ -27,6 +27,8 @@ sealed interface ContentLinkAction : Action {
         val searchHint: String
     ) : ContentLinkAction
     data class Open(override val item: ContentLink) : ContentLinkAction
+    /** Open the channel / user profile URL derived from this link. */
+    data class OpenProfile(override val item: ContentLink, val url: String) : ContentLinkAction
     data class CopyToClipboard(override val item: ContentLink) : ContentLinkAction
 
     /** Seed the Posts editor with this link (URL + its saved handles/hashtags/keywords) and switch to it. */

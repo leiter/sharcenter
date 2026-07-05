@@ -390,6 +390,22 @@ fun SocialMediaInfo.getDisplayName(): String {
 }
 
 /**
+ * Build a URL that points at the channel / user profile behind this content, when one can be
+ * derived from the parsed [username]. Returns null when there is no username to link to (e.g. a
+ * YouTube video URL that carries no channel handle), so callers can omit the profile action.
+ */
+fun SocialMediaInfo.profileUrl(): String? {
+    val user = username?.takeIf { it.isNotBlank() } ?: return null
+    return when (platform.lowercase()) {
+        "instagram" -> "https://www.instagram.com/$user/"
+        "facebook" -> "https://www.facebook.com/$user/"
+        "x" -> "https://x.com/$user"
+        "youtube" -> "https://www.youtube.com/@$user"
+        else -> null
+    }
+}
+
+/**
  * Get a formatted description for the social media content
  */
 fun SocialMediaInfo.getDescription(): String {
