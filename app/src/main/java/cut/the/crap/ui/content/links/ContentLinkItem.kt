@@ -1,14 +1,15 @@
 package cut.the.crap.ui.content.links
 
+//import cut.the.crap.mockedLinkItems
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,31 +20,27 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Comment
-import androidx.compose.material.icons.automirrored.filled.Input
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Numbers
-import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
+import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material.icons.outlined.AlternateEmail
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -59,20 +56,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import cut.the.crap.R
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.data.rest.YouTubeUrlParser
-//import cut.the.crap.mockedLinkItems
 import cut.the.crap.tools.DescriptionParser
 import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.domainPainter
@@ -88,7 +86,6 @@ import cut.the.crap.ui.components.api.ContentLinkAction
 import cut.the.crap.ui.components.api.TextAction
 import cut.the.crap.ui.theme.PreviewAppThemeProvider
 import cut.the.crap.ui.theme.PreviewThemeWrapper
-import kotlin.random.Random
 
 @Composable
 fun LinkListItem(
@@ -166,7 +163,7 @@ fun LinkListItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Tags FlowRow
+            // Keyword marker summary chips (or empty-state text)
             if (allTagsEmpty) {
                 Text(
                     text = "No keywords",
@@ -177,97 +174,59 @@ fun LinkListItem(
                         .padding(16.dp)
                 )
             } else {
-                FlowRow(
+                // Compact per-marker summary chips, inline with the edit pen. Each chip shows the
+                // count for one marker type; tapping it opens a dropdown listing that type's
+                // entries, each removable via the trailing delete icon.
+                Row(
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Handles (@) - secondary color
-                    handles.forEach { handle ->
-                        FilterChip(
-                            selected = false,
-                            onClick = if (!selectionState) {
-                                {
-                                    val updated = LinkMetadata.removeTag(item, handle, ChipsType.Handle)
-                                    action(ContentLinkAction.EditSearchHint(item, updated.description))
-                                }
-                            } else {
-                                { }
-                            },
-                            label = { Text("@$handle") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                                labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            ),
-                            trailingIcon = if (!selectionState) {
-                                {
-                                    Icon(
-                                        imageVector = Icons.Filled.Delete,
-                                        contentDescription = stringResource(R.string.links_cd_remove_handle),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            } else null
+                    if (handles.isNotEmpty()) {
+                        MarkerSummaryChip(
+                            icon = Icons.Outlined.AlternateEmail,
+                            entries = handles,
+                            entryPrefix = "@",
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                            labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            enabled = !selectionState,
+                            removeContentDescription = stringResource(R.string.links_cd_remove_handle),
+                            onRemove = { handle ->
+                                val updated = LinkMetadata.removeTag(item, handle, ChipsType.Handle)
+                                action(ContentLinkAction.EditSearchHint(item, updated.description))
+                            }
                         )
                     }
-
-                    // Hashtags (#) - tertiary color
-                    hashtags.forEach { hashtag ->
-                        FilterChip(
-                            selected = false,
-                            onClick = if (!selectionState) {
-                                {
-                                    val updated = LinkMetadata.removeTag(item, hashtag, ChipsType.Tag)
-                                    action(ContentLinkAction.EditSearchHint(item, updated.description))
-                                }
-                            } else {
-                                { }
-                            },
-                            label = { Text("#$hashtag") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-                                labelColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                            ),
-                            trailingIcon = if (!selectionState) {
-                                {
-                                    Icon(
-                                        imageVector = Icons.Filled.Delete,
-                                        contentDescription = stringResource(R.string.links_cd_remove_hashtag),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            } else null
+                    if (hashtags.isNotEmpty()) {
+                        MarkerSummaryChip(
+                            icon = Icons.Filled.Tag,
+                            entries = hashtags,
+                            entryPrefix = "#",
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                            labelColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            enabled = !selectionState,
+                            removeContentDescription = stringResource(R.string.links_cd_remove_hashtag),
+                            onRemove = { hashtag ->
+                                val updated = LinkMetadata.removeTag(item, hashtag, ChipsType.Tag)
+                                action(ContentLinkAction.EditSearchHint(item, updated.description))
+                            }
                         )
                     }
-
-                    // Keywords - primary color
-                    keywords.forEach { keyword ->
-                        FilterChip(
-                            selected = false,
-                            onClick = if (!selectionState) {
-                                {
-                                    val updated = LinkMetadata.removeTag(item, keyword, ChipsType.KeyWords)
-                                    action(ContentLinkAction.EditSearchHint(item, updated.description))
-                                }
-                            } else {
-                                { }
-                            },
-                            label = { Text(keyword) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                                labelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            ),
-                            trailingIcon = if (!selectionState) {
-                                {
-                                    Icon(
-                                        imageVector = Icons.Filled.Delete,
-                                        contentDescription = stringResource(R.string.links_cd_remove_keyword),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            } else null
+                    if (keywords.isNotEmpty()) {
+                        MarkerSummaryChip(
+                            icon = Icons.Filled.Numbers,
+                            entries = keywords,
+                            entryPrefix = "",
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                            labelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            enabled = !selectionState,
+                            removeContentDescription = stringResource(R.string.links_cd_remove_keyword),
+                            onRemove = { keyword ->
+                                val updated = LinkMetadata.removeTag(item, keyword, ChipsType.KeyWords)
+                                action(ContentLinkAction.EditSearchHint(item, updated.description))
+                            }
                         )
                     }
                 }
@@ -548,6 +507,63 @@ fun LinkListItem(
                     )
             )
         }
+            }
+        }
+    }
+}
+
+/**
+ * A compact summary chip for one marker type (handles / hashtags / keywords). Shows the entry
+ * count with a leading category icon; tapping it opens a dropdown listing every entry, each with a
+ * trailing delete icon that removes it via [onRemove]. Disabled (non-clickable) in selection mode.
+ */
+@Composable
+private fun MarkerSummaryChip(
+    icon: ImageVector,
+    entries: List<String>,
+    entryPrefix: String,
+    containerColor: Color,
+    labelColor: Color,
+    enabled: Boolean,
+    removeContentDescription: String,
+    onRemove: (String) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        FilterChip(
+            selected = false,
+            enabled = enabled,
+            onClick = { expanded = true },
+            label = { Text(entries.size.toString()) },
+            leadingIcon = {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = labelColor,
+                    modifier = Modifier.size(18.dp)
+                )
+            },
+            colors = FilterChipDefaults.filterChipColors(
+                containerColor = containerColor,
+                labelColor = labelColor,
+            ),
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            entries.forEach { entry ->
+                DropdownMenuItem(
+                    text = { Text("$entryPrefix$entry") },
+                    onClick = { onRemove(entry) },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = removeContentDescription,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                )
             }
         }
     }
