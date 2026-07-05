@@ -17,6 +17,10 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import coil.ImageLoader
+import coil.ImageLoaderFactory
+import coil.disk.DiskCache
+import coil.memory.MemoryCache
 import cut.the.crap.data.backup.DatabaseBackupManager
 import cut.the.crap.data.rest.YouTubeMetadataBackfiller
 import cut.the.crap.data.rest.task.JobQueueRepository
@@ -46,7 +50,33 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltAndroidApp
-class MyApplication : Application()
+class MyApplication : Application(), ImageLoaderFactory {
+
+    /**
+     * Provides the app-wide Coil [ImageLoader] used by every AsyncImage (currently the link
+     * thumbnails). Explicitly wires a memory cache and a persistent disk cache so thumbnails
+     * survive scrolling and app restarts, and disables cache-header respect: some thumbnail
+     * hosts (e.g. YouTube) send short-lived / no-store Cache-Control headers that would
+     * otherwise force Coil to re-download the same image.
+     */
+    override fun newImageLoader(): ImageLoader {
+        return ImageLoader.Builder(this)
+            .memoryCache {
+                MemoryCache.Builder(this)
+                    .maxSizePercent(0.25)
+                    .build()
+            }
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(cacheDir.resolve("image_cache"))
+                    .maxSizePercent(0.02)
+                    .build()
+            }
+            .respectCacheHeaders(false)
+            .crossfade(true)
+            .build()
+    }
+}
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

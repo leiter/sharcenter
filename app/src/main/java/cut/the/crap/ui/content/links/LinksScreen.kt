@@ -357,16 +357,16 @@ fun LinkScreen(
                             icon = Icons.Filled.ArrowUpward,
                             actionPayload = ListAction.ScrollToTop
                         ),
-                        MenuItem(
-                            title = R.string.app_name,
-                            icon = Icons.Filled.FolderOpen,
-                            actionPayload = FileAction.Import(Uri.EMPTY) // Will be intercepted
-                        ),
-                        MenuItem(
-                            title = R.string.app_name,
-                            icon = Icons.Filled.Download,
-                            actionPayload = FileAction.Export(null) // Will be intercepted
-                        ),
+//                        MenuItem(
+//                            title = R.string.app_name,
+//                            icon = Icons.Filled.FolderOpen,
+//                            actionPayload = FileAction.Import(Uri.EMPTY) // Will be intercepted
+//                        ),
+//                        MenuItem(
+//                            title = R.string.app_name,
+//                            icon = Icons.Filled.Download,
+//                            actionPayload = FileAction.Export(null) // Will be intercepted
+//                        ),
                         MenuItem(
                             title = R.string.app_name,
                             icon = Icons.Filled.SwapVert,
