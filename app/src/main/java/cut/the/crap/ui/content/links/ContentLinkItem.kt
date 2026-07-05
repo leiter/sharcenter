@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Comment
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.Delete
@@ -314,6 +315,7 @@ fun LinkListItem(
                 action = action,
                 menuItems = listOf(
                     MenuItem(R.string.context_menu_open, Icons.Filled.Link, ContentLinkAction.Open(item)),
+                    MenuItem(R.string.context_menu_compose_post, Icons.AutoMirrored.Filled.Send, ContentLinkAction.ComposePost(item)),
                     MenuItem(R.string.context_menu_clipboard, Icons.Filled.CopyAll, ContentLinkAction.CopyToClipboard(item)),
                     MenuItem(R.string.context_menu_comment_quote, Icons.AutoMirrored.Filled.Comment, ContentLinkAction.ShowCommentQuoteDialog(item)),
                     MenuItem(R.string.context_menu_delete, Icons.Filled.Delete, ContentLinkAction.OfferDelete(item))

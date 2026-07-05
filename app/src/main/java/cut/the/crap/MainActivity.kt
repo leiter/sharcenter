@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import cut.the.crap.data.backup.DatabaseBackupManager
 import cut.the.crap.data.rest.YouTubeMetadataBackfiller
@@ -34,7 +35,9 @@ import cut.the.crap.ui.components.api.TextAction
 import cut.the.crap.ui.components.api.UploadAction
 import cut.the.crap.ui.theme.MyAppTheme
 import cut.the.crap.ui.content.NavigationGraph
+import cut.the.crap.ui.content.Screen
 import cut.the.crap.ui.content.posts.PostsViewModel
+import cut.the.crap.ui.content.posts.composePostFromLink
 import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.settings.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -103,7 +106,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
 
                 val action: (Action) -> Unit = {
-                    handleAction(it, linksViewModel, postsViewModel, this)
+                    handleAction(it, linksViewModel, postsViewModel, navController, this)
                 }
 
                 Surface(
@@ -127,6 +130,7 @@ private fun handleAction(
     action: Action,
     linksViewModel: LinksViewModel,
     postsViewModel: PostsViewModel,
+    navController: NavHostController,
     activity: ComponentActivity
 ) {
     when(action){
@@ -135,6 +139,16 @@ private fun handleAction(
             Intent(Intent.ACTION_VIEW, action.item.link.toUri())
         )
         is ContentLinkAction.CopyToClipboard -> copyToClipboard(activity, action.item.link)
+
+        is ContentLinkAction.ComposePost -> {
+            // Bridge Links → Posts: seed the editor with this link's URL + saved markers,
+            // then switch to the Posts tab so the draft is ready to edit and send.
+            postsViewModel.composePostFromLink(action.item)
+            navController.navigate(Screen.Home.route) {
+                popUpTo(navController.graph.startDestinationId)
+                launchSingleTop = true
+            }
+        }
 
         is ContentItemAction.CopyToClipboard -> copyToClipboard(activity, action.contentItem.text)
 

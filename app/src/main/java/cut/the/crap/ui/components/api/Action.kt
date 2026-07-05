@@ -28,6 +28,9 @@ sealed interface ContentLinkAction : Action {
     ) : ContentLinkAction
     data class Open(override val item: ContentLink) : ContentLinkAction
     data class CopyToClipboard(override val item: ContentLink) : ContentLinkAction
+
+    /** Seed the Posts editor with this link (URL + its saved handles/hashtags/keywords) and switch to it. */
+    data class ComposePost(override val item: ContentLink) : ContentLinkAction
     data class ShowCommentQuoteDialog(override val item: ContentLink) : ContentLinkAction
     data class CreateComment(override val item: ContentLink, val comment: String) : ContentLinkAction
     data class CreateQuote(override val item: ContentLink, val quote: String) : ContentLinkAction

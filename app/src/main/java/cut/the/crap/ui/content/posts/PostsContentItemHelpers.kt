@@ -2,6 +2,8 @@ package cut.the.crap.ui.content.posts
 
 import androidx.lifecycle.viewModelScope
 import cut.the.crap.data.domain.ContentItem
+import cut.the.crap.data.domain.ContentLink
+import cut.the.crap.tools.DescriptionParser
 import cut.the.crap.tools.TextValueWrapper
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
@@ -48,6 +50,45 @@ internal fun PostsViewModel.loadContentItem(item: ContentItem) {
             )
         }
     }
+}
+
+/**
+ * Bridges the Links list into the Posts editor: seeds a fresh post composed from [link]
+ * (its URL plus the saved handles, hashtags, and keywords), persists it as the active item,
+ * and shows it in the editor. Mirrors [loadContentItem] but for a brand-new item, so the
+ * user lands on the Posts screen with the draft ready to edit and send.
+ */
+internal fun PostsViewModel.composePostFromLink(link: ContentLink) {
+    val text = link.toComposedPostText()
+    viewModelScope.launch {
+        // Detach from any currently active item, then make the new draft the active one.
+        contentItemRepository.clearActiveItem()
+        val id = contentItemRepository.insert(ContentItem(text = text, isActive = true))
+        activeItemId = id.toInt()
+        internalScreenState.update {
+            it.copy(
+                focusedContentText = TextValueWrapper(
+                    newText = text,
+                    selection = Pair(text.length, text.length)
+                ),
+                filterExpanded = false
+            )
+        }
+    }
+}
+
+/**
+ * Builds the editor text for "Compose post from this link": the URL followed (when present)
+ * by the link's saved handles (@), hashtags (#), and keywords, space-joined on a new line.
+ */
+fun ContentLink.toComposedPostText(): String {
+    val parsed = DescriptionParser.parse(description)
+    val markers = buildList {
+        parsed.handles.forEach { add("@$it") }
+        parsed.hashtags.forEach { add("#$it") }
+        parsed.keywords.forEach { add(it) }
+    }
+    return if (markers.isEmpty()) link else "$link\n\n${markers.joinToString(" ")}"
 }
 
 /**

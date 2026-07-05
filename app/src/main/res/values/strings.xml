@@ -5,6 +5,7 @@
     <string name="context_menu_insert">Insert</string>
     <string name="context_menu_edit">Edit</string>
     <string name="context_menu_open">Open</string>
+    <string name="context_menu_compose_post">Compose post</string>
     <string name="context_menu_clipboard">Clipboard</string>
     <string name="context_menu_comment_quote">Comment/Quote</string>
     <string name="context_menu_post_twitter">Post on Twitter</string>
