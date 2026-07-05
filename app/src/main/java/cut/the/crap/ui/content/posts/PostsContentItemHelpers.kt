@@ -69,7 +69,9 @@ internal fun PostsViewModel.composePostFromLink(link: ContentLink) {
             it.copy(
                 focusedContentText = TextValueWrapper(
                     newText = text,
-                    selection = Pair(text.length, text.length)
+                    // Cursor at the very start (the empty line above the URL) so the
+                    // user can type their post immediately.
+                    selection = Pair(0, 0)
                 ),
                 filterExpanded = false
             )
@@ -78,8 +80,9 @@ internal fun PostsViewModel.composePostFromLink(link: ContentLink) {
 }
 
 /**
- * Builds the editor text for "Compose post from this link": the URL followed (when present)
- * by the link's saved handles (@), hashtags (#), and keywords, space-joined on a new line.
+ * Builds the editor text for "Compose post from this link": a leading linefeed (an empty
+ * line for the user to write above), then the URL followed (when present) by the link's
+ * saved handles (@), hashtags (#), and keywords, space-joined on a new line.
  */
 fun ContentLink.toComposedPostText(): String {
     val parsed = DescriptionParser.parse(description)
@@ -88,7 +91,8 @@ fun ContentLink.toComposedPostText(): String {
         parsed.hashtags.forEach { add("#$it") }
         parsed.keywords.forEach { add(it) }
     }
-    return if (markers.isEmpty()) link else "$link\n\n${markers.joinToString(" ")}"
+    val body = if (markers.isEmpty()) link else "$link\n\n${markers.joinToString(" ")}"
+    return "\n$body"
 }
 
 /**

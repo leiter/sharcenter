@@ -16,7 +16,7 @@ class ComposePostFromLinkTest {
     fun `link with no description yields just the url`() {
         val link = ContentLink(id = 1, link = "https://x.com/user/status/1")
 
-        assertThat(link.toComposedPostText()).isEqualTo("https://x.com/user/status/1")
+        assertThat(link.toComposedPostText()).isEqualTo("\nhttps://x.com/user/status/1")
     }
 
     @Test
@@ -30,7 +30,7 @@ class ComposePostFromLinkTest {
         val link = ContentLink(id = 1, link = "https://x.com/post/1", description = description)
 
         assertThat(link.toComposedPostText())
-            .isEqualTo("https://x.com/post/1\n\n@alice @bob #news launch")
+            .isEqualTo("\nhttps://x.com/post/1\n\n@alice @bob #news launch")
     }
 
     @Test
@@ -46,13 +46,13 @@ class ComposePostFromLinkTest {
         val link = ContentLink(id = 1, link = "https://youtube.com/watch?v=abc", description = description)
 
         assertThat(link.toComposedPostText())
-            .isEqualTo("https://youtube.com/watch?v=abc\n\n#music")
+            .isEqualTo("\nhttps://youtube.com/watch?v=abc\n\n#music")
     }
 
     @Test
     fun `legacy comma separated description is treated as keywords`() {
         val link = ContentLink(id = 1, link = "https://x.com/post/1", description = "one, two")
 
-        assertThat(link.toComposedPostText()).isEqualTo("https://x.com/post/1\n\none two")
+        assertThat(link.toComposedPostText()).isEqualTo("\nhttps://x.com/post/1\n\none two")
     }
 }
