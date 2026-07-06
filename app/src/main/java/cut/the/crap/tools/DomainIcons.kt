@@ -16,6 +16,7 @@ fun domainPainter(domain: String) : Painter {
         "youtube" -> painterResource(id = R.drawable.youtube)
         "instagram" -> painterResource(id = R.drawable.instagram)
         "facebook" -> painterResource(id = R.drawable.facebook)
+        "bsky" -> painterResource(id = R.drawable.bluesky)
 
         else -> rememberVectorPainter(
             ImageVector.vectorResource(id = R.drawable.img_not_available)

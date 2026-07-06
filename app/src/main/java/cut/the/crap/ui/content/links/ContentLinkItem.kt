@@ -364,9 +364,14 @@ fun LinkListItem(
                         .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
                 ) {
                     // Placeholder/fallback matches the platform (YouTube logo for YouTube,
-                    // a neutral image otherwise) so a Bluesky card never shows a YouTube badge.
+                    // Bluesky logo for Bluesky, a neutral image otherwise) so a card never
+                    // shows the wrong platform badge.
                     val thumbnailPlaceholder = painterResource(
-                        id = if (isYouTube) R.drawable.youtube else R.drawable.img_not_available
+                        id = when {
+                            isYouTube -> R.drawable.youtube
+                            isBluesky -> R.drawable.bluesky
+                            else -> R.drawable.img_not_available
+                        }
                     )
                     AsyncImage(
                         model = thumbnailUrl,
