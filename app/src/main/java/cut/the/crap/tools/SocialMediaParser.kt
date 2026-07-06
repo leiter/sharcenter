@@ -30,6 +30,11 @@ private val FACEBOOK_PROFILE_REGEX = """facebook\.com/([A-Za-z0-9.]+)/?$""".toRe
 private val TWITTER_TWEET_ID_REGEX = """/status/(\d+)""".toRegex()
 private val TWITTER_USERNAME_REGEX = """(?:x\.com|twitter\.com)/([A-Za-z0-9_]+)""".toRegex()
 
+// Bluesky regex patterns. The actor segment is a handle (e.g. "alice.bsky.social", a custom
+// domain) or a DID ("did:plc:…"), so it is matched loosely up to the next path separator.
+private val BLUESKY_POST_REGEX = """bsky\.app/profile/([^/?#]+)/post/([A-Za-z0-9]+)""".toRegex()
+private val BLUESKY_PROFILE_REGEX = """bsky\.app/profile/([^/?#]+)""".toRegex()
+
 /**
  * Parse Instagram URLs to extract content information
  *
@@ -351,6 +356,55 @@ fun parseXUrl(url: String): SocialMediaInfo? {
 }
 
 /**
+ * Parse Bluesky URLs to extract content information
+ *
+ * Supported patterns:
+ * - https://bsky.app/profile/{actor}/post/{rkey}   -> Post
+ * - https://bsky.app/profile/{actor}               -> Profile
+ *
+ * where {actor} is a handle ("alice.bsky.social", a custom domain) or a DID ("did:plc:…").
+ */
+fun parseBlueskyUrl(url: String): SocialMediaInfo? {
+    if (!url.contains("bsky.app")) return null
+
+    BLUESKY_POST_REGEX.find(url)?.let { match ->
+        return SocialMediaInfo(
+            platform = "bluesky",
+            contentType = "post",
+            identifier = match.groupValues[2],
+            username = match.groupValues[1]
+        )
+    }
+
+    BLUESKY_PROFILE_REGEX.find(url)?.let { match ->
+        return SocialMediaInfo(
+            platform = "bluesky",
+            contentType = "profile",
+            identifier = null,
+            username = match.groupValues[1]
+        )
+    }
+
+    return null
+}
+
+/** Whether [url] points at Bluesky (bsky.app). */
+fun isBlueskyUrl(url: String): Boolean = url.contains("bsky.app")
+
+/**
+ * Builds the `at://` URI for the post [url] points at, resolvable by the public Bluesky API
+ * (`app.bsky.feed.getPostThread`). Returns null for profile links and non-Bluesky URLs. The actor
+ * segment (handle or DID) is used as the URI authority — the public AppView resolves handles.
+ */
+fun blueskyPostAtUri(url: String): String? {
+    val info = parseBlueskyUrl(url) ?: return null
+    if (info.contentType != "post") return null
+    val actor = info.username?.takeIf { it.isNotBlank() } ?: return null
+    val rkey = info.identifier?.takeIf { it.isNotBlank() } ?: return null
+    return "at://$actor/app.bsky.feed.post/$rkey"
+}
+
+/**
  * Parse any social media URL and return extracted information
  *
  * This is the main entry point - it automatically detects the platform
@@ -365,6 +419,7 @@ fun parseSocialMediaUrl(url: String): SocialMediaInfo? {
         url.contains("facebook.com") || url.contains("fb.com") || url.contains("fb.watch") -> parseFacebookUrl(url)
         url.contains("youtube.com") || url.contains("youtu.be") -> parseYoutubeUrl(url)
         url.contains("x.com") || url.contains("twitter.com") -> parseXUrl(url)
+        url.contains("bsky.app") -> parseBlueskyUrl(url)
         else -> null
     }
 }
@@ -401,6 +456,7 @@ fun SocialMediaInfo.profileUrl(): String? {
         "facebook" -> "https://www.facebook.com/$user/"
         "x" -> "https://x.com/$user"
         "youtube" -> "https://www.youtube.com/@$user"
+        "bluesky" -> "https://bsky.app/profile/$user"
         else -> null
     }
 }

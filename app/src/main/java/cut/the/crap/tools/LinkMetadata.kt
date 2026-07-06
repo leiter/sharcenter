@@ -11,6 +11,7 @@ import cut.the.crap.ui.components.api.ChipsType
  * metadata positions are platform-dependent:
  *
  * YouTube: [channelName, videoTitle, thumbnailUrl, contentType]
+ * Bluesky: [authorName, postText, thumbnailUrl, contentType]
  * X/Twitter: [username]
  * Generic: [rawInfo]
  */
@@ -46,6 +47,23 @@ object LinkMetadata {
         return getParsed(contentLink).metadata.getOrNull(0)?.takeIf { it.isNotBlank() }
     }
 
+    // --- Bluesky accessors (positions 0-3) ---
+
+    fun getBlueskyAuthor(contentLink: ContentLink): String? {
+        if (!isBlueskyUrl(contentLink.link)) return null
+        return getParsed(contentLink).metadata.getOrNull(0)?.takeIf { it.isNotBlank() }
+    }
+
+    fun getBlueskyText(contentLink: ContentLink): String? {
+        if (!isBlueskyUrl(contentLink.link)) return null
+        return getParsed(contentLink).metadata.getOrNull(1)?.takeIf { it.isNotBlank() }
+    }
+
+    fun getBlueskyThumbnailUrl(contentLink: ContentLink): String? {
+        if (!isBlueskyUrl(contentLink.link)) return null
+        return getParsed(contentLink).metadata.getOrNull(2)?.takeIf { it.isNotBlank() }
+    }
+
     // --- Setter helpers ---
 
     fun setYouTubeMetadata(
@@ -57,6 +75,29 @@ object LinkMetadata {
     ): ContentLink {
         val parsed = getParsed(contentLink)
         val metadataFields = listOf(channelName, videoTitle, thumbnailUrl, contentType)
+        val delimiters = DescriptionParser.chooseDelimiters(
+            metadataFields, parsed.handles, parsed.hashtags, parsed.keywords
+        )
+        val safeMetadata = metadataFields.map { DescriptionParser.sanitize(it, delimiters) }
+        val newDescription = DescriptionParser.serialize(
+            metadata = safeMetadata,
+            handles = parsed.handles,
+            hashtags = parsed.hashtags,
+            keywords = parsed.keywords,
+            delimiters = delimiters,
+        )
+        return contentLink.copy(description = newDescription)
+    }
+
+    fun setBlueskyMetadata(
+        contentLink: ContentLink,
+        authorName: String,
+        postText: String,
+        thumbnailUrl: String,
+        contentType: String,
+    ): ContentLink {
+        val parsed = getParsed(contentLink)
+        val metadataFields = listOf(authorName, postText, thumbnailUrl, contentType)
         val delimiters = DescriptionParser.chooseDelimiters(
             metadataFields, parsed.handles, parsed.hashtags, parsed.keywords
         )

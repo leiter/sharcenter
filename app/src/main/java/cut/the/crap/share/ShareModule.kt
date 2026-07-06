@@ -18,6 +18,7 @@ object ShareModule {
     fun provideSharedLinkHandlers(
         x: XSharedLinkHandler,
         youTube: YouTubeSharedLinkHandler,
+        bluesky: BlueskySharedLinkHandler,
         generic: GenericSharedLinkHandler
-    ): List<SharedLinkHandler> = listOf(x, youTube, generic)
+    ): List<SharedLinkHandler> = listOf(x, youTube, bluesky, generic)
 }

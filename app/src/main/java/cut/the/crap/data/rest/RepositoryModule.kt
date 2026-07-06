@@ -1,5 +1,7 @@
 package cut.the.crap.data.rest
 
+import cut.the.crap.data.rest.bluesky.BlueskyRepository
+import cut.the.crap.data.rest.bluesky.BlueskyRepositoryImpl
 import cut.the.crap.data.rest.eci.EciStatisticsRepository
 import cut.the.crap.data.rest.eci.EciStatisticsRepositoryImpl
 import cut.the.crap.data.rest.task.JobQueueRepository
@@ -24,6 +26,11 @@ abstract class RepositoryModule {
     abstract fun bindYouTubeRepository(
         impl: YouTubeRepositoryImpl
     ): YouTubeRepository
+
+    @Binds
+    abstract fun bindBlueskyRepository(
+        impl: BlueskyRepositoryImpl
+    ): BlueskyRepository
 
     @Binds
     abstract fun bindJobQueueRepository(

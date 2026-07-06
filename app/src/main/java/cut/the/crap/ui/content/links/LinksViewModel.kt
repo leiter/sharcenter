@@ -18,6 +18,7 @@ import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.ShareLinksTask
 import cut.the.crap.tools.DescriptionParser
 import cut.the.crap.tools.LinkMetadata
+import cut.the.crap.tools.isBlueskyUrl
 import cut.the.crap.tools.parseSocialMediaUrl
 import cut.the.crap.tools.prepareUrlInformation
 import cut.the.crap.ui.components.api.Action
@@ -129,6 +130,9 @@ class LinksViewModel @Inject constructor(
                         .map { link ->
                             if (YouTubeUrlParser.isYouTubeUrl(link.link)) {
                                 LinkMetadata.getChannelName(link) ?: ""
+                            } else if (isBlueskyUrl(link.link)) {
+                                LinkMetadata.getBlueskyAuthor(link)
+                                    ?: parseSocialMediaUrl(link.link)?.username ?: ""
                             } else {
                                 val urlInfo = prepareUrlInformation(link.link)
                                 urlInfo.getOrNull(1) ?: ""

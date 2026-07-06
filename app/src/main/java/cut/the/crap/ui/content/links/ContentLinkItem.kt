@@ -78,6 +78,7 @@ import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.domainPainter
 import cut.the.crap.tools.formatTimestampWithLocalizedFormatter
 import cut.the.crap.tools.getDisplayName
+import cut.the.crap.tools.isBlueskyUrl
 import cut.the.crap.tools.parseSocialMediaUrl
 import cut.the.crap.tools.prepareUrlInformation
 import cut.the.crap.tools.profileUrl
@@ -108,6 +109,13 @@ fun LinkListItem(
     val isYouTube = remember(item.link) {
         YouTubeUrlParser.isYouTubeUrl(item.link)
     }
+    val isBluesky = remember(item.link) {
+        isBlueskyUrl(item.link)
+    }
+    // Platforms that store rich metadata in the same positional layout in the description:
+    // [primary name, secondary text, thumbnail, contentType] (YouTube channel/title, Bluesky
+    // author/post text). Read and rendered through the shared block below.
+    val hasRichMetadata = isYouTube || isBluesky
 
     // Parse structured description
     val parsed = remember(item.description) {
@@ -117,11 +125,11 @@ fun LinkListItem(
     val hashtags = parsed.hashtags
     val keywords = parsed.keywords
 
-    // YouTube metadata from description
-    val channelName = if (isYouTube) parsed.metadata.getOrNull(0)?.takeIf { it.isNotBlank() } else null
-    val videoTitle = if (isYouTube) parsed.metadata.getOrNull(1)?.takeIf { it.isNotBlank() } else null
-    val thumbnailUrl = if (isYouTube) parsed.metadata.getOrNull(2)?.takeIf { it.isNotBlank() } else null
-    val contentType = if (isYouTube) parsed.metadata.getOrNull(3)?.takeIf { it.isNotBlank() } else null
+    // Rich metadata from description (position 0-3), for YouTube and Bluesky links
+    val channelName = if (hasRichMetadata) parsed.metadata.getOrNull(0)?.takeIf { it.isNotBlank() } else null
+    val videoTitle = if (hasRichMetadata) parsed.metadata.getOrNull(1)?.takeIf { it.isNotBlank() } else null
+    val thumbnailUrl = if (hasRichMetadata) parsed.metadata.getOrNull(2)?.takeIf { it.isNotBlank() } else null
+    val contentType = if (hasRichMetadata) parsed.metadata.getOrNull(3)?.takeIf { it.isNotBlank() } else null
 
     val allTagsEmpty = handles.isEmpty() && hashtags.isEmpty() && keywords.isEmpty()
 
@@ -355,13 +363,17 @@ fun LinkListItem(
                         .aspectRatio(16f / 9f)
                         .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
                 ) {
-                    val youTubePlaceholder = painterResource(id = R.drawable.youtube)
+                    // Placeholder/fallback matches the platform (YouTube logo for YouTube,
+                    // a neutral image otherwise) so a Bluesky card never shows a YouTube badge.
+                    val thumbnailPlaceholder = painterResource(
+                        id = if (isYouTube) R.drawable.youtube else R.drawable.img_not_available
+                    )
                     AsyncImage(
                         model = thumbnailUrl,
                         contentDescription = stringResource(R.string.links_cd_video_thumbnail),
-                        placeholder = youTubePlaceholder,
-                        error = youTubePlaceholder,
-                        fallback = youTubePlaceholder,
+                        placeholder = thumbnailPlaceholder,
+                        error = thumbnailPlaceholder,
+                        fallback = thumbnailPlaceholder,
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(4.dp)),
@@ -388,8 +400,9 @@ fun LinkListItem(
             }
 
 
-            // For YouTube links, prefer channel name from metadata over URL-parsed username
-            val displayUsername = if (isYouTube && channelName != null) {
+            // For YouTube/Bluesky, prefer the name from metadata (channel / author) over the
+            // URL-parsed username
+            val displayUsername = if (hasRichMetadata && channelName != null) {
                 channelName
             } else {
                 socialInfo?.username
@@ -414,9 +427,9 @@ fun LinkListItem(
                             Modifier.combinedClickable(
                                 onClick = { },
                                 onLongClick = {
-                                    // For YouTube with channel name, filter by channel name
+                                    // For YouTube/Bluesky with a metadata name, filter by it
                                     // For others, filter by URL path token
-                                    val filterValue = if (isYouTube && channelName != null) {
+                                    val filterValue = if (hasRichMetadata && channelName != null) {
                                         channelName
                                     } else {
                                         texts[1]
@@ -430,8 +443,8 @@ fun LinkListItem(
                     )
             )
 
-            // Display content type badge - prefer metadata contentType for YouTube
-            val displayType = if (isYouTube && contentType != null) {
+            // Display content type badge - prefer metadata contentType for YouTube/Bluesky
+            val displayType = if (hasRichMetadata && contentType != null) {
                 contentType.replaceFirstChar { it.uppercase() }
             } else {
                 socialInfo?.getDisplayName()
