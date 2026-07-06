@@ -4,6 +4,8 @@ import cut.the.crap.data.rest.bluesky.BlueskyRepository
 import cut.the.crap.data.rest.bluesky.BlueskyRepositoryImpl
 import cut.the.crap.data.rest.mastodon.MastodonRepository
 import cut.the.crap.data.rest.mastodon.MastodonRepositoryImpl
+import cut.the.crap.data.rest.tiktok.TikTokRepository
+import cut.the.crap.data.rest.tiktok.TikTokRepositoryImpl
 import cut.the.crap.data.rest.eci.EciStatisticsRepository
 import cut.the.crap.data.rest.eci.EciStatisticsRepositoryImpl
 import cut.the.crap.data.rest.task.JobQueueRepository
@@ -38,6 +40,11 @@ abstract class RepositoryModule {
     abstract fun bindMastodonRepository(
         impl: MastodonRepositoryImpl
     ): MastodonRepository
+
+    @Binds
+    abstract fun bindTikTokRepository(
+        impl: TikTokRepositoryImpl
+    ): TikTokRepository
 
     @Binds
     abstract fun bindJobQueueRepository(

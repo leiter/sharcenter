@@ -20,6 +20,7 @@ import cut.the.crap.tools.DescriptionParser
 import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.isBlueskyUrl
 import cut.the.crap.tools.isMastodonUrl
+import cut.the.crap.tools.isTikTokUrl
 import cut.the.crap.tools.parseSocialMediaUrl
 import cut.the.crap.tools.prepareUrlInformation
 import cut.the.crap.ui.components.api.Action
@@ -136,6 +137,9 @@ class LinksViewModel @Inject constructor(
                                     ?: parseSocialMediaUrl(link.link)?.username ?: ""
                             } else if (isMastodonUrl(link.link)) {
                                 LinkMetadata.getMastodonAuthor(link)
+                                    ?: parseSocialMediaUrl(link.link)?.username ?: ""
+                            } else if (isTikTokUrl(link.link)) {
+                                LinkMetadata.getTikTokAuthor(link)
                                     ?: parseSocialMediaUrl(link.link)?.username ?: ""
                             } else {
                                 val urlInfo = prepareUrlInformation(link.link)

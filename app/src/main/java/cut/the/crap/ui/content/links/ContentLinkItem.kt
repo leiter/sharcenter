@@ -80,6 +80,7 @@ import cut.the.crap.tools.formatTimestampWithLocalizedFormatter
 import cut.the.crap.tools.getDisplayName
 import cut.the.crap.tools.isBlueskyUrl
 import cut.the.crap.tools.isMastodonUrl
+import cut.the.crap.tools.isTikTokUrl
 import cut.the.crap.tools.parseSocialMediaUrl
 import cut.the.crap.tools.prepareUrlInformation
 import cut.the.crap.tools.profileUrl
@@ -116,10 +117,13 @@ fun LinkListItem(
     val isMastodon = remember(item.link) {
         isMastodonUrl(item.link)
     }
+    val isTikTok = remember(item.link) {
+        isTikTokUrl(item.link)
+    }
     // Platforms that store rich metadata in the same positional layout in the description:
-    // [primary name, secondary text, thumbnail, contentType] (YouTube channel/title, Bluesky &
-    // Mastodon author/post text). Read and rendered through the shared block below.
-    val hasRichMetadata = isYouTube || isBluesky || isMastodon
+    // [primary name, secondary text, thumbnail, contentType] (YouTube channel/title, Bluesky,
+    // Mastodon & TikTok author/post text). Read and rendered through the shared block below.
+    val hasRichMetadata = isYouTube || isBluesky || isMastodon || isTikTok
 
     // Parse structured description
     val parsed = remember(item.description) {
@@ -368,13 +372,14 @@ fun LinkListItem(
                         .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
                 ) {
                     // Placeholder/fallback matches the platform (YouTube logo for YouTube,
-                    // Bluesky logo for Bluesky, Mastodon logo for Mastodon, a neutral image
-                    // otherwise) so a card never shows the wrong platform badge.
+                    // Bluesky logo for Bluesky, Mastodon logo for Mastodon, TikTok logo for TikTok,
+                    // a neutral image otherwise) so a card never shows the wrong platform badge.
                     val thumbnailPlaceholder = painterResource(
                         id = when {
                             isYouTube -> R.drawable.youtube
                             isBluesky -> R.drawable.bluesky
                             isMastodon -> R.drawable.mastodon
+                            isTikTok -> R.drawable.tiktok
                             else -> R.drawable.img_not_available
                         }
                     )

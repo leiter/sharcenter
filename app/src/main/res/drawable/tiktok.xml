@@ -1,0 +1,14 @@
+<!--
+  Placeholder TikTok badge: a clean monochrome musical note in TikTok red. The official TikTok
+  logo is a trademarked multi-colour glyph; drop a brand asset in as res/drawable/tiktok.png (or
+  a proper vector here) to replace this without any other code change.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FE2C55"
+        android:pathData="M5,17 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 Z M10,5 h2 v12 h-2 Z M12,5 L16.5,8 L12,11 Z" />
+</vector>

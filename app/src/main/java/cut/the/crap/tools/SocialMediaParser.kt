@@ -58,6 +58,13 @@ private fun isMastodonHost(url: String): Boolean {
     return host.removePrefix("www.") !in NON_MASTODON_HOSTS
 }
 
+// TikTok regex patterns. A canonical post is `tiktok.com/@{user}/video/{id}` (or `/photo/{id}`);
+// a profile is `tiktok.com/@{user}`. Short links (vm./vt.tiktok.com, /t/) carry no user/id and are
+// expanded to the canonical form via a redirect before they are parsed.
+private val TIKTOK_VIDEO_REGEX = """tiktok\.com/@([\w.-]+)/video/(\d+)""".toRegex()
+private val TIKTOK_PHOTO_REGEX = """tiktok\.com/@([\w.-]+)/photo/(\d+)""".toRegex()
+private val TIKTOK_PROFILE_REGEX = """tiktok\.com/@([\w.-]+)/?(?:[?#].*)?$""".toRegex()
+
 /**
  * Parse Instagram URLs to extract content information
  *
@@ -481,6 +488,60 @@ fun mastodonStatusApiUrl(url: String): String? {
 }
 
 /**
+ * Parse TikTok URLs to extract content information.
+ *
+ * Supported patterns:
+ * - https://www.tiktok.com/@{user}/video/{id}   -> Video
+ * - https://www.tiktok.com/@{user}/photo/{id}   -> Photo (image slideshow post)
+ * - https://www.tiktok.com/@{user}              -> Profile
+ *
+ * Short links (vm./vt.tiktok.com, `/t/…`) carry no user/id and return null here; they are expanded
+ * to a canonical URL by the share handler's redirect resolution before parsing.
+ */
+fun parseTikTokUrl(url: String): SocialMediaInfo? {
+    if (!url.contains("tiktok.com")) return null
+
+    TIKTOK_VIDEO_REGEX.find(url)?.let { match ->
+        return SocialMediaInfo(
+            platform = "tiktok",
+            contentType = "video",
+            identifier = match.groupValues[2],
+            username = match.groupValues[1]
+        )
+    }
+
+    TIKTOK_PHOTO_REGEX.find(url)?.let { match ->
+        return SocialMediaInfo(
+            platform = "tiktok",
+            contentType = "photo",
+            identifier = match.groupValues[2],
+            username = match.groupValues[1]
+        )
+    }
+
+    TIKTOK_PROFILE_REGEX.find(url)?.let { match ->
+        return SocialMediaInfo(
+            platform = "tiktok",
+            contentType = "profile",
+            identifier = null,
+            username = match.groupValues[1]
+        )
+    }
+
+    return null
+}
+
+/** Whether [url] points at TikTok (any tiktok.com host, including vm./vt. short links). */
+fun isTikTokUrl(url: String): Boolean = url.contains("tiktok.com")
+
+/**
+ * Whether [url] is a TikTok short/redirect link (vm./vt.tiktok.com or a `/t/` path) that must be
+ * expanded to its canonical `/@user/video/{id}` form before it can be parsed or enriched.
+ */
+fun isTikTokShortLink(url: String): Boolean =
+    Regex("""(?:vm|vt)\.tiktok\.com/""").containsMatchIn(url) || url.contains("tiktok.com/t/")
+
+/**
  * Parse any social media URL and return extracted information
  *
  * This is the main entry point - it automatically detects the platform
@@ -496,6 +557,7 @@ fun parseSocialMediaUrl(url: String): SocialMediaInfo? {
         url.contains("youtube.com") || url.contains("youtu.be") -> parseYoutubeUrl(url)
         url.contains("x.com") || url.contains("twitter.com") -> parseXUrl(url)
         url.contains("bsky.app") -> parseBlueskyUrl(url)
+        url.contains("tiktok.com") -> parseTikTokUrl(url)
         isMastodonUrl(url) -> parseMastodonUrl(url)
         else -> null
     }
@@ -535,6 +597,7 @@ fun SocialMediaInfo.profileUrl(): String? {
         "youtube" -> "https://www.youtube.com/@$user"
         "bluesky" -> "https://bsky.app/profile/$user"
         "mastodon" -> additionalInfo["host"]?.let { "$it/@$user" }
+        "tiktok" -> "https://www.tiktok.com/@$user"
         else -> null
     }
 }
