@@ -35,6 +35,29 @@ private val TWITTER_USERNAME_REGEX = """(?:x\.com|twitter\.com)/([A-Za-z0-9_]+)"
 private val BLUESKY_POST_REGEX = """bsky\.app/profile/([^/?#]+)/post/([A-Za-z0-9]+)""".toRegex()
 private val BLUESKY_PROFILE_REGEX = """bsky\.app/profile/([^/?#]+)""".toRegex()
 
+// Mastodon regex patterns. Mastodon is federated with no fixed domain, so recognition is
+// structural: a post is `https://{instance}/@{user}/{numericId}` and a profile is
+// `https://{instance}/@{user}`. The captured host (with scheme) is kept in additionalInfo["host"]
+// so the origin instance can be re-derived for the public status API and profile links.
+private val MASTODON_POST_REGEX = """^(https?://[^/]+)/@([^/]+)/(\d{6,})""".toRegex()
+private val MASTODON_PROFILE_REGEX = """^(https?://[^/]+)/@([^/]+?)/?(?:[?#].*)?$""".toRegex()
+
+// Hosts that use the same `/@user` path form but are not Mastodon instances. Checked without a
+// leading "www." so both bare and www hosts are covered. The already-handled platforms are also
+// listed so `isMastodonUrl` is safe to call on any URL, independent of handler ordering.
+private val NON_MASTODON_HOSTS = setOf(
+    "youtube.com", "youtu.be", "medium.com", "x.com", "twitter.com",
+    "instagram.com", "facebook.com", "fb.com", "fb.watch", "threads.net", "tiktok.com", "bsky.app"
+)
+
+private fun hostWithScheme(url: String): String? =
+    """^(https?://[^/]+)""".toRegex().find(url)?.groupValues?.get(1)
+
+private fun isMastodonHost(url: String): Boolean {
+    val host = hostWithScheme(url)?.substringAfter("://")?.lowercase() ?: return false
+    return host.removePrefix("www.") !in NON_MASTODON_HOSTS
+}
+
 /**
  * Parse Instagram URLs to extract content information
  *
@@ -405,6 +428,59 @@ fun blueskyPostAtUri(url: String): String? {
 }
 
 /**
+ * Parse Mastodon URLs to extract content information.
+ *
+ * Supported patterns (on any instance host that is not a known non-Mastodon `@`-path site):
+ * - https://{instance}/@{user}/{numericId}   -> Post
+ * - https://{instance}/@{user}               -> Profile  ({user} may be federated, "user@remote")
+ *
+ * The instance host (with scheme) is stored in additionalInfo["host"] because, unlike the other
+ * platforms, the API and profile links depend on which instance the content lives on.
+ */
+fun parseMastodonUrl(url: String): SocialMediaInfo? {
+    if (!isMastodonHost(url)) return null
+
+    MASTODON_POST_REGEX.find(url)?.let { match ->
+        return SocialMediaInfo(
+            platform = "mastodon",
+            contentType = "post",
+            identifier = match.groupValues[3],
+            username = match.groupValues[2],
+            additionalInfo = mapOf("host" to match.groupValues[1])
+        )
+    }
+
+    MASTODON_PROFILE_REGEX.find(url)?.let { match ->
+        val user = match.groupValues[2].takeIf { it.isNotBlank() } ?: return null
+        return SocialMediaInfo(
+            platform = "mastodon",
+            contentType = "profile",
+            identifier = null,
+            username = user,
+            additionalInfo = mapOf("host" to match.groupValues[1])
+        )
+    }
+
+    return null
+}
+
+/** Whether [url] structurally looks like a Mastodon post/profile on a federated instance. */
+fun isMastodonUrl(url: String): Boolean = parseMastodonUrl(url) != null
+
+/**
+ * Builds the public status API URL (`/api/v1/statuses/{id}` on the post's *origin* instance) for
+ * the Mastodon post [url] points at. Returns null for profile links and non-Mastodon URLs. The
+ * status endpoint is unauthenticated for public posts.
+ */
+fun mastodonStatusApiUrl(url: String): String? {
+    val info = parseMastodonUrl(url) ?: return null
+    if (info.contentType != "post") return null
+    val host = info.additionalInfo["host"] ?: return null
+    val id = info.identifier ?: return null
+    return "$host/api/v1/statuses/$id"
+}
+
+/**
  * Parse any social media URL and return extracted information
  *
  * This is the main entry point - it automatically detects the platform
@@ -420,6 +496,7 @@ fun parseSocialMediaUrl(url: String): SocialMediaInfo? {
         url.contains("youtube.com") || url.contains("youtu.be") -> parseYoutubeUrl(url)
         url.contains("x.com") || url.contains("twitter.com") -> parseXUrl(url)
         url.contains("bsky.app") -> parseBlueskyUrl(url)
+        isMastodonUrl(url) -> parseMastodonUrl(url)
         else -> null
     }
 }
@@ -457,6 +534,7 @@ fun SocialMediaInfo.profileUrl(): String? {
         "x" -> "https://x.com/$user"
         "youtube" -> "https://www.youtube.com/@$user"
         "bluesky" -> "https://bsky.app/profile/$user"
+        "mastodon" -> additionalInfo["host"]?.let { "$it/@$user" }
         else -> null
     }
 }

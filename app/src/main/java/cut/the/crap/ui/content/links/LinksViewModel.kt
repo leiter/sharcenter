@@ -19,6 +19,7 @@ import cut.the.crap.data.rest.task.ShareLinksTask
 import cut.the.crap.tools.DescriptionParser
 import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.isBlueskyUrl
+import cut.the.crap.tools.isMastodonUrl
 import cut.the.crap.tools.parseSocialMediaUrl
 import cut.the.crap.tools.prepareUrlInformation
 import cut.the.crap.ui.components.api.Action
@@ -132,6 +133,9 @@ class LinksViewModel @Inject constructor(
                                 LinkMetadata.getChannelName(link) ?: ""
                             } else if (isBlueskyUrl(link.link)) {
                                 LinkMetadata.getBlueskyAuthor(link)
+                                    ?: parseSocialMediaUrl(link.link)?.username ?: ""
+                            } else if (isMastodonUrl(link.link)) {
+                                LinkMetadata.getMastodonAuthor(link)
                                     ?: parseSocialMediaUrl(link.link)?.username ?: ""
                             } else {
                                 val urlInfo = prepareUrlInformation(link.link)

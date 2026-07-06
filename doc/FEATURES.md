@@ -46,11 +46,13 @@ from them:
 ## Links (library)
 
 - **Share-in capture** — URLs shared to the app land in the library; X/Twitter redirects are
-  resolved, YouTube metadata (title, channel, thumbnail) is fetched, and Bluesky posts are
-  enriched with author, post text and a thumbnail via the public AppView API. Recognition and
-  processing are pluggable per platform (`SharedLinkHandler`), so new networks are additive.
-- **Profile shares become handles** — sharing an X or Bluesky *profile* saves the `@handle` to
-  the keyword pool instead of storing the URL as a link.
+  resolved, YouTube metadata (title, channel, thumbnail) is fetched, Bluesky posts are enriched
+  with author, post text and a thumbnail via the public AppView API, and Mastodon posts are
+  enriched the same way from the origin instance's public status API. Recognition and processing
+  are pluggable per platform (`SharedLinkHandler`), so new networks are additive.
+- **Profile shares become handles** — sharing an X, Bluesky or Mastodon *profile* saves the
+  `@handle` to the keyword pool instead of storing the URL as a link (Mastodon handles are stored
+  fully qualified as `@user@instance`).
 - **Thumbnail caching** — loaded thumbnails are cached via Coil for fast re-display.
 - **Tagging model** — each link carries **handles**, **hashtags** and **keywords**, surfaced
   as compact per-marker-type summary chips with dropdown menus (`LinkMetadata`).
@@ -114,8 +116,8 @@ Ideas not yet built, roughly in impact order.
    affordance to set it.
 
 ### Links
-5. **Rich previews for the remaining link types.** YouTube and Bluesky now fetch title/author
-   and a thumbnail; extend the same treatment to other platforms (e.g. Open Graph
+5. **Rich previews for the remaining link types.** YouTube, Bluesky and Mastodon now fetch
+   title/author and a thumbnail; extend the same treatment to other platforms (e.g. Open Graph
    image/title for arbitrary URLs) by adding more `SharedLinkHandler`s.
 6. **Duplicate-link detection** on share/save so the library doesn't accumulate the same URL.
 7. **Full bulk actions** — bulk tag, bulk export-selected, bulk delete alongside bulk favorite.

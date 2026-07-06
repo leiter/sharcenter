@@ -199,6 +199,12 @@
     <string name="bsky_error_timeout">Request timed out. Please check your connection.</string>
     <string name="bsky_error_unavailable">Post unavailable</string>
     <string name="bsky_error_fetch_failed">Failed to fetch post metadata: %1$s</string>
+    <string name="mastodon_error_invalid_url">Not a recognised Mastodon post URL: %1$s</string>
+    <string name="mastodon_error_not_found">Post not found or is unavailable</string>
+    <string name="mastodon_error_server">Mastodon server error: %1$d</string>
+    <string name="mastodon_error_timeout">Request timed out. Please check your connection.</string>
+    <string name="mastodon_error_unavailable">Post unavailable</string>
+    <string name="mastodon_error_fetch_failed">Failed to fetch post metadata: %1$s</string>
 
     <!-- ECI statistics errors -->
     <string name="eci_error_unrecognised_url">Not a recognised initiative URL: %1$s</string>

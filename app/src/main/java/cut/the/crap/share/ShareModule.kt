@@ -19,6 +19,7 @@ object ShareModule {
         x: XSharedLinkHandler,
         youTube: YouTubeSharedLinkHandler,
         bluesky: BlueskySharedLinkHandler,
+        mastodon: MastodonSharedLinkHandler,
         generic: GenericSharedLinkHandler
-    ): List<SharedLinkHandler> = listOf(x, youTube, bluesky, generic)
+    ): List<SharedLinkHandler> = listOf(x, youTube, bluesky, mastodon, generic)
 }

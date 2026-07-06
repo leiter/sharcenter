@@ -79,6 +79,7 @@ import cut.the.crap.tools.domainPainter
 import cut.the.crap.tools.formatTimestampWithLocalizedFormatter
 import cut.the.crap.tools.getDisplayName
 import cut.the.crap.tools.isBlueskyUrl
+import cut.the.crap.tools.isMastodonUrl
 import cut.the.crap.tools.parseSocialMediaUrl
 import cut.the.crap.tools.prepareUrlInformation
 import cut.the.crap.tools.profileUrl
@@ -112,10 +113,13 @@ fun LinkListItem(
     val isBluesky = remember(item.link) {
         isBlueskyUrl(item.link)
     }
+    val isMastodon = remember(item.link) {
+        isMastodonUrl(item.link)
+    }
     // Platforms that store rich metadata in the same positional layout in the description:
-    // [primary name, secondary text, thumbnail, contentType] (YouTube channel/title, Bluesky
-    // author/post text). Read and rendered through the shared block below.
-    val hasRichMetadata = isYouTube || isBluesky
+    // [primary name, secondary text, thumbnail, contentType] (YouTube channel/title, Bluesky &
+    // Mastodon author/post text). Read and rendered through the shared block below.
+    val hasRichMetadata = isYouTube || isBluesky || isMastodon
 
     // Parse structured description
     val parsed = remember(item.description) {
@@ -364,12 +368,13 @@ fun LinkListItem(
                         .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
                 ) {
                     // Placeholder/fallback matches the platform (YouTube logo for YouTube,
-                    // Bluesky logo for Bluesky, a neutral image otherwise) so a card never
-                    // shows the wrong platform badge.
+                    // Bluesky logo for Bluesky, Mastodon logo for Mastodon, a neutral image
+                    // otherwise) so a card never shows the wrong platform badge.
                     val thumbnailPlaceholder = painterResource(
                         id = when {
                             isYouTube -> R.drawable.youtube
                             isBluesky -> R.drawable.bluesky
+                            isMastodon -> R.drawable.mastodon
                             else -> R.drawable.img_not_available
                         }
                     )
@@ -388,7 +393,8 @@ fun LinkListItem(
                     DomainIcon(
                         domain = texts[0],
                         action = action,
-                        modifier = Modifier.align(Alignment.BottomStart)
+                        modifier = Modifier.align(Alignment.BottomStart),
+                        iconDomain = if (isMastodon) "mastodon" else texts[0]
                     )
                 }
             }
@@ -401,7 +407,11 @@ fun LinkListItem(
         ) {
             // Domain icon lives on the thumbnail (bottom-left) when there is one; otherwise show it here
             if (!hasThumbnail) {
-                DomainIcon(domain = texts[0], action = action)
+                DomainIcon(
+                    domain = texts[0],
+                    action = action,
+                    iconDomain = if (isMastodon) "mastodon" else texts[0]
+                )
             }
 
 
@@ -610,6 +620,9 @@ private fun DomainIcon(
     domain: String,
     action: (Action) -> Unit,
     modifier: Modifier = Modifier,
+    // Which icon to show. Defaults to [domain]; callers override it for federated platforms
+    // (e.g. Mastodon) where the per-instance domain has no single icon but the platform does.
+    iconDomain: String = domain,
 ) {
     val hasDomain = domain.isNotBlank()
     Box(
@@ -628,7 +641,7 @@ private fun DomainIcon(
         contentAlignment = Alignment.Center
     ) {
         Image(
-            painter = domainPainter(domain = domain),
+            painter = domainPainter(domain = iconDomain),
             modifier = Modifier
                 .size(24.dp)
                 .then(if (!hasDomain) Modifier.alpha(0.5f) else Modifier),

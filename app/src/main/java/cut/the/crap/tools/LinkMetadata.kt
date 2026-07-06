@@ -12,6 +12,7 @@ import cut.the.crap.ui.components.api.ChipsType
  *
  * YouTube: [channelName, videoTitle, thumbnailUrl, contentType]
  * Bluesky: [authorName, postText, thumbnailUrl, contentType]
+ * Mastodon: [authorName, postText, thumbnailUrl, contentType]
  * X/Twitter: [username]
  * Generic: [rawInfo]
  */
@@ -64,6 +65,23 @@ object LinkMetadata {
         return getParsed(contentLink).metadata.getOrNull(2)?.takeIf { it.isNotBlank() }
     }
 
+    // --- Mastodon accessors (positions 0-3) ---
+
+    fun getMastodonAuthor(contentLink: ContentLink): String? {
+        if (!isMastodonUrl(contentLink.link)) return null
+        return getParsed(contentLink).metadata.getOrNull(0)?.takeIf { it.isNotBlank() }
+    }
+
+    fun getMastodonText(contentLink: ContentLink): String? {
+        if (!isMastodonUrl(contentLink.link)) return null
+        return getParsed(contentLink).metadata.getOrNull(1)?.takeIf { it.isNotBlank() }
+    }
+
+    fun getMastodonThumbnailUrl(contentLink: ContentLink): String? {
+        if (!isMastodonUrl(contentLink.link)) return null
+        return getParsed(contentLink).metadata.getOrNull(2)?.takeIf { it.isNotBlank() }
+    }
+
     // --- Setter helpers ---
 
     fun setYouTubeMetadata(
@@ -90,6 +108,29 @@ object LinkMetadata {
     }
 
     fun setBlueskyMetadata(
+        contentLink: ContentLink,
+        authorName: String,
+        postText: String,
+        thumbnailUrl: String,
+        contentType: String,
+    ): ContentLink {
+        val parsed = getParsed(contentLink)
+        val metadataFields = listOf(authorName, postText, thumbnailUrl, contentType)
+        val delimiters = DescriptionParser.chooseDelimiters(
+            metadataFields, parsed.handles, parsed.hashtags, parsed.keywords
+        )
+        val safeMetadata = metadataFields.map { DescriptionParser.sanitize(it, delimiters) }
+        val newDescription = DescriptionParser.serialize(
+            metadata = safeMetadata,
+            handles = parsed.handles,
+            hashtags = parsed.hashtags,
+            keywords = parsed.keywords,
+            delimiters = delimiters,
+        )
+        return contentLink.copy(description = newDescription)
+    }
+
+    fun setMastodonMetadata(
         contentLink: ContentLink,
         authorName: String,
         postText: String,
