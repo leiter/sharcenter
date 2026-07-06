@@ -211,6 +211,12 @@
     <string name="tiktok_error_timeout">Request timed out. Please check your connection.</string>
     <string name="tiktok_error_unavailable">Post unavailable</string>
     <string name="tiktok_error_fetch_failed">Failed to fetch post metadata: %1$s</string>
+    <string name="reddit_error_invalid_url">Not a recognised Reddit post URL: %1$s</string>
+    <string name="reddit_error_not_found">Post not found or is unavailable</string>
+    <string name="reddit_error_server">Reddit server error: %1$d</string>
+    <string name="reddit_error_timeout">Request timed out. Please check your connection.</string>
+    <string name="reddit_error_unavailable">Post unavailable</string>
+    <string name="reddit_error_fetch_failed">Failed to fetch post metadata: %1$s</string>
 
     <!-- ECI statistics errors -->
     <string name="eci_error_unrecognised_url">Not a recognised initiative URL: %1$s</string>

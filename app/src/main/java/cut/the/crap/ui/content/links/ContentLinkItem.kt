@@ -80,6 +80,7 @@ import cut.the.crap.tools.formatTimestampWithLocalizedFormatter
 import cut.the.crap.tools.getDisplayName
 import cut.the.crap.tools.isBlueskyUrl
 import cut.the.crap.tools.isMastodonUrl
+import cut.the.crap.tools.isRedditUrl
 import cut.the.crap.tools.isTikTokUrl
 import cut.the.crap.tools.parseSocialMediaUrl
 import cut.the.crap.tools.prepareUrlInformation
@@ -120,10 +121,13 @@ fun LinkListItem(
     val isTikTok = remember(item.link) {
         isTikTokUrl(item.link)
     }
+    val isReddit = remember(item.link) {
+        isRedditUrl(item.link)
+    }
     // Platforms that store rich metadata in the same positional layout in the description:
     // [primary name, secondary text, thumbnail, contentType] (YouTube channel/title, Bluesky,
-    // Mastodon & TikTok author/post text). Read and rendered through the shared block below.
-    val hasRichMetadata = isYouTube || isBluesky || isMastodon || isTikTok
+    // Mastodon, TikTok & Reddit author/post text). Read and rendered through the shared block below.
+    val hasRichMetadata = isYouTube || isBluesky || isMastodon || isTikTok || isReddit
 
     // Parse structured description
     val parsed = remember(item.description) {
@@ -373,13 +377,15 @@ fun LinkListItem(
                 ) {
                     // Placeholder/fallback matches the platform (YouTube logo for YouTube,
                     // Bluesky logo for Bluesky, Mastodon logo for Mastodon, TikTok logo for TikTok,
-                    // a neutral image otherwise) so a card never shows the wrong platform badge.
+                    // Reddit logo for Reddit, a neutral image otherwise) so a card never shows the
+                    // wrong platform badge.
                     val thumbnailPlaceholder = painterResource(
                         id = when {
                             isYouTube -> R.drawable.youtube
                             isBluesky -> R.drawable.bluesky
                             isMastodon -> R.drawable.mastodon
                             isTikTok -> R.drawable.tiktok
+                            isReddit -> R.drawable.reddit
                             else -> R.drawable.img_not_available
                         }
                     )
@@ -399,7 +405,7 @@ fun LinkListItem(
                         domain = texts[0],
                         action = action,
                         modifier = Modifier.align(Alignment.BottomStart),
-                        iconDomain = if (isMastodon) "mastodon" else texts[0]
+                        iconDomain = platformIconDomain(isMastodon, isReddit, texts[0])
                     )
                 }
             }
@@ -415,7 +421,7 @@ fun LinkListItem(
                 DomainIcon(
                     domain = texts[0],
                     action = action,
-                    iconDomain = if (isMastodon) "mastodon" else texts[0]
+                    iconDomain = platformIconDomain(isMastodon, isReddit, texts[0])
                 )
             }
 
@@ -619,6 +625,19 @@ private fun MarkerSummaryChip(
         }
     }
 }
+
+/**
+ * The domain-icon key for the badge. Most links use their derived domain, but some platforms don't
+ * map cleanly to a single domain key — Mastodon is per-instance, and Reddit share/short links
+ * (redd.it) reduce to a different key — so force the platform key for those. [fallback] is the
+ * normally-derived domain (used for long-press domain filtering, which must stay the real domain).
+ */
+private fun platformIconDomain(isMastodon: Boolean, isReddit: Boolean, fallback: String): String =
+    when {
+        isMastodon -> "mastodon"
+        isReddit -> "reddit"
+        else -> fallback
+    }
 
 @Composable
 private fun DomainIcon(
