@@ -31,13 +31,9 @@ import cut.the.crap.data.domain.KeyWord
 import cut.the.crap.data.domain.KeywordRepository
 import cut.the.crap.data.domain.KeywordType
 import cut.the.crap.data.preferences.SettingsRepository
-import cut.the.crap.data.rest.YouTubeRepository
-import cut.the.crap.data.rest.YouTubeUrlParser
+import cut.the.crap.share.SharedLinkHandler
+import cut.the.crap.share.UrlResolution
 import cut.the.crap.tools.LinkMetadata
-import cut.the.crap.tools.UrlResolver
-import cut.the.crap.tools.parseSocialMediaUrl
-import cut.the.crap.tools.parseXUrl
-import kotlinx.coroutines.Dispatchers
 import cut.the.crap.ui.XLoginActivity
 import cut.the.crap.ui.components.api.ChipsType
 import cut.the.crap.ui.content.settings.ThemePreference
@@ -59,10 +55,14 @@ class ShareReceiverActivity : ComponentActivity() {
     lateinit var settingsRepository: SettingsRepository
 
     @Inject
-    lateinit var youTubeRepository: YouTubeRepository
-
-    @Inject
     lateinit var keywordRepository: KeywordRepository
+
+    /**
+     * Ordered chain of platform handlers (see [SharedLinkHandler]). The first that recognizes a
+     * shared URL owns its processing; the generic fallback is guaranteed last.
+     */
+    @Inject
+    lateinit var sharedLinkHandlers: List<@JvmSuppressWildcards SharedLinkHandler>
 
     // Store pending URL for retry after login
     private var pendingUrl: String? = null
@@ -81,7 +81,10 @@ class ShareReceiverActivity : ComponentActivity() {
             // Login cancelled - save the unresolved URL anyway
             pendingUrl?.let { url ->
                 Log.d(TAG, "Login cancelled, saving unresolved URL")
-                saveUrlAndFinish(url, wasResolved = false)
+                lifecycleScope.launch {
+                    val handler = sharedLinkHandlers.first { it.recognizes(url) }
+                    saveUrlAndFinish(handler, url, wasResolved = false)
+                }
             } ?: finish()
         }
     }
@@ -126,52 +129,30 @@ class ShareReceiverActivity : ComponentActivity() {
 
     private fun processUrl(url: String, isRetry: Boolean) {
         lifecycleScope.launch {
-            // Check if this is an X URL that needs resolution
-            if (!UrlResolver.isXRedirectUrl(url)) {
-                // Not an X redirect URL, just save it
-                saveUrlAndFinish(url, wasResolved = false)
-                return@launch
-            }
-
-            // Get X credentials from settings
-            val settings = settingsRepository.settingsFlow.first()
-            val credentials = if (settings.xAuthToken != null && settings.xCt0Token != null) {
-                Log.d(TAG, "X credentials found, will use GraphQL")
-                UrlResolver.XCredentials(settings.xAuthToken, settings.xCt0Token)
-            } else {
-                Log.d(TAG, "No X credentials configured")
-                null
-            }
-
-            // Use the new method that returns detailed status
-            when (val result = UrlResolver.resolveXUrlWithStatus(url, credentials)) {
-                is UrlResolver.ResolveResult.Success -> {
-                    Log.d(TAG, "URL resolved successfully: ${result.url}")
-                    saveUrlAndFinish(result.url, wasResolved = result.url != url)
+            // The first handler that recognizes the URL owns its processing (generic fallback last).
+            val handler = sharedLinkHandlers.first { it.recognizes(url) }
+            when (val resolution = handler.resolve(url)) {
+                is UrlResolution.Resolved -> {
+                    Log.d(TAG, "URL resolved: ${resolution.url} (changed=${resolution.changed})")
+                    saveUrlAndFinish(handler, resolution.url, wasResolved = resolution.changed)
                 }
 
-                is UrlResolver.ResolveResult.AuthRequired -> {
+                is UrlResolution.AuthRequired -> {
                     Log.d(TAG, "Auth required for URL resolution")
                     if (isRetry) {
                         // Already tried login, just save the unresolved URL
                         Log.w(TAG, "Auth still failing after login, saving unresolved")
-                        saveUrlAndFinish(url, wasResolved = false)
+                        saveUrlAndFinish(handler, url, wasResolved = false)
                     } else {
-                        // Prompt user to login
+                        // Prompt user to login, then retry via the activity result callback
                         pendingUrl = url
-                        val reason = if (credentials != null) {
+                        val reason = if (resolution.credentialsPresent) {
                             XLoginActivity.REASON_AUTH_EXPIRED
                         } else {
                             XLoginActivity.REASON_INITIAL_SETUP
                         }
                         promptForLogin(reason)
                     }
-                }
-
-                is UrlResolver.ResolveResult.Failed -> {
-                    Log.w(TAG, "URL resolution failed: ${result.reason}")
-                    // Save the unresolved URL
-                    saveUrlAndFinish(url, wasResolved = false)
                 }
             }
         }
@@ -191,21 +172,20 @@ class ShareReceiverActivity : ComponentActivity() {
         xLoginLauncher.launch(loginIntent)
     }
 
-    private fun saveUrlAndFinish(url: String, wasResolved: Boolean) {
-        lifecycleScope.launch {
-            // An X/Twitter profile share saves the handle only — the profile URL itself
-            // is never stored as a link, so bypass the edit dialog and link insert.
-            if (addXHandleIfProfile(url)) {
-                finish()
-                return@launch
-            }
-            val settings = settingsRepository.settingsFlow.first()
-            if (settings.editSharedLinkBeforeSave) {
-                // Let the user review/edit the link (and add keywords) before it's saved.
-                showEditDialog(url, wasResolved, settings.themePreference)
-            } else {
-                insertAndFinish(url, keywords = emptyList(), wasResolved = wasResolved)
-            }
+    private suspend fun saveUrlAndFinish(handler: SharedLinkHandler, url: String, wasResolved: Boolean) {
+        // Some shares save a handle to the keyword pool instead of storing the link — e.g. an
+        // X/Twitter profile. The handler decides; when it returns a handle we skip the link insert.
+        val handle = handler.handleToSaveInstead(url)
+        if (handle != null) {
+            saveHandleAndFinish(handle)
+            return
+        }
+        val settings = settingsRepository.settingsFlow.first()
+        if (settings.editSharedLinkBeforeSave) {
+            // Let the user review/edit the link (and add keywords) before it's saved.
+            showEditDialog(handler, url, wasResolved, settings.themePreference)
+        } else {
+            insertAndFinish(handler, url, keywords = emptyList(), wasResolved = wasResolved)
         }
     }
 
@@ -213,14 +193,19 @@ class ShareReceiverActivity : ComponentActivity() {
      * Renders an editable dialog over the transparent activity. On save the (possibly
      * edited) link and keywords are inserted; on cancel nothing is saved.
      */
-    private fun showEditDialog(url: String, wasResolved: Boolean, themePreference: ThemePreference) {
+    private fun showEditDialog(
+        handler: SharedLinkHandler,
+        url: String,
+        wasResolved: Boolean,
+        themePreference: ThemePreference
+    ) {
         setContent {
             MyAppTheme(themePreference = themePreference) {
                 ShareEditDialog(
                     initialUrl = url,
                     onSave = { editedUrl, keywords ->
                         lifecycleScope.launch {
-                            insertAndFinish(editedUrl, keywords, wasResolved)
+                            insertAndFinish(handler, editedUrl, keywords, wasResolved)
                         }
                     },
                     onCancel = { finish() }
@@ -229,7 +214,12 @@ class ShareReceiverActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun insertAndFinish(url: String, keywords: List<String>, wasResolved: Boolean) {
+    private suspend fun insertAndFinish(
+        handler: SharedLinkHandler,
+        url: String,
+        keywords: List<String>,
+        wasResolved: Boolean
+    ) {
         var contentLink = ContentLink(link = url)
         if (keywords.isNotEmpty()) {
             contentLink = LinkMetadata.setTags(contentLink, keywords, ChipsType.KeyWords)
@@ -243,35 +233,20 @@ class ShareReceiverActivity : ComponentActivity() {
         }
         Toast.makeText(this@ShareReceiverActivity, message, Toast.LENGTH_SHORT).show()
 
-        // Fetch YouTube metadata before finishing (lifecycleScope cancels on finish)
-        if (YouTubeUrlParser.isYouTubeUrl(url)) {
+        // Let the platform handler enrich the saved row (e.g. YouTube title/thumbnail) before we
+        // finish — lifecycleScope is cancelled on finish(), so any network fetch must complete here.
+        // insert() does not return the row id, so re-read the just-saved link by its timestamp.
+        val saved = contentRepository
+            .byTimeRange(start = contentLink.added - 1000, end = contentLink.added + 1000)
+            .firstOrNull { it.link == url }
+        if (saved != null) {
             try {
-                val result = kotlinx.coroutines.withContext(Dispatchers.IO) {
-                    youTubeRepository.getVideoMetadata(url)
-                }
-                if (result is cut.the.crap.data.rest.Result.Success) {
-                    val recentItems = contentRepository.byTimeRange(
-                        start = contentLink.added - 1000,
-                        end = contentLink.added + 1000
-                    )
-                    val dbItem = recentItems.firstOrNull { it.link == url }
-                    if (dbItem != null) {
-                        val type = parseSocialMediaUrl(url)?.contentType ?: "video"
-                        val updated = LinkMetadata.setYouTubeMetadata(
-                            dbItem,
-                            channelName = result.data.channelName,
-                            videoTitle = result.data.title,
-                            thumbnailUrl = result.data.thumbnailUrl,
-                            contentType = type
-                        )
-                        contentRepository.update(updated)
-                        Log.d(TAG, "YouTube metadata saved for: $url")
-                    }
-                } else if (result is cut.the.crap.data.rest.Result.Error) {
-                    Log.e(TAG, "YouTube metadata fetch failed: ${result.message}")
+                handler.enrich(saved)?.let { enriched ->
+                    contentRepository.update(enriched)
+                    Log.d(TAG, "Metadata enriched for: $url")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "YouTube metadata fetch error", e)
+                Log.e(TAG, "Metadata enrichment failed for: $url", e)
             }
         }
 
@@ -279,31 +254,21 @@ class ShareReceiverActivity : ComponentActivity() {
     }
 
     /**
-     * When [url] is an X/Twitter *profile* link, saves its handle as an `ACCOUNT`
-     * keyword — the same pool the handles dialog reads from — and returns `true` so the
-     * caller skips storing the profile URL as a link. Post links and non-X links return
-     * `false` and are saved normally. The handle is normalised to `@username` to match
-     * how the dialog displays and adds handles.
-     *
-     * Deduped case-insensitively: skipping an existing handle avoids the unique-index
-     * REPLACE from resetting its favorite/usage stats. A duplicate profile still returns
-     * `true` — the link is not saved either way.
+     * Saves [handle] to the `ACCOUNT` keyword pool — the same pool the handles dialog reads from —
+     * and finishes. Deduped case-insensitively: skipping an existing handle avoids the unique-index
+     * REPLACE from resetting its favorite/usage stats.
      */
-    private suspend fun addXHandleIfProfile(url: String): Boolean {
-        val info = parseXUrl(url) ?: return false
-        if (info.contentType != "profile") return false
-        val username = info.username?.takeIf { it.isNotBlank() } ?: return false
-        val handle = "@$username"
+    private suspend fun saveHandleAndFinish(handle: String) {
         val existing = keywordRepository.getByType(KeywordType.ACCOUNT).first()
         if (existing.any { it.text.equals(handle, ignoreCase = true) }) {
-            Log.d(TAG, "X handle already in pool, skipping: $handle")
+            Log.d(TAG, "Handle already in pool, skipping: $handle")
             Toast.makeText(this, getString(R.string.share_toast_handle_exists, handle), Toast.LENGTH_SHORT).show()
         } else {
             keywordRepository.insert(KeyWord(text = handle, type = KeywordType.ACCOUNT))
-            Log.d(TAG, "Added X handle to pool: $handle")
+            Log.d(TAG, "Added handle to pool: $handle")
             Toast.makeText(this, getString(R.string.share_toast_handle_saved, handle), Toast.LENGTH_SHORT).show()
         }
-        return true
+        finish()
     }
 
     override fun onNewIntent(intent: Intent) {
