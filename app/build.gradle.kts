@@ -49,6 +49,12 @@ android {
 
     buildTypes {
         debug {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             // Debug API URL - typically points to local development server
             // Example: "http://192.168.1.100:8080" or "http://10.0.2.2:8080" for Android emulator
             buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.100:8080\"")
@@ -56,7 +62,8 @@ android {
         release {
 
             signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             // Production API URL - points to production server
             // TODO: Update this to your production server URL when deploying
             // Example: "https://api.yourapp.com"
