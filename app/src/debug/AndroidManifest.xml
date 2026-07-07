@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Debug-only overlay. The cleartext network security config (permitting HTTP
+    to the local dev server at 192.168.1.100 / emulator 10.0.2.2) is applied
+    ONLY to debug builds. Release builds intentionally omit it so the release
+    manifest never declares cleartext traffic; production must use HTTPS.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:networkSecurityConfig="@xml/network_security_config" />
+
+</manifest>
