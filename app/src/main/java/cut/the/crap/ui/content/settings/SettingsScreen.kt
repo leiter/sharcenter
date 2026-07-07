@@ -23,8 +23,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import cut.the.crap.R
+import androidx.compose.ui.graphics.Color
 import cut.the.crap.ui.XLoginActivity
 import cut.the.crap.ui.components.BottomNavigationBar
+import cut.the.crap.ui.components.ColorPickerDialog
+import cut.the.crap.ui.components.toHexString
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.FileAction
 import cut.the.crap.ui.theme.PreviewAppThemeProvider
@@ -50,6 +53,10 @@ fun SettingsScreen(
     var showLinksSortOrderDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showTimestampFormatDialog by remember { mutableStateOf(false) }
+    var showColorPickerDialog by remember { mutableStateOf(false) }
+    // Demo state for the reusable ColorPicker. Not yet persisted or applied to the theme —
+    // this is a live showcase of the component ahead of wiring it to a real target.
+    var accentColorDemo by remember { mutableStateOf(Color(0xFF3A7BD5)) }
     var showXCredentialsDialog by remember { mutableStateOf(false) }
     var showBackupFrequencyDialog by remember { mutableStateOf(false) }
     var showBackupRetentionDialog by remember { mutableStateOf(false) }
@@ -171,6 +178,20 @@ fun SettingsScreen(
             onConfirm = { theme ->
                 onSettingsChanged(currentSettings.copy(themePreference = theme))
                 showThemeDialog = false
+            }
+        )
+    }
+
+    if (showColorPickerDialog) {
+        ColorPickerDialog(
+            initialColor = accentColorDemo,
+            title = stringResource(R.string.color_picker_title),
+            confirmLabel = stringResource(R.string.color_picker_confirm),
+            dismissLabel = stringResource(R.string.dialog_cancel),
+            onDismiss = { showColorPickerDialog = false },
+            onConfirm = { chosen ->
+                accentColorDemo = chosen
+                showColorPickerDialog = false
             }
         )
     }
@@ -317,6 +338,16 @@ fun SettingsScreen(
                     title = stringResource(R.string.settings_theme),
                     subtitle = stringResource(currentSettings.themePreference.displayNameResId),
                     onClick = { showThemeDialog = true }
+                )
+            }
+
+            item {
+                SettingsItem(
+                    icon = Icons.Default.ColorLens,
+                    title = stringResource(R.string.settings_accent_color),
+                    subtitle = "#${accentColorDemo.toHexString()}",
+                    onClick = { showColorPickerDialog = true },
+                    color = accentColorDemo
                 )
             }
 
