@@ -1,6 +1,6 @@
 # TODO List - BasicStateCodelab
 
-> Last updated: 2026-03-06
+> Last updated: 2026-07-07
 
 ## Critical / High Priority
 
@@ -60,17 +60,16 @@
   - Comment: "TODO there is a better fix using correct insets"
   - Needs: Proper `WindowInsets` handling for bottom-positioned SnackBar
 
-- [ ] **String resources for overflow menu** - `LinksTopBar.kt:240,245,250`
-  - Three menu items using `R.string.app_name` as placeholder
-  - Needs: Proper string resources for "Export selected", "Deselect all", "Toggle favorites"
+- [x] ~~**String resources for overflow menu** - `LinksTopBar.kt`~~ — DONE. Overflow items now use
+  dedicated resources (`links_bulk_favorite`, `links_bulk_tag_*`, `links_bulk_export`,
+  `links_bulk_delete`, `links_bulk_deselect`) instead of the `app_name` placeholder.
 
 ## Low Priority / Nice to Have
 
 ### Commented-Out Features (Evaluate for Removal or Implementation)
 
-1. **Bulk favorite toggle** - `LinksActionHandlers.kt:407-417`
-   - Code exists but is commented out
-   - Decision needed: Implement or remove?
+1. ~~**Bulk favorite toggle** - `LinksActionHandlers.kt`~~ — DONE. `ToggleFavoritesForSelected`
+   is now fully implemented (group toggle with snackbar) at `LinksActionHandlers.kt:443`.
 
 2. **Legacy preferences** - `PrefsFile.kt:30-40`
    - Old preference methods for page transitions and edge-to-edge

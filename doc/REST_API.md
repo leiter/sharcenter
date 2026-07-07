@@ -42,6 +42,9 @@ buildTypes {
   - Connect timeout: 10 seconds
   - Socket timeout: 30 seconds
 - **Logging:** Enabled only in DEBUG builds (INFO level)
+- **Cleartext traffic:** Permitted only in debug builds. `network_security_config.xml` and its
+  manifest reference live in the `debug` source set / debug manifest overlay, so release APKs
+  never declare cleartext HTTP. Point production at an HTTPS URL before shipping.
 
 ### Error Handling
 

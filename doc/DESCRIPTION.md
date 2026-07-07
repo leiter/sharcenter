@@ -56,7 +56,7 @@ New networks are additive by design: each platform is a self-contained
 - **Campaign composer** — turn the numbers into ready-to-post campaign drafts, showing how many signatures each country still needs.
 
 ### Settings & your data
-- **Appearance** — theme and timestamp/display-format selection.
+- **Appearance** — theme, timestamp/display-format selection, and an accent-color picker (HSV square, hue slider and hex field).
 - **Per-screen defaults** — independent default date range, favorite filter and sort order for Posts and Links.
 - **Import / Export** — move your library in and out as plain text.
 - **Backups** — one-tap backup and restore, plus scheduled backups with configurable frequency and retention.

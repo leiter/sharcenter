@@ -38,10 +38,9 @@ notes) were deliberately **excluded** — only genuine dead code is listed.
 - [ ] `tools/StringExtension.kt` — `// private val domainRegex = Regex(...)` (~line 31)
 
 ## Larger candidates — need a decision before removing
-- [ ] `ui/content/links/LinksActionHandlers.kt` — `ListAction.ToggleFavoritesForSelected`
-      branch has its entire body commented out, leaving an empty `viewModelScope.launch {}`.
-      This is an **unfinished feature**, not just dead code. Decide: implement it, or
-      reduce to an explicit no-op stub.
+- [x] `ui/content/links/LinksActionHandlers.kt` — `ListAction.ToggleFavoritesForSelected` is now
+      **fully implemented** (group toggle: favourite all unless every selected item already is,
+      then clear; emits a snackbar). No longer dead code.
 - [ ] `ui/components/MySpeedDial.kt` — the whole file (`MySpeedDial`, `SecondaryFab`,
       `CircularSpeedDialFab`) appears **unused** (no references found). Consider deleting
       the entire file rather than just cleaning its comments.

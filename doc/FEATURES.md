@@ -66,7 +66,8 @@ from them:
 - **Selection & bulk actions** — long-press to enter selection mode, then act on the set:
   - **Favorite / unfavorite selected** — toggles the whole group predictably (favorites all
     unless every item is already a favorite, in which case it clears them).
-  - **Tag selected**, and other list-wide operations.
+  - **Tag selected** — bulk-tag the set with handles, hashtags or keywords.
+  - **Export selected** and **delete selected**, plus deselect-all.
 - **Powerful long-press filters** — long-press gestures can filter by domain, by username, or
   set a date filter.
 - **Empty state** — `EmptyStateIndicator` renders guidance when a list has no items.
@@ -85,7 +86,13 @@ from them:
 
 ## Settings & data management
 
-- **Appearance** — theme selection and timestamp/display format.
+- **Appearance** — theme selection and timestamp/display format, plus an **accent color**
+  picker (`ColorPicker` / `ColorPickerDialog`): an HSV saturation/value square, hue slider and
+  editable hex field. HSV is the internal source of truth so dragging to a grey preserves the
+  chosen hue. The row shows the live color as a tinted icon and hex subtitle. Built only from
+  multiplatform Compose and pure-Kotlin maths (no `android.graphics`, `toArgb` or `String.format`)
+  so it moves to `commonMain` unchanged on the planned KMP migration. Currently a demo — the
+  chosen color is not yet persisted or applied to the theme.
 - **Per-screen defaults** — default date range, favorite filter and sort order, independently
   for Posts and Links.
 - **Import / Export** — move library data in and out of the app.
@@ -98,8 +105,17 @@ from them:
 
 - The developer test job that seeded `example.com` links is now gated behind
   `BuildConfig.DEBUG`, so it never runs in release builds.
+- **R8 minification, resource shrinking and obfuscation are enabled for release builds**
+  (`isMinifyEnabled` / `isShrinkResources`), with ProGuard rules covering the Ktor client
+  and serializable models. Debug builds stay un-obfuscated (standard Android behavior for
+  debuggable variants).
+- **Cleartext HTTP is a debug-only concern.** `network_security_config.xml` and its manifest
+  reference live in the `debug` source set / debug manifest overlay, so release APKs never
+  declare cleartext traffic. The two dev hosts it permits are only reachable from debug builds.
 - Dependency upgrades are broadly gated on a coordinated AGP 8.10 → 9.1 / Gradle 9 /
   Kotlin 2.4 / Hilt 2.60 migration; only a few library bumps are safe before then.
+- A Kotlin Multiplatform migration is planned; new shared-candidate code (e.g. `ColorPicker`)
+  is written KMP-safe — no `android.*`, `toArgb` or `String.format`.
 
 ---
 
@@ -125,20 +141,21 @@ Ideas not yet built, roughly in impact order.
    `SharedLinkHandler`s. Note Reddit's oEmbed returns no thumbnail, and its unauthenticated `.json`
    endpoints are now blocked (403), so Reddit cards show title + author over the Reddit badge.
 6. **Duplicate-link detection** on share/save so the library doesn't accumulate the same URL.
-7. **Full bulk actions** — bulk tag, bulk export-selected, bulk delete alongside bulk favorite.
-8. **Discoverability for long-press gestures.** A first-run coach-mark or a "hold to filter"
+7. **Discoverability for long-press gestures.** A first-run coach-mark or a "hold to filter"
    hint for the four hidden long-press actions.
 
 ### Cross-cutting
-9. **Scheduled posting** using the Python `job_queue` backend already in the repo — queue a
+8. **Scheduled posting** using the Python `job_queue` backend already in the repo — queue a
    draft and get a reminder/notification when it's time to post.
-10. **Personal content dashboard.** Links per domain, saves per week, posting streaks,
+9. **Personal content dashboard.** Links per domain, saves per week, posting streaks,
     most-used tags — a lightweight analytics screen from metadata that already exists.
-11. **Undo on delete for Links.** Posts offer a delete snackbar; standardize Links on
+10. **Undo on delete for Links.** Posts offer a delete snackbar; standardize Links on
     snackbar-with-Undo too.
-12. **Material You dynamic color** from wallpaper, and an audit that the light/dark toggle
-    covers all `copy(alpha = …)` surfaces.
-13. **Onboarding.** `TryMeScreen` exists but is not wired into the nav graph — either surface
+11. **Apply the accent color to the theme.** The `ColorPicker` and Settings row exist but the
+    chosen color is demo-only — persist it (DataStore) and thread it into `MaterialTheme`.
+    Also consider **Material You dynamic color** from wallpaper, and an audit that the
+    light/dark toggle covers all `copy(alpha = …)` surfaces.
+12. **Onboarding.** `TryMeScreen` exists but is not wired into the nav graph — either surface
     it as onboarding / empty-state guidance or remove it.
-14. **Accessibility polish.** Fill remaining empty `contentDescription`s, finish localizing
+13. **Accessibility polish.** Fill remaining empty `contentDescription`s, finish localizing
     stray hardcoded strings, and lift 36dp icon buttons to the 48dp Material touch target.
