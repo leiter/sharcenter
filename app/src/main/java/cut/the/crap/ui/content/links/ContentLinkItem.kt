@@ -405,7 +405,8 @@ fun LinkListItem(
                         domain = texts[0],
                         action = action,
                         modifier = Modifier.align(Alignment.BottomStart),
-                        iconDomain = platformIconDomain(isMastodon, isReddit, texts[0])
+                        iconDomain = platformIconDomain(isMastodon, isReddit, texts[0]),
+                        onClick = { action(ContentLinkAction.Open(item)) }
                     )
                 }
             }
@@ -421,7 +422,8 @@ fun LinkListItem(
                 DomainIcon(
                     domain = texts[0],
                     action = action,
-                    iconDomain = platformIconDomain(isMastodon, isReddit, texts[0])
+                    iconDomain = platformIconDomain(isMastodon, isReddit, texts[0]),
+                    onClick = { action(ContentLinkAction.Open(item)) }
                 )
             }
 
@@ -434,8 +436,16 @@ fun LinkListItem(
                 socialInfo?.username
             }
             val hasUsername = displayUsername != null && displayUsername.isNotBlank()
+            // When no handle/channel is recognised, fall back to the domain (more useful than a
+            // generic "No account"); keep the muted style so the card still reads as "unresolved".
+            val domain = texts[0]
+            val accountText = when {
+                hasUsername -> displayUsername!!
+                domain.isNotBlank() -> domain
+                else -> "No account"
+            }
             Text(
-                text = displayUsername ?: "No account",
+                text = accountText,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -647,6 +657,8 @@ private fun DomainIcon(
     // Which icon to show. Defaults to [domain]; callers override it for federated platforms
     // (e.g. Mastodon) where the per-instance domain has no single icon but the platform does.
     iconDomain: String = domain,
+    // Tap action for the icon (opens the link). Long-press still filters by domain.
+    onClick: () -> Unit = {},
 ) {
     val hasDomain = domain.isNotBlank()
     Box(
@@ -655,7 +667,7 @@ private fun DomainIcon(
             .then(
                 if (hasDomain) {
                     Modifier.combinedClickable(
-                        onClick = { },
+                        onClick = onClick,
                         onLongClick = { action(TextAction.AddHiddenFilter(domain)) }
                     )
                 } else {
@@ -670,7 +682,7 @@ private fun DomainIcon(
                 .size(24.dp)
                 .then(if (!hasDomain) Modifier.alpha(0.5f) else Modifier),
             contentScale = ContentScale.Fit,
-            contentDescription = if (hasDomain) "Long press to filter by domain" else "No domain available"
+            contentDescription = if (hasDomain) "Tap to open link, long press to filter by domain" else "No domain available"
         )
     }
 }
