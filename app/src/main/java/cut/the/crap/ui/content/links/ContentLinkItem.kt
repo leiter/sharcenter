@@ -459,16 +459,31 @@ fun LinkListItem(
                 modifier = Modifier
                     .weight(0.7f)
                     .then(
-                        if (hasUsername) {
+                        // Interactive whenever there's something to act on — a recognised
+                        // handle/channel, or the domain fallback. Only the bare "No account"
+                        // state (no username, no domain) stays inert.
+                        if (hasUsername || domain.isNotBlank()) {
                             Modifier.combinedClickable(
-                                onClick = { },
-                                onLongClick = {
-                                    // For YouTube/Bluesky with a metadata name, filter by it
-                                    // For others, filter by URL path token
-                                    val filterValue = if (hasRichMetadata && channelName != null) {
-                                        channelName
+                                // Tap opens the account/channel profile on the platform when one is
+                                // recognised; otherwise it visits the domain's home page. Falls back
+                                // to the raw link only if neither can be resolved.
+                                onClick = {
+                                    val target = socialInfo?.profileUrl()
+                                        ?: domainHomeUrl(item.link)
+                                    if (target != null) {
+                                        action(ContentLinkAction.OpenProfile(item, target))
                                     } else {
-                                        texts[1]
+                                        action(ContentLinkAction.Open(item))
+                                    }
+                                },
+                                onLongClick = {
+                                    // Long-press filters by the value actually shown: the
+                                    // YouTube/Bluesky metadata name, else the URL path token for a
+                                    // recognised handle, else the domain fallback.
+                                    val filterValue = when {
+                                        hasRichMetadata && channelName != null -> channelName
+                                        hasUsername -> texts[1]
+                                        else -> domain
                                     }
                                     action(TextAction.AddHiddenFilter(filterValue))
                                 }
@@ -648,6 +663,19 @@ private fun platformIconDomain(isMastodon: Boolean, isReddit: Boolean, fallback:
         isReddit -> "reddit"
         else -> fallback
     }
+
+/**
+ * The origin (scheme + host) of [link] — e.g. "https://www.youtube.com" — used to open the
+ * platform's home page when the item carries no resolvable account/channel profile. The derived
+ * `domain` text shown on the card is only a display token (TLD stripped), so the real host is
+ * re-parsed from the link here. Returns null for a malformed link.
+ */
+private fun domainHomeUrl(link: String): String? = try {
+    val url = java.net.URL(link)
+    url.host.takeIf { it.isNotBlank() }?.let { "${url.protocol}://$it" }
+} catch (e: Exception) {
+    null
+}
 
 @Composable
 private fun DomainIcon(
