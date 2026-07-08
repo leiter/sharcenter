@@ -41,5 +41,7 @@ data class PostsScreenState(
     val selectedTagChips: List<KeyWord> = emptyList(),  // Active tag filter chips
     val dialogSource: DialogSource = DialogSource.FILTER,  // Track where dialog was opened from
     val selectedFileUris: List<Uri> = emptyList(),  // Files selected for upload
-    val isUploading: Boolean = false  // Upload in progress
+    val isUploading: Boolean = false,  // Upload in progress
+    val selectionMode: Boolean = false,  // Batch selection mode active
+    val selectedItems: List<Int> = emptyList()  // IDs of items selected in batch mode
 )

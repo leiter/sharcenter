@@ -14,20 +14,27 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
@@ -211,6 +218,11 @@ fun PostsScreen(
     val filterExpanded = screenStateValue.filterExpanded
     val filterStateList = screenStateValue.filterStateList
 
+    // System back exits batch selection before leaving the screen.
+    BackHandler(enabled = screenStateValue.selectionMode) {
+        action(UiAction.ExitSelectionMode(cut.the.crap.ui.components.api.Screen.Posts))
+    }
+
     if (screenStateValue.showDateFilterSheet) {
         cut.the.crap.ui.components.DateFilterBottomSheet(
             initialStartTime = screenStateValue.startTime,
@@ -227,6 +239,59 @@ fun PostsScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
+            if (screenStateValue.selectionMode) {
+                val allItems by contentItems.collectAsState()
+                val selectedCount = screenStateValue.selectedItems.size
+                val visibleIds = allItems.map { it.id }
+                val allSelected = visibleIds.isNotEmpty() &&
+                    visibleIds.all { it in screenStateValue.selectedItems }
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(R.string.posts_selection_count, selectedCount),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            action(UiAction.ExitSelectionMode(cut.the.crap.ui.components.api.Screen.Posts))
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = stringResource(R.string.links_cd_exit_selection)
+                            )
+                        }
+                    },
+                    actions = {
+                        // Select-all / deselect-all toggle over the currently visible items.
+                        IconButton(onClick = {
+                            if (allSelected) action(ContentItemAction.DeselectAll)
+                            else action(ContentItemAction.SelectAll)
+                        }) {
+                            Icon(
+                                imageVector = if (allSelected) Icons.Filled.Cancel else Icons.Filled.CheckCircle,
+                                tint = if (allSelected) MaterialTheme.colorScheme.error
+                                    else MaterialTheme.colorScheme.secondary,
+                                contentDescription = stringResource(
+                                    if (allSelected) R.string.links_deselect_all
+                                    else R.string.links_select_all_filtered
+                                )
+                            )
+                        }
+                        if (selectedCount > 0) {
+                            IconButton(onClick = { action(ContentItemAction.DeleteSelected) }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Delete,
+                                    contentDescription = stringResource(R.string.links_bulk_delete)
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                )
+            } else {
             Column {
                 CenterAlignedTopAppBar(
                     title = { Text("") },
@@ -319,11 +384,13 @@ fun PostsScreen(
                     }
                 }
             }
+            }
         },
         bottomBar = {
             BottomNavigationBar(navController = navController)
         },
         floatingActionButton = {
+            if (!screenStateValue.selectionMode) {
             FloatingActionButton(
                 onClick = {
                     action(cut.the.crap.ui.components.api.ContentItemAction.CreateNew)
@@ -335,6 +402,7 @@ fun PostsScreen(
                     imageVector = Icons.Filled.Add,
                     contentDescription = stringResource(R.string.posts_cd_create_item)
                 )
+            }
             }
         }
     ) { paddingValues ->
@@ -365,6 +433,8 @@ fun PostsScreen(
                 paddingValues = paddingValues,
                 contentItems = contentItems,
                 onContentItemsReordered = onContentItemsReordered,
+                selectionMode = screenStateValue.selectionMode,
+                selectedItems = screenStateValue.selectedItems,
             )
         }
     }

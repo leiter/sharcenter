@@ -320,6 +320,8 @@
     <string name="posts_cd_expand_filters">Expand filters</string>
     <string name="posts_cd_load_stats">Load initiative statistics</string>
     <string name="posts_cd_create_item">Create new content item</string>
+    <string name="posts_selection_count">%1$d selected</string>
+    <string name="posts_cd_toggle_selection">Toggle selection</string>
 
     <!-- Links screen / top bar -->
     <string name="links_active_filters">Active filters:</string>

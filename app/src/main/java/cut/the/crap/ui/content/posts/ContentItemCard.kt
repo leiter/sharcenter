@@ -3,13 +3,17 @@ package cut.the.crap.ui.content.posts
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Input
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -18,6 +22,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -54,6 +59,8 @@ fun ContentItemCard(
     contentItem: ContentItem,
     action: (Action) -> Unit,
     isDragging: Boolean,
+    selectionMode: Boolean = false,
+    isSelected: Boolean = false,
 ) {
     val formattedDate = remember(contentItem.lastModified) {
         formatTimestampWithLocalizedFormatter(contentItem.lastModified)
@@ -68,17 +75,34 @@ fun ContentItemCard(
     val isExpandable = contentItem.text.length > 120
 
     Card(
-        modifier = modifier,
-        onClick = {
-            action(ContentItemAction.Load(contentItem.id))
-        },
+        modifier = modifier
+            .combinedClickable(
+                // Tap toggles selection while in batch mode, otherwise loads the item into the
+                // editor. Long-press enters batch selection (replaces long-press drag-reorder).
+                onClick = {
+                    if (selectionMode) action(ContentItemAction.ToggleSelection(contentItem.id))
+                    else action(ContentItemAction.Load(contentItem.id))
+                },
+                onLongClick = {
+                    if (!selectionMode) action(ContentItemAction.EnterSelectionMode(contentItem.id))
+                }
+            )
+            .then(
+                if (selectionMode && isSelected) {
+                    Modifier.border(2.dp, MaterialTheme.colorScheme.secondary, MaterialTheme.shapes.medium)
+                } else {
+                    Modifier
+                }
+            ),
         colors = CardDefaults.cardColors(
             containerColor = when {
+                selectionMode && isSelected -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
                 isDragging -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 contentItem.isActive -> MaterialTheme.colorScheme.primaryContainer
                 else -> MaterialTheme.colorScheme.surface
             },
             contentColor = when {
+                selectionMode && isSelected -> MaterialTheme.colorScheme.onSecondaryContainer
                 isDragging -> MaterialTheme.colorScheme.onSurfaceVariant
                 contentItem.isActive -> MaterialTheme.colorScheme.onPrimaryContainer
                 else -> MaterialTheme.colorScheme.onSurface
@@ -149,7 +173,7 @@ fun ContentItemCard(
                 }
             }
 
-            // Row 3: Action buttons
+            // Row 3: Action buttons — or, in selection mode, a selection indicator
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -157,6 +181,15 @@ fun ContentItemCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+              if (selectionMode) {
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    imageVector = if (isSelected) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
+                    tint = if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    contentDescription = stringResource(R.string.posts_cd_toggle_selection),
+                    modifier = Modifier.padding(12.dp)
+                )
+              } else {
                 Row {
                     IconButton(
                         onClick = {
@@ -202,6 +235,7 @@ fun ContentItemCard(
                         MenuItem(R.string.context_menu_delete, Icons.Filled.Delete, ContentItemAction.Delete(contentItem.id))
                     )
                 )
+              }
             }
         }
     }

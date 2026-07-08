@@ -94,6 +94,15 @@ sealed interface ContentItemAction : Action {
     data class PostOnTwitter(val contentItem: ContentItem) : ContentItemAction
     data class PostOnFacebook(val contentItem: ContentItem) : ContentItemAction
     data class ShareViaSheet(val contentItem: ContentItem) : ContentItemAction
+
+    // Selection / batch actions (Posts screen). Kept on ContentItemAction so only the
+    // PostsViewModel reacts — the screen-agnostic ListAction variants would double-dispatch
+    // to the LinksViewModel. Exit uses the screen-scoped UiAction.ExitSelectionMode.
+    data class EnterSelectionMode(val id: Int) : ContentItemAction
+    data class ToggleSelection(val id: Int) : ContentItemAction
+    data object SelectAll : ContentItemAction
+    data object DeselectAll : ContentItemAction
+    data object DeleteSelected : ContentItemAction
 }
 
 // ========== Handle/Tag/KeyWords Actions ==========

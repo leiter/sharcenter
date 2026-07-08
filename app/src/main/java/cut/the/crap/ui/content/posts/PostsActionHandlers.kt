@@ -7,8 +7,10 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import cut.the.crap.data.rest.Result
 import cut.the.crap.data.rest.task.FileUploadData
+import cut.the.crap.tools.TextValueWrapper
 import cut.the.crap.tools.insertText
 import cut.the.crap.tools.isForThisScreen
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import cut.the.crap.ui.components.DateType
@@ -78,6 +80,13 @@ internal fun PostsViewModel.handleUiAction(action: UiAction) {
             if (!this.isForThisScreen(action.screen)) return
             internalScreenState.update {
                 it.copy(searchExpanded = action.expanded)
+            }
+        }
+
+        is UiAction.ExitSelectionMode -> {
+            if (!this.isForThisScreen(action.screen)) return
+            internalScreenState.update {
+                it.copy(selectionMode = false, selectedItems = emptyList())
             }
         }
 
@@ -343,7 +352,57 @@ internal fun PostsViewModel.handleContentItemAction(action: ContentItemAction) {
             }
         }
 
+        is ContentItemAction.EnterSelectionMode -> internalScreenState.update {
+            it.copy(selectionMode = true, selectedItems = listOf(action.id))
+        }
+
+        is ContentItemAction.ToggleSelection -> internalScreenState.update {
+            val selected = it.selectedItems.toMutableList()
+            if (selected.contains(action.id)) selected.remove(action.id) else selected.add(action.id)
+            it.copy(selectedItems = selected)
+        }
+
+        is ContentItemAction.SelectAll -> internalScreenState.update {
+            // "All" means every currently visible (filtered/sorted) item.
+            it.copy(selectedItems = contentItems.value.map { item -> item.id })
+        }
+
+        is ContentItemAction.DeselectAll -> internalScreenState.update {
+            it.copy(selectedItems = emptyList())
+        }
+
+        is ContentItemAction.DeleteSelected -> deleteSelectedContentItems()
+
         else -> Unit
+    }
+}
+
+/**
+ * Deletes every currently selected item in one pass, then leaves selection mode. If the item open
+ * in the editor is among them, the editor is reset and the next remaining item (if any) is loaded —
+ * handled once here rather than per-item to avoid concurrent active-item reloads.
+ */
+private fun PostsViewModel.deleteSelectedContentItems() {
+    val ids = internalScreenState.value.selectedItems.toSet()
+    if (ids.isEmpty()) {
+        internalScreenState.update { it.copy(selectionMode = false, selectedItems = emptyList()) }
+        return
+    }
+    viewModelScope.launch {
+        val activeDeleted = activeItemId != null && activeItemId in ids
+        ids.forEach { id ->
+            contentItemRepository.getById(id)?.let { contentItemRepository.delete(it) }
+        }
+        if (activeDeleted) {
+            contentItemRepository.clearActiveItem()
+            activeItemId = null
+            internalScreenState.update { it.copy(focusedContentText = TextValueWrapper()) }
+            val remaining = contentItemRepository.getItems().firstOrNull() ?: emptyList()
+            if (remaining.isNotEmpty()) loadContentItem(remaining.first()) else createNewContentItem()
+        }
+        internalScreenState.update {
+            it.copy(selectionMode = false, selectedItems = emptyList())
+        }
     }
 }
 
