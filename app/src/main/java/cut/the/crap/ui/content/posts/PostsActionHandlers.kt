@@ -35,8 +35,12 @@ internal fun PostsViewModel.handleTextAction(action: TextAction) {
             autoSaveContentItem(action.value)
         }
 
-        is TextAction.EditQueryText -> internalScreenState.update {
-            it.copy(query = action.query)
+        is TextAction.EditQueryText -> {
+            internalScreenState.update {
+                it.copy(query = action.query)
+            }
+            // Apply the query to the content list so search actually filters results.
+            contentItemManager.filterByQuery(action.query)
         }
 
         is TextAction.PasteFromClipboard -> {

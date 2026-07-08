@@ -441,6 +441,79 @@ class PostsViewModelTest {
         }
     }
 
+    // ========== Search Filtering Tests ==========
+
+    @Test
+    fun `edit query text filters content items by text case-insensitively`() = runTest {
+        val items = listOf(
+            TestData.contentItem(id = 1, text = "Hello world"),
+            TestData.contentItem(id = 2, text = "Goodbye moon"),
+            TestData.contentItem(id = 3, text = "WORLD peace")
+        )
+        contentItemRepository.setItems(items)
+        advanceUntilIdle()
+
+        viewModel.contentItems.test {
+            // All items visible before any search
+            assertThat(awaitItem()).hasSize(3)
+
+            viewModel.consumeAction(TextAction.EditQueryText("world"))
+
+            // Only the items whose text contains "world" (any case) remain
+            val filtered = awaitItem()
+            assertThat(filtered.map { it.id }).containsExactly(1, 3)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `whitespace-only query is treated as no filter`() = runTest {
+        val items = listOf(
+            TestData.contentItem(id = 1, text = "Hello world"),
+            TestData.contentItem(id = 2, text = "Goodbye moon")
+        )
+        contentItemRepository.setItems(items)
+        advanceUntilIdle()
+
+        viewModel.contentItems.test {
+            assertThat(awaitItem()).hasSize(2)
+
+            // Narrow the list first so restoring to the full list is a distinct emission
+            viewModel.consumeAction(TextAction.EditQueryText("moon"))
+            assertThat(awaitItem().map { it.id }).containsExactly(2)
+
+            // A whitespace-only query is blank, so it filters nothing
+            viewModel.consumeAction(TextAction.EditQueryText("   "))
+            assertThat(awaitItem()).hasSize(2)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `clearing query restores the full content item list`() = runTest {
+        val items = listOf(
+            TestData.contentItem(id = 1, text = "Hello world"),
+            TestData.contentItem(id = 2, text = "Goodbye moon")
+        )
+        contentItemRepository.setItems(items)
+        advanceUntilIdle()
+
+        viewModel.contentItems.test {
+            assertThat(awaitItem()).hasSize(2)
+
+            viewModel.consumeAction(TextAction.EditQueryText("moon"))
+            assertThat(awaitItem().map { it.id }).containsExactly(2)
+
+            // Clearing the query (e.g. collapsing the search bar) restores everything
+            viewModel.consumeAction(TextAction.EditQueryText(""))
+            assertThat(awaitItem()).hasSize(2)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     // ========== Keyword Lists Tests ==========
 
     @Test

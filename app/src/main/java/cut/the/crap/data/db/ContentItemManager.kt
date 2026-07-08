@@ -13,7 +13,8 @@ import kotlinx.coroutines.flow.map
 
 data class ContentQueryConfig(
     val filterState: ContentFilterState,
-    val sortState: ContentSortState
+    val sortState: ContentSortState,
+    val searchQuery: String
 )
 
 data class ContentFilterState(
@@ -33,14 +34,17 @@ data class ContentSortState(
 class ContentItemManager(private val repository: ContentItemRepository) {
     private val filterState = MutableStateFlow(ContentFilterState())
     private val sortState = MutableStateFlow(ContentSortState())
+    private val searchQuery = MutableStateFlow("")
 
     private val queryConfig: Flow<ContentQueryConfig> = combine(
         filterState,
-        sortState
-    ) { filterState, sortState ->
+        sortState,
+        searchQuery
+    ) { filterState, sortState, searchQuery ->
         ContentQueryConfig(
             filterState = filterState,
-            sortState = sortState
+            sortState = sortState,
+            searchQuery = searchQuery
         )
     }
 
@@ -53,12 +57,22 @@ class ContentItemManager(private val repository: ContentItemRepository) {
             startTime = config.filterState.timeFrameStart,
             endTime = config.filterState.timeFrameEnd
         ).map { items ->
-            // Apply client-side text filtering for handles and tags
+            // Apply client-side text filtering for handles/tags and the search query
             val filteredItems = items.filter { item ->
-                applyKeywordFilter(item, config.filterState)
+                applyKeywordFilter(item, config.filterState) && matchesSearch(item, config.searchQuery)
             }
             if (config.sortState.reverse) filteredItems.reversed() else filteredItems
         }
+    }
+
+    /**
+     * Whether this item matches the search [query] (case-insensitive). A blank query matches
+     * everything. Match is against the item's [ContentItem.text], which is the only free-text
+     * the item carries (handles/hashtags/keywords are embedded inline in that text).
+     */
+    private fun matchesSearch(item: ContentItem, query: String): Boolean {
+        if (query.isBlank()) return true
+        return item.text.contains(query, ignoreCase = true)
     }
 
     /**
@@ -111,6 +125,10 @@ class ContentItemManager(private val repository: ContentItemRepository) {
             filterHandles = handles,
             filterTags = tags
         )
+    }
+
+    fun filterByQuery(query: String) {
+        searchQuery.value = query
     }
 
     fun sortByOrder() {
