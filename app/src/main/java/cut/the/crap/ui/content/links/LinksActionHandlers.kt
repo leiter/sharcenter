@@ -1,6 +1,7 @@
 package cut.the.crap.ui.content.links
 
 import androidx.lifecycle.viewModelScope
+import cut.the.crap.R
 import cut.the.crap.data.domain.KeyWord
 import cut.the.crap.data.domain.KeywordType
 import cut.the.crap.ui.components.DateType
@@ -435,7 +436,11 @@ internal fun LinksViewModel.handleListAction(action: ListAction) {
                     it.copy(selectedItems = emptyList(), checkMarks = false)
                 }
                 if (toDelete.isNotEmpty()) {
-                    emitSnackBarMessage("Deleted ${toDelete.size} links")
+                    emitSnackBarMessage(
+                        context.resources.getQuantityString(
+                            R.plurals.links_snackbar_deleted, toDelete.size, toDelete.size
+                        )
+                    )
                 }
             }
         }
@@ -451,8 +456,11 @@ internal fun LinksViewModel.handleListAction(action: ListAction) {
                 val newFavourite = !selected.all { it.favourite }
                 selected.forEach { contentRepository.update(it.copy(favourite = newFavourite)) }
                 emitSnackBarMessage(
-                    if (newFavourite) "Favorited ${selected.size} links"
-                    else "Unfavorited ${selected.size} links"
+                    context.resources.getQuantityString(
+                        if (newFavourite) R.plurals.links_snackbar_favorited
+                        else R.plurals.links_snackbar_unfavorited,
+                        selected.size, selected.size
+                    )
                 )
             }
         }
@@ -473,7 +481,11 @@ internal fun LinksViewModel.handleListAction(action: ListAction) {
                 }
                 internalScreenState.update { it.copy(bulkTagType = null) }
                 if (selected.isNotEmpty()) {
-                    emitSnackBarMessage("Tagged ${selected.size} links")
+                    emitSnackBarMessage(
+                        context.resources.getQuantityString(
+                            R.plurals.links_snackbar_tagged, selected.size, selected.size
+                        )
+                    )
                 }
             }
         }
@@ -488,10 +500,17 @@ internal fun LinksViewModel.handleListAction(action: ListAction) {
                 if (selectedLinks.isNotEmpty()) {
                     when (val result = jobQueueRepository.submitTask(ShareLinksTask(selectedLinks))) {
                         is cut.the.crap.data.rest.Result.Success -> {
-                            emitSnackBarMessage("Submitted ${selectedLinks.size} links to job queue")
+                            emitSnackBarMessage(
+                                context.resources.getQuantityString(
+                                    R.plurals.links_snackbar_submitted,
+                                    selectedLinks.size, selectedLinks.size
+                                )
+                            )
                         }
                         is cut.the.crap.data.rest.Result.Error -> {
-                            emitSnackBarMessage("Failed to submit: ${result.message}")
+                            emitSnackBarMessage(
+                                context.getString(R.string.links_snackbar_submit_failed, result.message)
+                            )
                         }
                     }
                 }
@@ -513,7 +532,9 @@ internal fun LinksViewModel.handleFileAction(action: FileAction) {
                 result.onSuccess { message ->
                     emitSnackBarMessage(message)
                 }.onFailure { error ->
-                    emitSnackBarMessage("Export failed: ${error.message}")
+                    emitSnackBarMessage(
+                        context.getString(R.string.links_snackbar_export_failed, error.message ?: "")
+                    )
                 }
             }
         }
@@ -524,7 +545,9 @@ internal fun LinksViewModel.handleFileAction(action: FileAction) {
                 result.onSuccess { message ->
                     emitSnackBarMessage(message)
                 }.onFailure { error ->
-                    emitSnackBarMessage("Import failed: ${error.message}")
+                    emitSnackBarMessage(
+                        context.getString(R.string.links_snackbar_import_failed, error.message ?: "")
+                    )
                 }
             }
         }

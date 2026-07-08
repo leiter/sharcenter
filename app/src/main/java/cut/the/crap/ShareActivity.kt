@@ -162,9 +162,9 @@ class ShareReceiverActivity : ComponentActivity() {
         Toast.makeText(
             this,
             if (reason == XLoginActivity.REASON_AUTH_EXPIRED)
-                "X session expired. Please log in again."
+                getString(R.string.share_toast_x_session_expired)
             else
-                "Log in to X to resolve this URL",
+                getString(R.string.share_toast_x_login_prompt),
             Toast.LENGTH_SHORT
         ).show()
 
@@ -227,9 +227,9 @@ class ShareReceiverActivity : ComponentActivity() {
         contentRepository.insert(contentLink)
 
         val message = if (wasResolved) {
-            "Link resolved and saved"
+            getString(R.string.share_toast_link_resolved_saved)
         } else {
-            "Link saved"
+            getString(R.string.share_toast_link_saved)
         }
         Toast.makeText(this@ShareReceiverActivity, message, Toast.LENGTH_SHORT).show()
 

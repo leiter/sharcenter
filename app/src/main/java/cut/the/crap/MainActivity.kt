@@ -194,14 +194,14 @@ private fun handleAction(
                     result.onSuccess { fileName ->
                         Toast.makeText(
                             activity,
-                            "Backup successful: $fileName",
+                            activity.getString(R.string.backup_toast_success, fileName),
                             Toast.LENGTH_LONG
                         ).show()
                     }
                     result.onFailure { error ->
                         Toast.makeText(
                             activity,
-                            "Backup failed: ${error.message}",
+                            activity.getString(R.string.backup_toast_failed, error.message ?: ""),
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -217,7 +217,7 @@ private fun handleAction(
                     result.onSuccess { name ->
                         Toast.makeText(
                             activity,
-                            "Restored from $name. Restarting…",
+                            activity.getString(R.string.restore_toast_success, name),
                             Toast.LENGTH_LONG
                         ).show()
                         // Room must reopen the replaced file, so restart the process.
@@ -226,7 +226,7 @@ private fun handleAction(
                     result.onFailure { error ->
                         Toast.makeText(
                             activity,
-                            "Restore failed: ${error.message}",
+                            activity.getString(R.string.restore_toast_failed, error.message ?: ""),
                             Toast.LENGTH_LONG
                         ).show()
                     }

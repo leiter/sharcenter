@@ -66,6 +66,9 @@ fun ColorPicker(
     onColorChanged: (Color) -> Unit,
     modifier: Modifier = Modifier,
     showHexField: Boolean = true,
+    // Label for the hex input field. Passed in (not resolved here) so this component stays free of
+    // Android string-resource lookups, keeping it portable for the planned KMP migration.
+    hexLabel: String = "Hex",
 ) {
     val initialHsv = remember(initialColor) { initialColor.toHsv() }
     var hue by remember(initialColor) { mutableFloatStateOf(initialHsv.hue) }
@@ -107,6 +110,7 @@ fun ColorPicker(
         if (showHexField) {
             HexRow(
                 color = currentColor,
+                hexLabel = hexLabel,
                 onHexColor = { c ->
                     val hsv = c.toHsv()
                     hue = hsv.hue
@@ -131,6 +135,7 @@ fun ColorPickerDialog(
     title: String,
     confirmLabel: String,
     dismissLabel: String,
+    hexLabel: String,
 ) {
     var picked by remember { mutableStateOf(initialColor) }
     AlertDialog(
@@ -141,6 +146,7 @@ fun ColorPickerDialog(
                 initialColor = initialColor,
                 onColorChanged = { picked = it },
                 modifier = Modifier.fillMaxWidth(),
+                hexLabel = hexLabel,
             )
         },
         confirmButton = {
@@ -223,6 +229,7 @@ private fun HueSlider(
 private fun HexRow(
     color: Color,
     onHexColor: (Color) -> Unit,
+    hexLabel: String,
 ) {
     var hexText by remember { mutableStateOf("#" + color.toHexString()) }
 
@@ -250,7 +257,7 @@ private fun HexRow(
                 parseHexColor(input)?.let(onHexColor)
             },
             singleLine = true,
-            label = { Text("Hex") },
+            label = { Text(hexLabel) },
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Characters,
                 keyboardType = KeyboardType.Ascii,

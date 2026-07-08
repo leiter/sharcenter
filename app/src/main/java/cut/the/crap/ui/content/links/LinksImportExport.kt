@@ -2,6 +2,7 @@ package cut.the.crap.ui.content.links
 
 import android.content.Context
 import android.net.Uri
+import cut.the.crap.R
 import androidx.lifecycle.viewModelScope
 import cut.the.crap.data.domain.DELIMITER
 import cut.the.crap.data.domain.ContentLink
@@ -29,12 +30,12 @@ internal fun LinksViewModel.exportSelectedItems(outputStream: OutputStream?): Re
         val itemsToExport = listState.value.filter { selectedIds.contains(it.id) }
 
         if (itemsToExport.isEmpty()) {
-            return Result.failure(IllegalStateException("No items selected"))
+            return Result.failure(IllegalStateException(context.getString(R.string.links_export_no_items_selected)))
         }
 
         // Validate delimiter
         if (!itemsToExport.validateDelimiter()) {
-            return Result.failure(IllegalStateException("Delimiter conflict in data: Items contain the delimiter '$DELIMITER'"))
+            return Result.failure(IllegalStateException(context.getString(R.string.links_export_delimiter_conflict, DELIMITER)))
         }
 
         // Build export content
@@ -47,9 +48,13 @@ internal fun LinksViewModel.exportSelectedItems(outputStream: OutputStream?): Re
         val result = saveFileToDownloads(outputStream, exportContent)
 
         if (result.isSuccess) {
-            Result.success("Exported ${itemsToExport.size} items successfully")
+            Result.success(
+                context.resources.getQuantityString(
+                    R.plurals.links_export_success, itemsToExport.size, itemsToExport.size
+                )
+            )
         } else {
-            Result.failure(result.exceptionOrNull() ?: Exception("Unknown export error"))
+            Result.failure(result.exceptionOrNull() ?: Exception(context.getString(R.string.links_export_unknown_error)))
         }
     } catch (e: Exception) {
         Result.failure(e)
@@ -92,13 +97,13 @@ internal fun buildExportContent(
 internal fun LinksViewModel.importFromFile(uri: Uri, context: Context): Result<String> {
     return try {
         val inputStream = context.contentResolver.openInputStream(uri)
-            ?: return Result.failure(IllegalStateException("Cannot open file"))
+            ?: return Result.failure(IllegalStateException(context.getString(R.string.links_import_cannot_open)))
 
         val content = inputStream.bufferedReader().use { it.readText() }
         val lines = content.lines().filter { it.isNotBlank() && !it.startsWith("#") }
 
         if (lines.isEmpty()) {
-            return Result.failure(IllegalStateException("File is empty or contains only metadata"))
+            return Result.failure(IllegalStateException(context.getString(R.string.links_import_empty_file)))
         }
 
         // Get existing items to check for duplicates
@@ -166,13 +171,25 @@ internal fun LinksViewModel.importFromFile(uri: Uri, context: Context): Result<S
 
         if (importedCount > 0 || skippedCount > 0) {
             val message = buildString {
-                append("Imported $importedCount items")
-                if (skippedCount > 0) append(", skipped $skippedCount duplicates")
-                if (errorCount > 0) append(", $errorCount failed")
+                append(
+                    context.resources.getQuantityString(
+                        R.plurals.links_import_imported, importedCount, importedCount
+                    )
+                )
+                if (skippedCount > 0) append(
+                    context.resources.getQuantityString(
+                        R.plurals.links_import_skipped, skippedCount, skippedCount
+                    )
+                )
+                if (errorCount > 0) append(
+                    context.resources.getQuantityString(
+                        R.plurals.links_import_failed_count, errorCount, errorCount
+                    )
+                )
             }
             Result.success(message)
         } else {
-            Result.failure(IllegalStateException("No valid items found in file"))
+            Result.failure(IllegalStateException(context.getString(R.string.links_import_no_valid_items)))
         }
     } catch (e: Exception) {
         Result.failure(e)

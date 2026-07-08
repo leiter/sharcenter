@@ -188,6 +188,7 @@ fun SettingsScreen(
             title = stringResource(R.string.color_picker_title),
             confirmLabel = stringResource(R.string.color_picker_confirm),
             dismissLabel = stringResource(R.string.dialog_cancel),
+            hexLabel = stringResource(R.string.color_picker_hex_label),
             onDismiss = { showColorPickerDialog = false },
             onConfirm = { chosen ->
                 accentColorDemo = chosen

@@ -436,4 +436,67 @@
     <string name="file_toast_copy_failed">Failed to copy file</string>
     <string name="file_toast_copy_error">Error copying file</string>
 
+    <!-- Database backup / restore toasts -->
+    <string name="backup_toast_success">Backup successful: %1$s</string>
+    <string name="backup_toast_failed">Backup failed: %1$s</string>
+    <string name="restore_toast_success">Restored from %1$s. Restarting…</string>
+    <string name="restore_toast_failed">Restore failed: %1$s</string>
+
+    <!-- Share / X login toasts -->
+    <string name="share_toast_x_session_expired">X session expired. Please log in again.</string>
+    <string name="share_toast_x_login_prompt">Log in to X to resolve this URL</string>
+    <string name="share_toast_link_resolved_saved">Link resolved and saved</string>
+    <string name="share_toast_link_saved">Link saved</string>
+
+    <!-- Color picker -->
+    <string name="color_picker_hex_label">Hex</string>
+
+    <!-- Links bulk-action snackbars -->
+    <plurals name="links_snackbar_deleted">
+        <item quantity="one">Deleted %d link</item>
+        <item quantity="other">Deleted %d links</item>
+    </plurals>
+    <plurals name="links_snackbar_favorited">
+        <item quantity="one">Favorited %d link</item>
+        <item quantity="other">Favorited %d links</item>
+    </plurals>
+    <plurals name="links_snackbar_unfavorited">
+        <item quantity="one">Unfavorited %d link</item>
+        <item quantity="other">Unfavorited %d links</item>
+    </plurals>
+    <plurals name="links_snackbar_tagged">
+        <item quantity="one">Tagged %d link</item>
+        <item quantity="other">Tagged %d links</item>
+    </plurals>
+    <plurals name="links_snackbar_submitted">
+        <item quantity="one">Submitted %d link to job queue</item>
+        <item quantity="other">Submitted %d links to job queue</item>
+    </plurals>
+    <string name="links_snackbar_submit_failed">Failed to submit: %1$s</string>
+    <string name="links_snackbar_export_failed">Export failed: %1$s</string>
+    <string name="links_snackbar_import_failed">Import failed: %1$s</string>
+
+    <!-- Links import / export result messages -->
+    <string name="links_export_no_items_selected">No items selected</string>
+    <string name="links_export_delimiter_conflict">Delimiter conflict in data: Items contain the delimiter \'%1$s\'</string>
+    <plurals name="links_export_success">
+        <item quantity="one">Exported %d item successfully</item>
+        <item quantity="other">Exported %d items successfully</item>
+    </plurals>
+    <string name="links_export_unknown_error">Unknown export error</string>
+    <string name="links_import_cannot_open">Cannot open file</string>
+    <string name="links_import_empty_file">File is empty or contains only metadata</string>
+    <string name="links_import_no_valid_items">No valid items found in file</string>
+    <plurals name="links_import_imported">
+        <item quantity="one">Imported %d item</item>
+        <item quantity="other">Imported %d items</item>
+    </plurals>
+    <plurals name="links_import_skipped">
+        <item quantity="one">, skipped %d duplicate</item>
+        <item quantity="other">, skipped %d duplicates</item>
+    </plurals>
+    <plurals name="links_import_failed_count">
+        <item quantity="one">, %d failed</item>
+        <item quantity="other">, %d failed</item>
+    </plurals>
 </resources>
