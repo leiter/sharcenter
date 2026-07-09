@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -13,11 +14,23 @@ import androidx.room.RoomDatabase
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
-@Database(entities = [ContentLinkDB::class, KeywordDB::class, ContentItemDB::class], version = 4, exportSchema = true)
+@Database(
+    entities = [
+        ContentLinkDB::class,
+        KeywordDB::class,
+        ContentItemDB::class,
+        SubjectDB::class,
+        PostSubjectCrossRef::class,
+        LinkSubjectCrossRef::class,
+    ],
+    version = 5,
+    exportSchema = true,
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun contentLinkDao(): ContentLinkDao
     abstract fun keywordDao(): KeywordDao
     abstract fun contentItemDao(): ContentItemDao
+    abstract fun subjectDao(): SubjectDao
 }
 
 @Entity(tableName = "tweets_table")  // Keep old table name for backward compatibility
@@ -243,5 +256,131 @@ interface ContentItemDao {
 
     @Query("DELETE FROM content_items_table")
     suspend fun deleteAll()
+}
+
+// ---------------------------------------------------------------------------
+// Subjects: a colour (optionally named) used to bundle posts and links into
+// topics. Items relate to subjects many-to-many via the cross-ref tables below,
+// so a single post or link can belong to several subjects at once.
+// ---------------------------------------------------------------------------
+
+@Entity(
+    tableName = "subjects_table",
+    indices = [Index(value = ["modifiedAt"])]
+)
+data class SubjectDB(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    // Optional label. Null means the subject is identified by its colour alone.
+    val name: String? = null,
+    // Six-digit uppercase RRGGBB, matching ColorPicker's Color.toHexString().
+    val colorHex: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val modifiedAt: Long = System.currentTimeMillis(),
+)
+
+/** Join row linking a post ([ContentItemDB]) to a [SubjectDB]. */
+@Entity(
+    tableName = "post_subject_cross_ref",
+    primaryKeys = ["postId", "subjectId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = ContentItemDB::class,
+            parentColumns = ["id"],
+            childColumns = ["postId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+        ForeignKey(
+            entity = SubjectDB::class,
+            parentColumns = ["id"],
+            childColumns = ["subjectId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index(value = ["subjectId"])]
+)
+data class PostSubjectCrossRef(
+    val postId: Int,
+    val subjectId: Int,
+)
+
+/** Join row linking a link ([ContentLinkDB]) to a [SubjectDB]. */
+@Entity(
+    tableName = "link_subject_cross_ref",
+    primaryKeys = ["linkId", "subjectId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = ContentLinkDB::class,
+            parentColumns = ["id"],
+            childColumns = ["linkId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+        ForeignKey(
+            entity = SubjectDB::class,
+            parentColumns = ["id"],
+            childColumns = ["subjectId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index(value = ["subjectId"])]
+)
+data class LinkSubjectCrossRef(
+    val linkId: Int,
+    val subjectId: Int,
+)
+
+@Dao
+interface SubjectDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(subject: SubjectDB): Long
+
+    @Update
+    suspend fun update(subject: SubjectDB)
+
+    @Delete
+    suspend fun delete(subject: SubjectDB)
+
+    @Query("SELECT * FROM subjects_table WHERE id = :subjectId")
+    suspend fun getById(subjectId: Int): SubjectDB?
+
+    /** All subjects, most-recently-touched first (drives the colour-history preview order). */
+    @Query("SELECT * FROM subjects_table ORDER BY modifiedAt DESC")
+    fun getAllByRecency(): Flow<List<SubjectDB>>
+
+    /** All subjects, alphabetically by name (falling back to colour) for management lists. */
+    @Query("SELECT * FROM subjects_table ORDER BY COALESCE(name, colorHex) COLLATE NOCASE ASC")
+    fun getAllByName(): Flow<List<SubjectDB>>
+
+    // --- Post <-> subject links ---
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun linkPost(ref: PostSubjectCrossRef)
+
+    @Delete
+    suspend fun unlinkPost(ref: PostSubjectCrossRef)
+
+    @Query("""
+        SELECT s.* FROM subjects_table s
+        INNER JOIN post_subject_cross_ref x ON s.id = x.subjectId
+        WHERE x.postId = :postId
+        ORDER BY s.modifiedAt DESC
+    """)
+    fun getSubjectsForPost(postId: Int): Flow<List<SubjectDB>>
+
+    // --- Link <-> subject links ---
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun linkLink(ref: LinkSubjectCrossRef)
+
+    @Delete
+    suspend fun unlinkLink(ref: LinkSubjectCrossRef)
+
+    @Query("""
+        SELECT s.* FROM subjects_table s
+        INNER JOIN link_subject_cross_ref x ON s.id = x.subjectId
+        WHERE x.linkId = :linkId
+        ORDER BY s.modifiedAt DESC
+    """)
+    fun getSubjectsForLink(linkId: Int): Flow<List<SubjectDB>>
 }
 

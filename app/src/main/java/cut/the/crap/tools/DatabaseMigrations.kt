@@ -56,3 +56,43 @@ internal val MIGRATION_3_4 = object : Migration(3, 4) {
         db.execSQL("CREATE INDEX IF NOT EXISTS index_content_items_table_sortOrder ON content_items_table(sortOrder)")
     }
 }
+
+internal val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Subjects: a colour (optionally named) used to bundle posts and links.
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS subjects_table (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                name TEXT,
+                colorHex TEXT NOT NULL,
+                createdAt INTEGER NOT NULL,
+                modifiedAt INTEGER NOT NULL
+            )
+        """)
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_subjects_table_modifiedAt ON subjects_table(modifiedAt)")
+
+        // Many-to-many join: post -> subject.
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS post_subject_cross_ref (
+                postId INTEGER NOT NULL,
+                subjectId INTEGER NOT NULL,
+                PRIMARY KEY(postId, subjectId),
+                FOREIGN KEY(postId) REFERENCES content_items_table(id) ON DELETE CASCADE,
+                FOREIGN KEY(subjectId) REFERENCES subjects_table(id) ON DELETE CASCADE
+            )
+        """)
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_post_subject_cross_ref_subjectId ON post_subject_cross_ref(subjectId)")
+
+        // Many-to-many join: link -> subject.
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS link_subject_cross_ref (
+                linkId INTEGER NOT NULL,
+                subjectId INTEGER NOT NULL,
+                PRIMARY KEY(linkId, subjectId),
+                FOREIGN KEY(linkId) REFERENCES tweets_table(id) ON DELETE CASCADE,
+                FOREIGN KEY(subjectId) REFERENCES subjects_table(id) ON DELETE CASCADE
+            )
+        """)
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_link_subject_cross_ref_subjectId ON link_subject_cross_ref(subjectId)")
+    }
+}

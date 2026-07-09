@@ -2,19 +2,27 @@ package cut.the.crap.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -59,6 +67,9 @@ import kotlin.math.roundToInt
  *
  * @param initialColor the colour the picker opens on. Changing it resets the internal HSV state.
  * @param onColorChanged invoked with the live colour on every adjustment.
+ * @param recentColors previously picked colours, most-recent first, shown as a tappable history
+ *   strip below the picker. Empty hides the strip. Tapping a swatch loads that colour.
+ * @param recentPreviewCount how many history swatches to show before the strip offers to expand.
  */
 @Composable
 fun ColorPicker(
@@ -69,6 +80,8 @@ fun ColorPicker(
     // Label for the hex input field. Passed in (not resolved here) so this component stays free of
     // Android string-resource lookups, keeping it portable for the planned KMP migration.
     hexLabel: String = "Hex",
+    recentColors: List<Color> = emptyList(),
+    recentPreviewCount: Int = 12,
 ) {
     val initialHsv = remember(initialColor) { initialColor.toHsv() }
     var hue by remember(initialColor) { mutableFloatStateOf(initialHsv.hue) }
@@ -80,6 +93,15 @@ fun ColorPicker(
     // Keep the latest callback without restarting the long-lived pointerInput coroutines.
     val latestOnColorChanged by rememberUpdatedState(onColorChanged)
     val emit = { latestOnColorChanged(Color.hsv(hue, saturation, value)) }
+
+    // Load an arbitrary colour into the HSV source of truth (used by the hex field and history).
+    val applyColor: (Color) -> Unit = { c ->
+        val hsv = c.toHsv()
+        hue = hsv.hue
+        saturation = hsv.saturation
+        value = hsv.value
+        emit()
+    }
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         SaturationValueArea(
@@ -111,13 +133,16 @@ fun ColorPicker(
             HexRow(
                 color = currentColor,
                 hexLabel = hexLabel,
-                onHexColor = { c ->
-                    val hsv = c.toHsv()
-                    hue = hsv.hue
-                    saturation = hsv.saturation
-                    value = hsv.value
-                    emit()
-                },
+                onHexColor = applyColor,
+            )
+        }
+
+        if (recentColors.isNotEmpty()) {
+            ColorHistoryStrip(
+                colors = recentColors,
+                previewCount = recentPreviewCount,
+                selectedColor = currentColor,
+                onSelect = applyColor,
             )
         }
     }
@@ -136,6 +161,7 @@ fun ColorPickerDialog(
     confirmLabel: String,
     dismissLabel: String,
     hexLabel: String,
+    recentColors: List<Color> = emptyList(),
 ) {
     var picked by remember { mutableStateOf(initialColor) }
     AlertDialog(
@@ -147,6 +173,7 @@ fun ColorPickerDialog(
                 onColorChanged = { picked = it },
                 modifier = Modifier.fillMaxWidth(),
                 hexLabel = hexLabel,
+                recentColors = recentColors,
             )
         },
         confirmButton = {
@@ -268,6 +295,119 @@ private fun HexRow(
     }
 }
 
+/**
+ * History strip: a row of small filled circles for previously picked [colors] (most-recent first).
+ * Tapping a swatch loads that colour into the picker. When there are more colours than
+ * [previewCount], a trailing "+N" swatch expands the strip into a scrollable grid of all of them.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ColorHistoryStrip(
+    colors: List<Color>,
+    previewCount: Int,
+    selectedColor: Color,
+    onSelect: (Color) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedHex = selectedColor.toHexString()
+    val hasMore = colors.size > previewCount
+
+    if (expanded) {
+        FlowRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 160.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            colors.forEach { color ->
+                ColorDot(
+                    color = color,
+                    selected = color.toHexString() == selectedHex,
+                    onClick = { onSelect(color) },
+                )
+            }
+            CollapseDot(onClick = { expanded = false })
+        }
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            colors.take(previewCount).forEach { color ->
+                ColorDot(
+                    color = color,
+                    selected = color.toHexString() == selectedHex,
+                    onClick = { onSelect(color) },
+                )
+            }
+            if (hasMore) {
+                ExpandDot(remaining = colors.size - previewCount, onClick = { expanded = true })
+            }
+        }
+    }
+}
+
+private val SwatchSize = 28.dp
+
+@Composable
+private fun ColorDot(color: Color, selected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(SwatchSize)
+            .clip(CircleShape)
+            .background(color)
+            .border(
+                width = if (selected) 3.dp else 1.dp,
+                color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline,
+                shape = CircleShape,
+            )
+            .clickable(onClick = onClick),
+    )
+}
+
+/** Trailing swatch that shows how many more colours are hidden and expands the strip on tap. */
+@Composable
+private fun ExpandDot(remaining: Int, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(SwatchSize)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "+$remaining",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** Trailing swatch that collapses the expanded strip back to the preview row. */
+@Composable
+private fun CollapseDot(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(SwatchSize)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "−",  // minus sign
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Pure-Kotlin colour maths — all multiplatform-safe.
 // ---------------------------------------------------------------------------
@@ -311,6 +451,9 @@ private fun Int.toHex2(): String {
     val digits = "0123456789ABCDEF"
     return "${digits[(this shr 4) and 0x0F]}${digits[this and 0x0F]}"
 }
+
+/** Public counterpart of [parseHexColor]: `#RRGGBB` or `RRGGBB` → [Color], or null if invalid. */
+fun colorFromHex(input: String): Color? = parseHexColor(input)
 
 /** Parse `#RRGGBB` or `RRGGBB` (case-insensitive). Returns null for anything else. */
 private fun parseHexColor(input: String): Color? {

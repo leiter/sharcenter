@@ -6,15 +6,19 @@ import cut.the.crap.data.db.AppDatabase
 import cut.the.crap.data.db.ContentItemDao
 import cut.the.crap.data.db.KeywordDao
 import cut.the.crap.data.db.ContentLinkDao
+import cut.the.crap.data.db.SubjectDao
 import cut.the.crap.data.domain.ContentItemRepository
 import cut.the.crap.data.domain.ContentItemRepositoryImpl
 import cut.the.crap.data.domain.KeywordRepository
 import cut.the.crap.data.domain.KeywordRepositoryImpl
 import cut.the.crap.data.domain.ContentLinkRepository
 import cut.the.crap.data.domain.ContentLinkRepositoryImpl
+import cut.the.crap.data.domain.SubjectRepository
+import cut.the.crap.data.domain.SubjectRepositoryImpl
 import cut.the.crap.tools.MIGRATION_1_2
 import cut.the.crap.tools.MIGRATION_2_3
 import cut.the.crap.tools.MIGRATION_3_4
+import cut.the.crap.tools.MIGRATION_4_5
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,7 +36,7 @@ object AppModule {
             appContext,
             AppDatabase::class.java,
             "app_database"
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
     }
 
@@ -68,5 +72,16 @@ object AppModule {
     @Singleton
     fun provideContentItemRepository(contentItemDao: ContentItemDao): ContentItemRepository {
         return ContentItemRepositoryImpl(contentItemDao)
+    }
+
+    @Provides
+    fun provideSubjectDao(database: AppDatabase): SubjectDao {
+        return database.subjectDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSubjectRepository(subjectDao: SubjectDao): SubjectRepository {
+        return SubjectRepositoryImpl(subjectDao)
     }
 }
