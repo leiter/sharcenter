@@ -82,7 +82,7 @@ class SettingsRepository @Inject constructor(
                     preferences[PreferencesKeys.LINKS_FAVORITE_FILTER_PRESET] ?: defaultFavoriteFilter.name
                 ),
                 postsSortOrderPreset = SortOrderPreset.valueOf(
-                    preferences[PreferencesKeys.POSTS_SORT_ORDER_PRESET] ?: SortOrderPreset.BY_ORDER.name
+                    preferences[PreferencesKeys.POSTS_SORT_ORDER_PRESET] ?: SortOrderPreset.BY_DATE.name
                 ),
                 linksSortOrderPreset = SortOrderPreset.valueOf(
                     preferences[PreferencesKeys.LINKS_SORT_ORDER_PRESET] ?: SortOrderPreset.BY_DATE.name

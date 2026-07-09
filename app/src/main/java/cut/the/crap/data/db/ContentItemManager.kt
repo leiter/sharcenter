@@ -27,8 +27,8 @@ data class ContentFilterState(
 
 data class ContentSortState(
     val reverse: Boolean = false,
-    val sortByOrder: Boolean = true,
-    val sortByDate: Boolean = false
+    val sortByOrder: Boolean = false,
+    val sortByDate: Boolean = true
 )
 
 class ContentItemManager(private val repository: ContentItemRepository) {
