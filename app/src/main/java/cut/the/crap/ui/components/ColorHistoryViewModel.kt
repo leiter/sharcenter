@@ -3,20 +3,17 @@ package cut.the.crap.ui.components
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cut.the.crap.data.preferences.ColorHistoryRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Exposes the recently picked colours (as RRGGBB hex strings, most-recent first) and records new
  * picks. Any screen that shows a [ColorPicker]/[ColorPickerDialog] can obtain this via
- * `hiltViewModel()` to give the picker a shared, persistent history strip.
+ * `koinViewModel()` to give the picker a shared, persistent history strip.
  */
-@HiltViewModel
-class ColorHistoryViewModel @Inject constructor(
+class ColorHistoryViewModel constructor(
     private val colorHistoryRepository: ColorHistoryRepository
 ) : ViewModel() {
 

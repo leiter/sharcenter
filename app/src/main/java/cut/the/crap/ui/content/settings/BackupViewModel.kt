@@ -5,19 +5,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cut.the.crap.data.backup.BackupInfo
 import cut.the.crap.data.backup.DatabaseBackupManager
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Backs the backup-management screen: loads the list of existing backups and deletes
  * the ones the user selects.
  */
-@HiltViewModel
-class BackupViewModel @Inject constructor(
+class BackupViewModel constructor(
     private val backupManager: DatabaseBackupManager
 ) : ViewModel() {
 

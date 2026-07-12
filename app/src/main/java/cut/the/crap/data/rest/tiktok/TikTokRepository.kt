@@ -14,7 +14,6 @@ import io.ktor.client.request.parameter
 import io.ktor.serialization.ContentConvertException
 import kotlinx.serialization.SerializationException
 import java.io.IOException
-import javax.inject.Inject
 
 /**
  * Repository for fetching TikTok post metadata from the public oEmbed endpoint
@@ -30,7 +29,7 @@ interface TikTokRepository {
     suspend fun getPostMetadata(url: String): Result<TikTokPostMetadata>
 }
 
-class TikTokRepositoryImpl @Inject constructor(
+class TikTokRepositoryImpl constructor(
     private val client: HttpClient,
     private val strings: StringProvider
 ) : TikTokRepository {

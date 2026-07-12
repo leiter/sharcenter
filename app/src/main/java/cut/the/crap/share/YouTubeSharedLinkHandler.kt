@@ -6,13 +6,12 @@ import cut.the.crap.data.rest.YouTubeRepository
 import cut.the.crap.data.rest.YouTubeUrlParser
 import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.parseSocialMediaUrl
-import javax.inject.Inject
 
 /**
  * Handles YouTube shares: the link is saved as-is, then enriched with the video's title, channel
  * name and thumbnail fetched from the oEmbed endpoint via [YouTubeRepository].
  */
-class YouTubeSharedLinkHandler @Inject constructor(
+class YouTubeSharedLinkHandler constructor(
     private val youTubeRepository: YouTubeRepository
 ) : SharedLinkHandler {
 

@@ -13,7 +13,6 @@ import cut.the.crap.R
 import cut.the.crap.tools.StringProvider
 import kotlinx.serialization.Serializable
 import java.io.IOException
-import javax.inject.Inject
 
 @Serializable
 data class Message(val text: String)
@@ -22,7 +21,7 @@ interface MessageRepository {
     suspend fun postMessage(message: Message): Result<String>
 }
 
-class MessageRepositoryImpl @Inject constructor(
+class MessageRepositoryImpl constructor(
     private val client: HttpClient,
     private val strings: StringProvider
 ) : MessageRepository {

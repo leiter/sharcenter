@@ -2,12 +2,10 @@ package cut.the.crap.data.rest
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Example ViewModel demonstrating YouTube metadata fetching
@@ -15,7 +13,7 @@ import javax.inject.Inject
  * Usage in a Composable:
  * ```
  * @Composable
- * fun YouTubePreviewScreen(viewModel: YouTubePreviewViewModel = hiltViewModel()) {
+ * fun YouTubePreviewScreen(viewModel: YouTubePreviewViewModel = koinViewModel()) {
  *     val state by viewModel.state.collectAsState()
  *
  *     when (state) {
@@ -33,8 +31,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-@HiltViewModel
-class YouTubePreviewViewModel @Inject constructor(
+class YouTubePreviewViewModel constructor(
     private val youTubeRepository: YouTubeRepository
 ) : ViewModel() {
 

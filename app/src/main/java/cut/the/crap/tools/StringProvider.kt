@@ -2,8 +2,6 @@ package cut.the.crap.tools
 
 import android.content.Context
 import androidx.annotation.StringRes
-import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
 
 /**
  * Resolves string resources outside of Compose (repositories, ViewModels, etc.) so that
@@ -15,8 +13,8 @@ interface StringProvider {
     fun get(@StringRes resId: Int, vararg formatArgs: Any): String
 }
 
-class AndroidStringProvider @Inject constructor(
-    @ApplicationContext private val context: Context
+class AndroidStringProvider constructor(
+    private val context: Context
 ) : StringProvider {
     override fun get(resId: Int): String = context.getString(resId)
     override fun get(resId: Int, vararg formatArgs: Any): String =

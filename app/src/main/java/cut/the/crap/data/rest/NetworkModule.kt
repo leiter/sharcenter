@@ -1,10 +1,6 @@
 package cut.the.crap.data.rest
 
 import cut.the.crap.BuildConfig
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
@@ -16,16 +12,15 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import javax.inject.Singleton
+import org.koin.dsl.module
 
-@Module
-@InstallIn(SingletonComponent::class)
-object NetworkModule {
-
-    @Provides
-    @Singleton
-    fun provideHttpClient(): HttpClient {
-        return HttpClient(OkHttp) {
+/**
+ * Shared Ktor [HttpClient] (formerly the Hilt `NetworkModule`), registered as a
+ * `single` to mirror the previous `@Singleton` scope.
+ */
+val networkModule = module {
+    single {
+        HttpClient(OkHttp) {
             // Default request configuration with base URL
             defaultRequest {
                 url(BuildConfig.API_BASE_URL)

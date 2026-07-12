@@ -3,15 +3,12 @@ package cut.the.crap.ui.content.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cut.the.crap.data.preferences.SettingsRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class SettingsViewModel @Inject constructor(
+class SettingsViewModel constructor(
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 

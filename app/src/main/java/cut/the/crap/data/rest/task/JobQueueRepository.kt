@@ -26,8 +26,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import java.io.IOException
 import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Request payload for the job queue server.
@@ -72,8 +70,7 @@ interface JobQueueRepository {
     suspend fun uploadFiles(files: List<FileUploadData>): Result<String>
 }
 
-@Singleton
-class JobQueueRepositoryImpl @Inject constructor(
+class JobQueueRepositoryImpl constructor(
     private val strings: StringProvider
 ) : JobQueueRepository {
 

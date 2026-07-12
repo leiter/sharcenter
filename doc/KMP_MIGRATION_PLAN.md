@@ -128,24 +128,35 @@ versions centralised in `libs.versions.toml`.
 
 ---
 
-## Phase 2 — DI: Hilt → Koin
-**Goal:** remove the single largest Android-only coupling (47 annotation sites).
+## Phase 2 — DI: Hilt → Koin  ✅ DONE (2026-07-12)
+**Goal:** remove the single largest Android-only coupling (Koin 4.0.0).
 
-- [ ] Add Koin (`koin-core`, `koin-android`, `koin-compose-viewmodel`).
-- [ ] Rewrite `di/AppModule` + `data/rest/NetworkModule` as Koin `module { }` DSL.
-      `@Provides`/`@Singleton` → `single { }`, `@Binds` → `single<Iface> { Impl(get()) }`.
-- [ ] `@Inject constructor(...)` classes: keep the constructors; register each in a
-      Koin module (or adopt Koin Annotations + KSP to auto-generate).
-- [ ] `@HiltViewModel` (5 ViewModels) → `viewModel { }` / `koinViewModel()` at call sites.
-- [ ] Replace `@AndroidEntryPoint` + `hiltViewModel()` in composables with `koinViewModel()`.
-- [ ] Replace the Hilt `Application` with `startKoin { }` in `androidApp`.
-- [ ] Replace `@ApplicationContext` injection in `AndroidStringProvider`,
-      `FileHelper`, `DatabaseBackupManager`, `SettingsRepository` with a Koin-provided
-      platform `Context` (Android) / no-op elsewhere.
-- [ ] Add a Koin **`verify()`** test to catch missing bindings at build time.
+- [x] Added Koin (`koin-android`, `koin-androidx-compose`; `koin-test` for verify).
+- [x] Rewrote the 4 Hilt modules as Koin `module { }` in place: `AppModule`→`databaseModule`,
+      `NetworkModule`→`networkModule`, `RepositoryModule`→`repositoryModule`,
+      `ShareModule`→`shareModule`; `@Provides @Singleton`→`single`, `@Binds`→
+      `factoryOf(::Impl) bind Iface::class`. Scoping preserved (`@Singleton`→`single`,
+      unscoped→`factory`).
+- [x] Stripped `@Inject`/`@Singleton`/`@ApplicationContext`/`javax.inject` from 31 files;
+      constructors kept, resolved by `singleOf`/`factoryOf`/`viewModelOf`. The
+      previously-implicit `@Inject` singletons (`SettingsRepository`, `ColorHistoryRepository`,
+      `YouTubeMetadataBackfiller`) are now explicit Koin definitions.
+- [x] 6 `@HiltViewModel` → `viewModelOf(...)` in `di/ViewModelModule.kt`; the 2
+      `hiltViewModel()` composable sites → `koinViewModel()`.
+- [x] `@AndroidEntryPoint` removed from 3 activities; `@Inject lateinit var`→`by inject()`,
+      `by viewModels()`→`by viewModel()`.
+- [x] `@HiltAndroidApp` `MyApplication` → `startKoin { androidContext(...); modules(...) }`.
+- [x] `@ApplicationContext Context` → `androidContext()`; `dagger.Lazy<AppDatabase>` →
+      `kotlin.Lazy<AppDatabase>` provided as `single { lazy { get() } }` (backup manager).
+- [x] Added `KoinGraphTest` — static `verify()` of the whole graph (build-time
+      missing-binding check; Ktor `HttpClientEngine`/`HttpClientConfig` declared as
+      `extraTypes` since the factory lambda supplies them).
 
-**Risk:** medium-high but mechanical; do it while everything is still Android-only so
-you can diff behavior 1:1.
+**Verification:** compiles clean; **209 unit tests / 0 failures / 6 skipped** (incl. Koin
+verify); installed the **minified** debug build on-device and confirmed Koin starts under
+R8 and the Posts screen loads real data (full VM→repo→Room graph resolves at runtime).
+
+**Exit:** no `dagger`/`hilt`/`javax.inject` code remains (only doc comments); app runs on Koin. ✅
 
 **Exit:** app runs on Koin; no `dagger`/`hilt`/kapt references remain.
 

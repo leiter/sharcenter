@@ -6,7 +6,6 @@ import cut.the.crap.data.rest.bluesky.BlueskyRepository
 import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.isBlueskyUrl
 import cut.the.crap.tools.parseBlueskyUrl
-import javax.inject.Inject
 
 /**
  * Handles Bluesky shares:
@@ -14,7 +13,7 @@ import javax.inject.Inject
  * - a shared *post* link is saved as-is, then enriched with the author, post text and a thumbnail
  *   fetched from the public AppView API via [BlueskyRepository].
  */
-class BlueskySharedLinkHandler @Inject constructor(
+class BlueskySharedLinkHandler constructor(
     private val blueskyRepository: BlueskyRepository
 ) : SharedLinkHandler {
 

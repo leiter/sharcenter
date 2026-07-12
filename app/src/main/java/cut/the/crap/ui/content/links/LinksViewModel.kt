@@ -32,8 +32,6 @@ import cut.the.crap.ui.components.api.ListAction
 import cut.the.crap.ui.components.api.TextAction
 import cut.the.crap.ui.components.api.UiAction
 import android.util.Log
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -49,13 +47,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
-@HiltViewModel
-class LinksViewModel @Inject constructor(
+class LinksViewModel constructor(
     internal val contentRepository: ContentLinkRepository,
     private val repository: MessageRepository,
-    @ApplicationContext internal val context: Context,
+    internal val context: Context,
     private val settingsRepository: SettingsRepository,
     internal val keywordRepository: cut.the.crap.data.domain.KeywordRepository,
     internal val jobQueueRepository: JobQueueRepository,

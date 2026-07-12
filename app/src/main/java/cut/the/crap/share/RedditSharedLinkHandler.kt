@@ -8,7 +8,6 @@ import cut.the.crap.tools.UrlResolver
 import cut.the.crap.tools.isRedditShortLink
 import cut.the.crap.tools.isRedditUrl
 import cut.the.crap.tools.parseRedditUrl
-import javax.inject.Inject
 
 /**
  * Handles Reddit shares:
@@ -19,7 +18,7 @@ import javax.inject.Inject
  * - a shared *post* link is saved as-is, then enriched with the author and title fetched from the
  *   public oEmbed endpoint via [RedditRepository] (Reddit's oEmbed returns no thumbnail).
  */
-class RedditSharedLinkHandler @Inject constructor(
+class RedditSharedLinkHandler constructor(
     private val redditRepository: RedditRepository
 ) : SharedLinkHandler {
 

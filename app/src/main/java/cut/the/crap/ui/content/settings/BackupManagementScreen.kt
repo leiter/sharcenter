@@ -20,7 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cut.the.crap.R
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.navigation.NavHostController
 import cut.the.crap.data.backup.BackupInfo
 import cut.the.crap.ui.components.BottomNavigationBar
@@ -32,7 +32,7 @@ import java.util.Locale
 @Composable
 fun BackupManagementScreen(
     navController: NavHostController,
-    viewModel: BackupViewModel = hiltViewModel()
+    viewModel: BackupViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
     val backups by viewModel.backups.collectAsState()

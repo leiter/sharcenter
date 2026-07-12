@@ -3,7 +3,6 @@ package cut.the.crap.data.domain
 import cut.the.crap.data.db.KeywordDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 interface KeywordRepository {
     suspend fun insert(keyWord: KeyWord)
@@ -25,7 +24,7 @@ interface KeywordRepository {
     suspend fun importFromList(items: List<String>, type: KeywordType)
 }
 
-class KeywordRepositoryImpl @Inject constructor(
+class KeywordRepositoryImpl constructor(
     private val keywordDao: KeywordDao
 ) : KeywordRepository {
 

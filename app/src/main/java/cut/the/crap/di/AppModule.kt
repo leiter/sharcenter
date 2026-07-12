@@ -1,87 +1,51 @@
 package cut.the.crap.di
 
-import android.content.Context
 import androidx.room.Room
+import cut.the.crap.data.backup.DatabaseBackupManager
 import cut.the.crap.data.db.AppDatabase
-import cut.the.crap.data.db.ContentItemDao
-import cut.the.crap.data.db.KeywordDao
-import cut.the.crap.data.db.ContentLinkDao
-import cut.the.crap.data.db.SubjectDao
 import cut.the.crap.data.domain.ContentItemRepository
 import cut.the.crap.data.domain.ContentItemRepositoryImpl
-import cut.the.crap.data.domain.KeywordRepository
-import cut.the.crap.data.domain.KeywordRepositoryImpl
 import cut.the.crap.data.domain.ContentLinkRepository
 import cut.the.crap.data.domain.ContentLinkRepositoryImpl
+import cut.the.crap.data.domain.KeywordRepository
+import cut.the.crap.data.domain.KeywordRepositoryImpl
 import cut.the.crap.data.domain.SubjectRepository
 import cut.the.crap.data.domain.SubjectRepositoryImpl
 import cut.the.crap.tools.MIGRATION_1_2
 import cut.the.crap.tools.MIGRATION_2_3
 import cut.the.crap.tools.MIGRATION_3_4
 import cut.the.crap.tools.MIGRATION_4_5
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
+import org.koin.dsl.module
 
-@Module
-@InstallIn(SingletonComponent::class)
-object AppModule {
-    @Provides
-    @Singleton
-    fun provideDatabase(@ApplicationContext appContext: Context): AppDatabase {
-        return Room.databaseBuilder(
-            appContext,
+/**
+ * Database + DAO + local-repository bindings (formerly the Hilt `AppModule`).
+ * `single` mirrors the previous `@Singleton` scoping.
+ */
+val databaseModule = module {
+    single {
+        Room.databaseBuilder(
+            androidContext(),
             AppDatabase::class.java,
             "app_database"
         ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
     }
 
+    single { get<AppDatabase>().contentLinkDao() }
+    single { get<AppDatabase>().keywordDao() }
+    single { get<AppDatabase>().contentItemDao() }
+    single { get<AppDatabase>().subjectDao() }
 
-    @Provides
-    fun provideContentLinkDao(database: AppDatabase): ContentLinkDao {
-        return database.contentLinkDao()
-    }
+    // Lazy handle so injecting the backup manager doesn't eagerly open the database.
+    single<Lazy<AppDatabase>> { lazy { get<AppDatabase>() } }
 
-    @Provides
-    @Singleton
-    fun provideContentLinkRepository(contentLinkDao: ContentLinkDao): ContentLinkRepository {
-        return ContentLinkRepositoryImpl(contentLinkDao)
-    }
+    singleOf(::ContentLinkRepositoryImpl) bind ContentLinkRepository::class
+    singleOf(::KeywordRepositoryImpl) bind KeywordRepository::class
+    singleOf(::ContentItemRepositoryImpl) bind ContentItemRepository::class
+    singleOf(::SubjectRepositoryImpl) bind SubjectRepository::class
 
-    @Provides
-    fun provideKeywordDao(database: AppDatabase): KeywordDao {
-        return database.keywordDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideKeywordRepository(keywordDao: KeywordDao): KeywordRepository {
-        return KeywordRepositoryImpl(keywordDao)
-    }
-
-    @Provides
-    fun provideContentItemDao(database: AppDatabase): ContentItemDao {
-        return database.contentItemDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideContentItemRepository(contentItemDao: ContentItemDao): ContentItemRepository {
-        return ContentItemRepositoryImpl(contentItemDao)
-    }
-
-    @Provides
-    fun provideSubjectDao(database: AppDatabase): SubjectDao {
-        return database.subjectDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideSubjectRepository(subjectDao: SubjectDao): SubjectRepository {
-        return SubjectRepositoryImpl(subjectDao)
-    }
+    singleOf(::DatabaseBackupManager)
 }

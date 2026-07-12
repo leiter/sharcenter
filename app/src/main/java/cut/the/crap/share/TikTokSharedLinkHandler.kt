@@ -8,7 +8,6 @@ import cut.the.crap.tools.UrlResolver
 import cut.the.crap.tools.isTikTokShortLink
 import cut.the.crap.tools.isTikTokUrl
 import cut.the.crap.tools.parseTikTokUrl
-import javax.inject.Inject
 
 /**
  * Handles TikTok shares:
@@ -18,7 +17,7 @@ import javax.inject.Inject
  * - a shared *post* link is saved as-is, then enriched with the author, caption and cover thumbnail
  *   fetched from the public oEmbed endpoint via [TikTokRepository].
  */
-class TikTokSharedLinkHandler @Inject constructor(
+class TikTokSharedLinkHandler constructor(
     private val tikTokRepository: TikTokRepository
 ) : SharedLinkHandler {
 

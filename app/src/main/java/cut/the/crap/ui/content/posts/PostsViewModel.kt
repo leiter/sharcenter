@@ -19,7 +19,6 @@ import cut.the.crap.ui.components.api.KeywordAction
 import cut.the.crap.ui.components.api.TextAction
 import cut.the.crap.ui.components.api.UiAction
 import cut.the.crap.ui.components.api.UploadAction
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -29,7 +28,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 sealed interface FabState {
     data object Default : FabState
@@ -59,8 +57,7 @@ sealed interface EciUiEvent {
     data class ShowError(val message: String) : EciUiEvent
 }
 
-@HiltViewModel
-class PostsViewModel @Inject constructor(
+class PostsViewModel constructor(
     internal val keywordRepository: KeywordRepository,
     internal val contentItemRepository: ContentItemRepository,
     private val settingsRepository: cut.the.crap.data.preferences.SettingsRepository,

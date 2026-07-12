@@ -38,31 +38,25 @@ import cut.the.crap.ui.XLoginActivity
 import cut.the.crap.ui.components.api.ChipsType
 import cut.the.crap.ui.content.settings.ThemePreference
 import cut.the.crap.ui.theme.MyAppTheme
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 private const val TAG = "ShareReceiver"
 
-@AndroidEntryPoint
 class ShareReceiverActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var contentRepository: ContentLinkRepository
+    private val contentRepository: ContentLinkRepository by inject()
 
-    @Inject
-    lateinit var settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository by inject()
 
-    @Inject
-    lateinit var keywordRepository: KeywordRepository
+    private val keywordRepository: KeywordRepository by inject()
 
     /**
      * Ordered chain of platform handlers (see [SharedLinkHandler]). The first that recognizes a
      * shared URL owns its processing; the generic fallback is guaranteed last.
      */
-    @Inject
-    lateinit var sharedLinkHandlers: List<@JvmSuppressWildcards SharedLinkHandler>
+    private val sharedLinkHandlers: List<SharedLinkHandler> by inject()
 
     // Store pending URL for retry after login
     private var pendingUrl: String? = null

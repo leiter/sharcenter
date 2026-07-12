@@ -6,7 +6,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -44,13 +43,32 @@ import cut.the.crap.ui.content.posts.PostsViewModel
 import cut.the.crap.ui.content.posts.composePostFromLink
 import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.settings.SettingsViewModel
-import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.HiltAndroidApp
+import cut.the.crap.data.rest.networkModule
+import cut.the.crap.data.rest.repositoryModule
+import cut.the.crap.di.databaseModule
+import cut.the.crap.di.viewModelModule
+import cut.the.crap.share.shareModule
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
+import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.context.startKoin
 
-@HiltAndroidApp
 class MyApplication : Application(), ImageLoaderFactory {
+
+    override fun onCreate() {
+        super.onCreate()
+        startKoin {
+            androidContext(this@MyApplication)
+            modules(
+                databaseModule,
+                networkModule,
+                repositoryModule,
+                shareModule,
+                viewModelModule,
+            )
+        }
+    }
 
     /**
      * Provides the app-wide Coil [ImageLoader] used by every AsyncImage (currently the link
@@ -78,23 +96,19 @@ class MyApplication : Application(), ImageLoaderFactory {
     }
 }
 
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val linksViewModel: LinksViewModel by viewModels()
+    private val linksViewModel: LinksViewModel by viewModel()
 
-    private val postsViewModel: PostsViewModel by viewModels()
+    private val postsViewModel: PostsViewModel by viewModel()
 
-    private val settingsViewModel: SettingsViewModel by viewModels()
+    private val settingsViewModel: SettingsViewModel by viewModel()
 
-    @Inject
-    lateinit var databaseBackupManager: DatabaseBackupManager
+    val databaseBackupManager: DatabaseBackupManager by inject()
 
-    @Inject
-    lateinit var jobQueueRepository: JobQueueRepository
+    val jobQueueRepository: JobQueueRepository by inject()
 
-    @Inject
-    lateinit var youTubeMetadataBackfiller: YouTubeMetadataBackfiller
+    val youTubeMetadataBackfiller: YouTubeMetadataBackfiller by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
 

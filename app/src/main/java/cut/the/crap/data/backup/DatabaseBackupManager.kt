@@ -17,8 +17,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import cut.the.crap.data.db.AppDatabase
 import cut.the.crap.data.preferences.SettingsRepository
 import cut.the.crap.ui.content.settings.BackupFrequency
-import dagger.Lazy
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import java.io.File
 import java.io.FileInputStream
@@ -26,8 +24,6 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Metadata for a single backup file stored in Downloads.
@@ -47,9 +43,8 @@ data class BackupInfo(
 
 private val Context.backupDataStore: DataStore<Preferences> by preferencesDataStore(name = "backup_preferences")
 
-@Singleton
-class DatabaseBackupManager @Inject constructor(
-    @ApplicationContext private val context: Context,
+class DatabaseBackupManager constructor(
+    private val context: Context,
     // Lazy so injecting the manager doesn't eagerly open the database.
     private val database: Lazy<AppDatabase>,
     private val settingsRepository: SettingsRepository
@@ -396,7 +391,7 @@ class DatabaseBackupManager @Inject constructor(
             validation.exceptionOrNull()?.let { return Result.failure(it) }
 
             // Replace the live database file. Close Room first so the file isn't held open.
-            database.get().close()
+            database.value.close()
 
             val dbFile = context.getDatabasePath(DATABASE_NAME)
             dbFile.parentFile?.mkdirs()

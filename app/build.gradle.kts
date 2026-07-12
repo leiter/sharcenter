@@ -5,7 +5,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.serialization)
 }
@@ -128,10 +127,8 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.navigation.compose)
 
-    implementation(libs.hilt.navigation.compose)
-    kapt(libs.hilt.compiler)
-    kapt(libs.hilt.android.compiler)
-    implementation(libs.hilt.android)
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.lifecycle.runtime.ktx)
 
@@ -168,6 +165,9 @@ dependencies {
     testImplementation(libs.androidx.arch.core.testing)
     // Truth assertions for readability
     testImplementation(libs.truth)
+    // Koin dependency-graph verification
+    testImplementation(libs.koin.test)
+    testImplementation(libs.koin.test.junit4)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.espresso.core)

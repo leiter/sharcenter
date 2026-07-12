@@ -4,7 +4,6 @@ import cut.the.crap.data.preferences.SettingsRepository
 import cut.the.crap.tools.UrlResolver
 import cut.the.crap.tools.parseXUrl
 import kotlinx.coroutines.flow.first
-import javax.inject.Inject
 
 /**
  * Handles X/Twitter shares:
@@ -12,7 +11,7 @@ import javax.inject.Inject
  *   using the signed-in user's credentials and prompting for login when they are missing/stale;
  * - stores a shared *profile* link as an `@handle` in the keyword pool instead of as a link.
  */
-class XSharedLinkHandler @Inject constructor(
+class XSharedLinkHandler constructor(
     private val settingsRepository: SettingsRepository
 ) : SharedLinkHandler {
 

@@ -12,7 +12,6 @@ import io.ktor.client.request.get
 import io.ktor.serialization.ContentConvertException
 import kotlinx.serialization.SerializationException
 import java.io.IOException
-import javax.inject.Inject
 
 /**
  * Loads and parses the "signatures per country" statistics for a European Citizens'
@@ -43,7 +42,7 @@ interface EciStatisticsRepository {
     suspend fun getStatistics(year: Int, number: String): Result<EciStatistics>
 }
 
-class EciStatisticsRepositoryImpl @Inject constructor(
+class EciStatisticsRepositoryImpl constructor(
     private val client: HttpClient,
     private val strings: StringProvider
 ) : EciStatisticsRepository {

@@ -1,27 +1,33 @@
 package cut.the.crap.share
 
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
+import org.koin.core.module.dsl.factoryOf
+import org.koin.dsl.module
 
-@Module
-@InstallIn(SingletonComponent::class)
-object ShareModule {
+/**
+ * Shared-link handler chain (formerly the Hilt `ShareModule`).
+ *
+ * Ordered chain consulted for each shared URL. The first whose
+ * [SharedLinkHandler.recognizes] returns true owns the share, so [GenericSharedLinkHandler] —
+ * which recognizes everything — must stay last. Register new platform handlers ahead of it.
+ */
+val shareModule = module {
+    factoryOf(::XSharedLinkHandler)
+    factoryOf(::YouTubeSharedLinkHandler)
+    factoryOf(::BlueskySharedLinkHandler)
+    factoryOf(::MastodonSharedLinkHandler)
+    factoryOf(::TikTokSharedLinkHandler)
+    factoryOf(::RedditSharedLinkHandler)
+    factoryOf(::GenericSharedLinkHandler)
 
-    /**
-     * Ordered chain of handlers consulted for each shared URL. The first whose
-     * [SharedLinkHandler.recognizes] returns true owns the share, so [GenericSharedLinkHandler] —
-     * which recognizes everything — must stay last. Register new platform handlers ahead of it.
-     */
-    @Provides
-    fun provideSharedLinkHandlers(
-        x: XSharedLinkHandler,
-        youTube: YouTubeSharedLinkHandler,
-        bluesky: BlueskySharedLinkHandler,
-        mastodon: MastodonSharedLinkHandler,
-        tikTok: TikTokSharedLinkHandler,
-        reddit: RedditSharedLinkHandler,
-        generic: GenericSharedLinkHandler
-    ): List<SharedLinkHandler> = listOf(x, youTube, bluesky, mastodon, tikTok, reddit, generic)
+    factory<List<SharedLinkHandler>> {
+        listOf(
+            get<XSharedLinkHandler>(),
+            get<YouTubeSharedLinkHandler>(),
+            get<BlueskySharedLinkHandler>(),
+            get<MastodonSharedLinkHandler>(),
+            get<TikTokSharedLinkHandler>(),
+            get<RedditSharedLinkHandler>(),
+            get<GenericSharedLinkHandler>(),
+        )
+    }
 }

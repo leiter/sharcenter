@@ -5,7 +5,6 @@ import cut.the.crap.data.db.PostSubjectCrossRef
 import cut.the.crap.data.db.SubjectDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 interface SubjectRepository {
     suspend fun insert(subject: Subject): Long
@@ -30,7 +29,7 @@ interface SubjectRepository {
     fun getSubjectsForLink(linkId: Int): Flow<List<Subject>>
 }
 
-class SubjectRepositoryImpl @Inject constructor(
+class SubjectRepositoryImpl constructor(
     private val subjectDao: SubjectDao
 ) : SubjectRepository {
 

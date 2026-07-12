@@ -3,7 +3,6 @@ package cut.the.crap.data.domain
 import cut.the.crap.data.db.ContentItemDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 interface ContentItemRepository {
     suspend fun insert(contentItem: ContentItem): Long
@@ -26,7 +25,7 @@ interface ContentItemRepository {
     suspend fun deleteAll()
 }
 
-class ContentItemRepositoryImpl @Inject constructor(
+class ContentItemRepositoryImpl constructor(
     private val contentItemDao: ContentItemDao
 ) : ContentItemRepository {
 

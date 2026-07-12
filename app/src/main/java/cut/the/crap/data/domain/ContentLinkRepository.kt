@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.map
 import java.io.File
-import javax.inject.Inject
 
 interface ContentLinkRepository {
 
@@ -37,7 +36,7 @@ interface ContentLinkRepository {
         end: Long = System.currentTimeMillis() // Default: current time
     ): List<ContentLink>
 }
-class ContentLinkRepositoryImpl @Inject constructor(
+class ContentLinkRepositoryImpl constructor(
     private val contentLinkDao: ContentLinkDao
 ) : ContentLinkRepository {
 

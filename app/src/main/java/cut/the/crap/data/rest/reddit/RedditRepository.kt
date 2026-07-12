@@ -16,7 +16,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.serialization.ContentConvertException
 import kotlinx.serialization.SerializationException
 import java.io.IOException
-import javax.inject.Inject
 
 /**
  * Repository for fetching Reddit post metadata from the public oEmbed endpoint
@@ -34,7 +33,7 @@ interface RedditRepository {
     suspend fun getPostMetadata(url: String): Result<RedditPostMetadata>
 }
 
-class RedditRepositoryImpl @Inject constructor(
+class RedditRepositoryImpl constructor(
     private val client: HttpClient,
     private val strings: StringProvider
 ) : RedditRepository {

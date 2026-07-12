@@ -26,17 +26,14 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
 import cut.the.crap.data.preferences.SettingsRepository
 import cut.the.crap.ui.theme.MyAppTheme
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 private const val TAG = "XLoginActivity"
 
-@AndroidEntryPoint
 class XLoginActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository by inject()
 
     companion object {
         const val EXTRA_REASON = "reason"

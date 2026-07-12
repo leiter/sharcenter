@@ -12,7 +12,6 @@ import cut.the.crap.R
 import cut.the.crap.tools.StringProvider
 import kotlinx.serialization.SerializationException
 import java.io.IOException
-import javax.inject.Inject
 
 /**
  * Repository for fetching YouTube video metadata using oEmbed API
@@ -35,7 +34,7 @@ interface YouTubeRepository {
     suspend fun getVideoMetadataById(videoId: String): Result<YouTubeVideoMetadata>
 }
 
-class YouTubeRepositoryImpl @Inject constructor(
+class YouTubeRepositoryImpl constructor(
     private val client: HttpClient,
     private val strings: StringProvider
 ) : YouTubeRepository {

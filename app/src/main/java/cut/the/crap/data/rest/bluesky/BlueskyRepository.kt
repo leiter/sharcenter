@@ -12,7 +12,6 @@ import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import java.io.IOException
-import javax.inject.Inject
 
 /**
  * Repository for fetching Bluesky post metadata from the public AppView API
@@ -28,7 +27,7 @@ interface BlueskyRepository {
     suspend fun getPostMetadata(url: String): Result<BlueskyPostMetadata>
 }
 
-class BlueskyRepositoryImpl @Inject constructor(
+class BlueskyRepositoryImpl constructor(
     private val client: HttpClient,
     private val strings: StringProvider
 ) : BlueskyRepository {

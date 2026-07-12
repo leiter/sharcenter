@@ -11,7 +11,6 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.get
 import java.io.IOException
-import javax.inject.Inject
 
 /**
  * Repository for fetching Mastodon post metadata from the public status API
@@ -28,7 +27,7 @@ interface MastodonRepository {
     suspend fun getPostMetadata(url: String): Result<MastodonPostMetadata>
 }
 
-class MastodonRepositoryImpl @Inject constructor(
+class MastodonRepositoryImpl constructor(
     private val client: HttpClient,
     private val strings: StringProvider
 ) : MastodonRepository {

@@ -26,7 +26,7 @@ import cut.the.crap.R
 import androidx.compose.ui.graphics.Color
 import cut.the.crap.ui.XLoginActivity
 import cut.the.crap.ui.components.BottomNavigationBar
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import cut.the.crap.ui.components.ColorHistoryViewModel
 import cut.the.crap.ui.components.ColorPickerDialog
 import cut.the.crap.ui.components.colorFromHex
@@ -61,7 +61,7 @@ fun SettingsScreen(
     // this is a live showcase of the component ahead of wiring it to a real target.
     var accentColorDemo by remember { mutableStateOf(Color(0xFF3A7BD5)) }
     // Persistent, shared colour-pick history feeding the picker's history strip.
-    val colorHistoryViewModel: ColorHistoryViewModel = hiltViewModel()
+    val colorHistoryViewModel: ColorHistoryViewModel = koinViewModel()
     val recentColorHexes by colorHistoryViewModel.recentColors.collectAsState()
     val recentColors = remember(recentColorHexes) { recentColorHexes.mapNotNull(::colorFromHex) }
     var showXCredentialsDialog by remember { mutableStateOf(false) }

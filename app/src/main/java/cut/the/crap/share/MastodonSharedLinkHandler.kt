@@ -6,7 +6,6 @@ import cut.the.crap.data.rest.mastodon.MastodonRepository
 import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.isMastodonUrl
 import cut.the.crap.tools.parseMastodonUrl
-import javax.inject.Inject
 
 /**
  * Handles Mastodon shares:
@@ -15,7 +14,7 @@ import javax.inject.Inject
  * - a shared *post* link is saved as-is, then enriched with the author, post text and a thumbnail
  *   fetched from the origin instance's public status API via [MastodonRepository].
  */
-class MastodonSharedLinkHandler @Inject constructor(
+class MastodonSharedLinkHandler constructor(
     private val mastodonRepository: MastodonRepository
 ) : SharedLinkHandler {
 

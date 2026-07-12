@@ -7,15 +7,12 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.IOException
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Persists the colours the user has recently picked in the [cut.the.crap.ui.components.ColorPicker],
@@ -25,9 +22,8 @@ import javax.inject.Singleton
  * Colours are stored as six-digit uppercase RRGGBB strings (matching `Color.toHexString()`), so this
  * layer stays free of Compose/Android colour types for the planned KMP migration.
  */
-@Singleton
-class ColorHistoryRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+class ColorHistoryRepository constructor(
+    private val context: Context
 ) {
     @Serializable
     private data class StoredColor(val hex: String, val pickedAt: Long)
