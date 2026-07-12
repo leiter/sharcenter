@@ -162,55 +162,54 @@ R8 and the Posts screen loads real data (full VM→repo→Room graph resolves at
 
 ---
 
-## Phase 3 — Database: Room → SQLDelight
-**Goal:** a DB layer that runs on Android, desktop-JVM (macOS incl.), iOS, and macOS-native.
+## Phase 3 — Database: Room → SQLDelight  ✅ DONE (2026-07-12)
+**Goal:** a DB layer that runs on Android, desktop-JVM (macOS incl.), iOS and macOS-native.
+**SQLDelight 2.0.2. kapt is now gone entirely (Room was its last user).**
 
-Current DB surface (from `data/db/AppDatabase.kt` + color-subjects work):
-`ContentLinkDB (tweets_table)`, `DraftPostDB (prepared_tweets_table)`, `KeywordDB`,
-`ContentItemDB`, `SubjectDB (subjects_table)`, and join tables
-`post_subject_cross_ref`, `link_subject_cross_ref` (v5).
+- [x] SQLDelight plugin + `databases { create("ShareDatabase") { packageName = "cut.the.crap.data.db.sql" } }`.
+- [x] `.sq` files under `src/main/sqldelight/cut/the/crap/data/db/sql/` reproduce the v5
+      schema, **preserving the legacy physical table names verbatim** (`tweets_table`,
+      `prepared_tweets_table` was dead code and dropped, `handle_tag_table`,
+      `content_items_table`, `subjects_table`, `post/link_subject_cross_ref`) and the
+      DB file name `app_database` — so existing installs open unchanged.
+      Note: `.sq` files need `import kotlin.Boolean; import kotlin.Int;` for `AS Int` /
+      `AS Boolean` to resolve; `Int` columns need `IntColumnAdapter` (Boolean is native).
+- [x] Every DAO method ported to a named SQLDelight statement; Flow queries use
+      `.asFlow().mapToList(dispatcher)`. Room's `@Insert(REPLACE)` + `autoGenerate`
+      semantics reproduced with paired `insert` / `insertWithId` statements (id == 0 ⇒
+      omit the PK so SQLite assigns it).
+- [x] Cross-ref tables recreated with `ON DELETE CASCADE`; the driver sets
+      `PRAGMA foreign_keys=ON` (Room's default) so cascade still fires.
+- [x] **Migrations:** `1..4.sqm` mirror the former Room `MIGRATION_1_2 … 4_5` exactly.
+      SQLDelight's derived schema version is **5 — identical to the `user_version` Room
+      wrote**, so an up-to-date install opens with no spurious upgrade.
+- [x] Driver via `createDriver(context)` (`AndroidSqliteDriver`) + `createDatabase(driver)`
+      supplying the Int adapters. Becomes `expect fun` at the module-split step, with the
+      JDBC driver on desktop and the native driver on iOS/macOS.
+- [x] **Kept the DAO contracts and `*DB` row models** (now plain Kotlin in `Entities.kt`,
+      no Room annotations) and implemented them in `SqlDelightDaos.kt`. Consequence: the
+      four repositories, the domain mappers and the **entire UI layer are unchanged** —
+      Koin simply rebinds the DAO interfaces to the new impls.
+- [x] `DatabaseBackupManager` reworked off Room: holds `Lazy<SqlDriver>` instead of
+      `Lazy<AppDatabase>`; schema-version constant now sourced from `DatabaseFactory`.
+- [x] Removed Room `AppDatabase`, the Room `Migration` objects, the kapt plugin, all
+      `room-*` deps and the schema-assets wiring.
+- [x] Build: the custom `instrumentation` build type needs `matchingFallbacks += "debug"`
+      (SQLDelight's AAR only publishes debug/release variants).
 
-- [ ] Add SQLDelight plugin + `sqldelight { databases { create("AppDatabase") { … } } }`.
-- [ ] Write `.sq` files in `commonMain/sqldelight/` — **one per table**, preserving the
-      legacy table names verbatim so existing Android databases open unchanged:
-      ```sql
-      -- ContentLink.sq
-      CREATE TABLE tweets_table (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        link TEXT NOT NULL,
-        added INTEGER NOT NULL,
-        position INTEGER NOT NULL DEFAULT 0,
-        description TEXT NOT NULL DEFAULT '',
-        favourite INTEGER NOT NULL DEFAULT 0,
-        hideItem INTEGER NOT NULL DEFAULT 0
-      );
-      selectById: SELECT * FROM tweets_table WHERE id = ?;
-      insert: INSERT OR REPLACE INTO tweets_table(...) VALUES (...);
-      ```
-- [ ] Port every DAO method (`@Query`/`@Insert`/`@Update`/`@Delete`) to a named
-      SQLDelight statement. Flow-returning queries → `.asFlow().mapToList(dispatcher)`.
-- [ ] Recreate the cross-ref join tables with `FOREIGN KEY … ON DELETE CASCADE`
-      (SQLDelight honors `PRAGMA foreign_keys` — set it in the driver).
-- [ ] **Migrations:** translate the archived Room schema versions (`1.json`→`5.json`)
-      into SQLDelight `.sqm` migration files (`1.sqm`, `2.sqm`, …). Set the schema
-      version so an existing v5 Android DB is recognized as already-migrated.
-- [ ] Provide the driver via `expect fun createDriver(): SqlDriver`:
-   - `androidMain`: `AndroidSqliteDriver(schema, context, "app.db")`
-   - `jvmMain` (desktop): `JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY…)` → file path under `AppDirs`
-   - `iosMain` / `macosMain`: `NativeSqliteDriver(schema, "app.db")`
-- [ ] Wrap the generated queries behind your **existing repository interfaces** so
-      the domain/UI layers don't change (`SubjectRepository`, `ContentItem…` etc.).
-- [ ] Rework `DatabaseBackupManager` — it currently reaches into
-      `SupportSQLiteDatabase`/`SQLiteDatabase`. Replace with a portable export
-      (copy the DB file via kotlinx-io / driver checkpoint) behind an `expect`.
-- [ ] Migrate DAO unit tests to `commonTest` using the in-memory JDBC driver.
+**Verification:**
+- **212 unit tests / 0 failures**, incl. 3 new SQLDelight tests run on the **JVM JDBC
+  driver — the same driver desktop/macOS will use**: schema version is 5; a Room-created
+  v4 DB migrates to v5 with data intact and CASCADE enforced; a fresh install round-trips
+  rows through the Int/Boolean adapters. Koin graph `verify()` still passes.
+- **On-device (Pixel 7a):** the instrumented `MigrationTest` passes, exercising the
+  *Android* driver path (`AndroidSqliteDriver` auto-migrating a v4 DB on open).
+- **Minified debug build on-device against the real production database:** Posts screen
+  renders the same rows as before the swap, and the Links screen loads **all 1481 items**
+  from `tweets_table` with the `handle_tag_table` keyword join, sorting and filtering —
+  no `SQLiteException`, no missing tables, no Koin resolution errors.
 
-**Risk:** highest-value, highest-care phase. Keep Room and SQLDelight side-by-side on a
-branch until the SQLDelight path passes the full test suite **and** opens a real v5
-Android DB with data intact.
-
-**Exit:** all DB access flows through SQLDelight; Room, `androidx.room`, and the
-`app/schemas` kapt wiring are removed.
+**Exit:** all DB access flows through SQLDelight; Room and kapt fully removed. ✅
 
 ---
 
