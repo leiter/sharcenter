@@ -1,8 +1,9 @@
 # KMP Migration Plan — ShareCenter (`cut.the.crap`)
 
 **Targets:** Android · iOS · Desktop (JVM: Linux/Windows/macOS) · macOS-native
-**Status:** In progress on `kmp-migration` — Phases 0–3 done (version catalog, Hilt→Koin,
-Room→SQLDelight). Next: split `shared`/`androidApp`, then the iOS/desktop/macOS targets.
+**Status:** In progress on `kmp-migration` — Phases 0–4A/B done (version catalog, Hilt→Koin,
+Room→SQLDelight, `:shared` KMP module with a real `commonMain`). Next: **Phase 4C** —
+commonize the UI with Compose Multiplatform (the remaining big lift), then the app targets.
 **Last updated:** 2026-07-12
 **Baseline branch:** `kmp-migration` (branched from `main`, with `feature/color-subjects` merged in; tag `pre-kmp-baseline`)
 
@@ -213,6 +214,63 @@ R8 and the Posts screen loads real data (full VM→repo→Room graph resolves at
   no `SQLiteException`, no missing tables, no Koin resolution errors.
 
 **Exit:** all DB access flows through SQLDelight; Room and kapt fully removed. ✅
+
+---
+
+## Phase 4A/4B — Split out `:shared` with a real `commonMain`  ✅ DONE (2026-07-12)
+**Goal:** a Kotlin Multiplatform module whose `commonMain` is genuinely Android-free.
+
+Module layout (note: `:app` *is* the "androidApp" — not renamed, to avoid churn in the
+signing config / Play Store paths):
+
+```
+:shared   kotlin("multiplatform") + com.android.library + sqldelight
+  commonMain/  sqldelight/*.sq + *.sqm  |  data/db (Entities, SqlDelightDaos,
+               DatabaseAdapters)        |  data/domain (models, mappers, 4 repositories)
+  androidMain/ DatabaseFactory (AndroidSqliteDriver)
+  desktopTest/ SqlDelightMigrationTest  → runs on the JVM/JDBC driver
+:app      the Android application: UI, networking, settings, DI  → depends on :shared
+```
+
+- [x] `:shared` created with `androidTarget()` + `jvm("desktop")`. The desktop target isn't
+      shipped — it exists to **prove `commonMain` compiles and runs off Android**.
+- [x] Persistence + domain core moved to `commonMain`. **Verified Android-free:** no
+      `android.*` / `androidx.*` / `java.*` import remains in `commonMain`.
+- [x] The 3 SQLDelight migration tests now execute as **`[desktop]` JVM target tests**.
+- [x] `Dispatchers.IO` doesn't exist in `commonMain` → the DAOs take the dispatcher from
+      the caller; Koin supplies `Dispatchers.IO` on Android.
+- [x] Dropped `ContentLinkRepository.importFromFile(File)` — dead code, and the last
+      `java.io` coupling in the domain layer.
+- [x] `kotlin-multiplatform` plugin must be declared in the **root** build (`apply false`),
+      else the subproject hits "plugin already on the classpath with an unknown version".
+- [x] Cross-module smart-cast fix: a `public` property of `:shared` can't be smart-cast in
+      `:app` (`contentItem.category` → `?.let`).
+
+**Verified:** full build green; **209 Android unit tests + 3 desktop/JVM tests, 0 failures**;
+minified build on-device still loads all **1481 real links** through the shared module.
+
+**Deliberately left in `:app`** (each blocked on a Compose-MP / seam prerequisite):
+`ContentItemManager`/`ItemManager` (pull in `tools` date helpers → `java.time`),
+`data/rest` (Ktor repos reference `R.string`), `data/preferences` (androidx DataStore),
+all UI (needs Compose Multiplatform), ViewModels, Koin modules.
+
+---
+
+## Phase 4C — Commonize the UI (Compose Multiplatform)  ← NEXT, the big lift
+**Goal:** move the UI into `commonMain` so a desktop/iOS/macOS app can actually render.
+
+Measured cost drivers (why this is the largest remaining phase):
+- **504 `R.string`/`plurals`/`drawable` call sites** across 39 files, plus **354 strings +
+  14 plurals** in `strings.xml`, and **302 `stringResource()`** calls → must become
+  Compose Multiplatform resources (`Res.string`). This is the single biggest line item.
+- Toolchain swap: AndroidX Compose → JetBrains Compose Multiplatform; `navigation-compose`
+  → CMP navigation (11 files); Coil 2 → Coil 3 (2 files); `activity-compose` (8 files).
+- `java.time` / `java.text` / `java.io` in 24 files → kotlinx-datetime + kotlinx-io.
+- `android.*` in 31 files → `expect`/`actual` seams (Toast, Intent, clipboard, WebView, files).
+- Ktor's hardcoded OkHttp engine + raw okhttp3 in `UrlResolver` (3 files).
+
+Risk profile is the inverse of Phases 2–3: **low consequence, high churn** — no user data at
+stake and failures are compile-time, not silent. Estimated 1–2 weeks.
 
 ---
 
