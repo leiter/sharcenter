@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import cut.the.crap.R
 import cut.the.crap.data.domain.KeyWord
 import cut.the.crap.data.domain.KeywordType
+import cut.the.crap.ui.localized
 import cut.the.crap.ui.components.DateType
 import cut.the.crap.ui.components.FilterState
 import cut.the.crap.ui.components.MyEditDialogStyle
@@ -509,7 +510,10 @@ internal fun LinksViewModel.handleListAction(action: ListAction) {
                         }
                         is cut.the.crap.data.rest.Result.Error -> {
                             emitSnackBarMessage(
-                                context.getString(R.string.links_snackbar_submit_failed, result.message)
+                                context.getString(
+                                    R.string.links_snackbar_submit_failed,
+                                    result.error.localized(context),
+                                )
                             )
                         }
                     }

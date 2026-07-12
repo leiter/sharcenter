@@ -4,6 +4,7 @@ import cut.the.crap.data.rest.Result
 import cut.the.crap.data.rest.YouTubeRepository
 import cut.the.crap.data.rest.YouTubeVideoMetadata
 import cut.the.crap.testutils.TestData
+import cut.the.crap.data.rest.AppError
 
 /**
  * Fake implementation of YouTubeRepository for testing.
@@ -35,7 +36,7 @@ class FakeYouTubeRepository : YouTubeRepository {
     }
 
     fun setErrorResponse(message: String, exception: Throwable? = null) {
-        nextResult = Result.Error(message, exception)
+        nextResult = Result.Error(AppError.Unexpected(message), exception)
     }
 
     fun getFetchedUrls(): List<String> = fetchedUrls.toList()

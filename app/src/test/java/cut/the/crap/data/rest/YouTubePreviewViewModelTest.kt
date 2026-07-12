@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import cut.the.crap.data.rest.AppError
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class YouTubePreviewViewModelTest {
@@ -70,7 +71,7 @@ class YouTubePreviewViewModelTest {
 
         // Check Error state
         val errorState = viewModel.state.value as YouTubePreviewState.Error
-        assertThat(errorState.message).isEqualTo(errorMessage)
+        assertThat(errorState.error).isEqualTo(AppError.Unexpected(errorMessage))
     }
 
     @Test
@@ -108,7 +109,7 @@ class YouTubePreviewViewModelTest {
 
         // Check Error state
         val errorState = viewModel.state.value as YouTubePreviewState.Error
-        assertThat(errorState.message).isEqualTo(errorMessage)
+        assertThat(errorState.error).isEqualTo(AppError.Unexpected(errorMessage))
     }
 
     @Test

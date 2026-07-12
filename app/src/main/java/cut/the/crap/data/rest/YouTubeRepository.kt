@@ -9,7 +9,6 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.serialization.ContentConvertException
 import cut.the.crap.R
-import cut.the.crap.tools.StringProvider
 import kotlinx.serialization.SerializationException
 import java.io.IOException
 
@@ -36,7 +35,6 @@ interface YouTubeRepository {
 
 class YouTubeRepositoryImpl constructor(
     private val client: HttpClient,
-    private val strings: StringProvider
 ) : YouTubeRepository {
 
     companion object {
@@ -46,12 +44,12 @@ class YouTubeRepositoryImpl constructor(
     override suspend fun getVideoMetadata(youtubeUrl: String): Result<YouTubeVideoMetadata> {
         // Validate it's a YouTube URL
         if (!YouTubeUrlParser.isYouTubeUrl(youtubeUrl)) {
-            return Result.Error(strings.get(R.string.yt_error_invalid_url, youtubeUrl), retryable = false)
+            return Result.Error(AppError.InvalidUrl(Source.YOUTUBE, youtubeUrl), retryable = false)
         }
 
         // Extract video ID (e.g. community posts and channel URLs have none — never retry)
         val videoId = YouTubeUrlParser.extractVideoId(youtubeUrl)
-            ?: return Result.Error(strings.get(R.string.yt_error_no_video_id, youtubeUrl), retryable = false)
+            ?: return Result.Error(AppError.NoVideoId(youtubeUrl), retryable = false)
 
         return getVideoMetadataById(videoId)
     }
@@ -59,7 +57,7 @@ class YouTubeRepositoryImpl constructor(
     override suspend fun getVideoMetadataById(videoId: String): Result<YouTubeVideoMetadata> {
         // Validate video ID format (11 characters, alphanumeric with - and _)
         if (!videoId.matches(Regex("^[a-zA-Z0-9_-]{11}$"))) {
-            return Result.Error(strings.get(R.string.yt_error_invalid_video_id, videoId), retryable = false)
+            return Result.Error(AppError.InvalidVideoId(videoId), retryable = false)
         }
 
         return try {
@@ -79,10 +77,10 @@ class YouTubeRepositoryImpl constructor(
         } catch (e: ClientRequestException) {
             // 4xx errors - likely video not found or private (permanent, do not retry)
             when (e.response.status.value) {
-                404 -> Result.Error(strings.get(R.string.yt_error_not_found), e, retryable = false)
-                401, 403 -> Result.Error(strings.get(R.string.yt_error_not_accessible), e, retryable = false)
+                404 -> Result.Error(AppError.NotFound(Source.YOUTUBE), e, retryable = false)
+                401, 403 -> Result.Error(AppError.NotAccessible, e, retryable = false)
                 else -> Result.Error(
-                    strings.get(R.string.error_client, e.response.status.value, e.response.status.description),
+                    AppError.Client(e.response.status.value, e.response.status.description),
                     e,
                     retryable = false
                 )
@@ -90,22 +88,22 @@ class YouTubeRepositoryImpl constructor(
         } catch (e: ServerResponseException) {
             // 5xx errors - transient, worth retrying
             Result.Error(
-                strings.get(R.string.yt_error_server, e.response.status.value),
+                AppError.SourceServer(Source.YOUTUBE, e.response.status.value),
                 e
             )
         } catch (e: SocketTimeoutException) {
-            Result.Error(strings.get(R.string.yt_error_timeout), e)
+            Result.Error(AppError.SourceTimeout(Source.YOUTUBE), e)
         } catch (e: ContentConvertException) {
             // YouTube returns a non-JSON body (e.g. "Not Found") with a 2xx status for
             // deleted/unavailable videos; Ktor wraps the parse failure here. Permanent.
-            Result.Error(strings.get(R.string.yt_error_unavailable), e, retryable = false)
+            Result.Error(AppError.Unavailable(Source.YOUTUBE), e, retryable = false)
         } catch (e: SerializationException) {
             // Defensive: a raw serialization failure is likewise permanent.
-            Result.Error(strings.get(R.string.yt_error_unavailable), e, retryable = false)
+            Result.Error(AppError.Unavailable(Source.YOUTUBE), e, retryable = false)
         } catch (e: IOException) {
-            Result.Error(strings.get(R.string.error_network, e.message ?: strings.get(R.string.yt_error_connect_fallback)), e)
+            Result.Error(AppError.Network(e.message), e)
         } catch (e: Exception) {
-            Result.Error(strings.get(R.string.yt_error_fetch_failed, e.message ?: strings.get(R.string.error_unknown)), e)
+            Result.Error(AppError.FetchFailed(Source.YOUTUBE, e.message), e)
         }
     }
 }

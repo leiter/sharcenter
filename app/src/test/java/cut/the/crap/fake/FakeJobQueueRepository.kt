@@ -4,6 +4,7 @@ import cut.the.crap.data.rest.Result
 import cut.the.crap.data.rest.task.FileUploadData
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.Task
+import cut.the.crap.data.rest.AppError
 
 /**
  * Fake implementation of JobQueueRepository for testing.
@@ -41,7 +42,7 @@ class FakeJobQueueRepository : JobQueueRepository {
     }
 
     fun setSubmitTaskError(message: String, exception: Throwable? = null) {
-        submitTaskResult = Result.Error(message, exception)
+        submitTaskResult = Result.Error(AppError.Unexpected(message), exception)
     }
 
     fun setUploadFilesSuccess(message: String = "Files uploaded") {
@@ -49,7 +50,7 @@ class FakeJobQueueRepository : JobQueueRepository {
     }
 
     fun setUploadFilesError(message: String, exception: Throwable? = null) {
-        uploadFilesResult = Result.Error(message, exception)
+        uploadFilesResult = Result.Error(AppError.Unexpected(message), exception)
     }
 
     fun getSubmittedTasks(): List<Task> = submittedTasks.toList()

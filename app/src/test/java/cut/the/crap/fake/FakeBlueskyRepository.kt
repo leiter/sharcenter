@@ -3,6 +3,7 @@ package cut.the.crap.fake
 import cut.the.crap.data.rest.Result
 import cut.the.crap.data.rest.bluesky.BlueskyPostMetadata
 import cut.the.crap.data.rest.bluesky.BlueskyRepository
+import cut.the.crap.data.rest.AppError
 
 /**
  * Fake implementation of BlueskyRepository for testing.
@@ -31,7 +32,7 @@ class FakeBlueskyRepository : BlueskyRepository {
     }
 
     fun setErrorResponse(message: String, exception: Throwable? = null) {
-        nextResult = Result.Error(message, exception)
+        nextResult = Result.Error(AppError.Unexpected(message), exception)
     }
 
     fun getFetchedUrls(): List<String> = fetchedUrls.toList()

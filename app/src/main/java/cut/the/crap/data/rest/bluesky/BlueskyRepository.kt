@@ -2,7 +2,6 @@ package cut.the.crap.data.rest.bluesky
 
 import cut.the.crap.R
 import cut.the.crap.data.rest.Result
-import cut.the.crap.tools.StringProvider
 import cut.the.crap.tools.blueskyPostAtUri
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -12,6 +11,8 @@ import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import java.io.IOException
+import cut.the.crap.data.rest.AppError
+import cut.the.crap.data.rest.Source
 
 /**
  * Repository for fetching Bluesky post metadata from the public AppView API
@@ -29,7 +30,6 @@ interface BlueskyRepository {
 
 class BlueskyRepositoryImpl constructor(
     private val client: HttpClient,
-    private val strings: StringProvider
 ) : BlueskyRepository {
 
     companion object {
@@ -40,7 +40,7 @@ class BlueskyRepositoryImpl constructor(
     override suspend fun getPostMetadata(url: String): Result<BlueskyPostMetadata> {
         // Only post URLs carry an at:// URI to resolve; profile links have no post to fetch.
         val atUri = blueskyPostAtUri(url)
-            ?: return Result.Error(strings.get(R.string.bsky_error_invalid_url, url), retryable = false)
+            ?: return Result.Error(AppError.InvalidUrl(Source.BLUESKY, url), retryable = false)
 
         return try {
             // depth=0 keeps the payload to the focal post — replies aren't needed for metadata.
@@ -51,27 +51,27 @@ class BlueskyRepositoryImpl constructor(
 
             BlueskyPostMetadata.fromThread(response)
                 ?.let { Result.Success(it) }
-                ?: Result.Error(strings.get(R.string.bsky_error_unavailable), retryable = false)
+                ?: Result.Error(AppError.Unavailable(Source.BLUESKY), retryable = false)
         } catch (e: ClientRequestException) {
             // 4xx — post deleted, blocked, or a bad at:// URI. Permanent.
             when (e.response.status.value) {
-                400, 404 -> Result.Error(strings.get(R.string.bsky_error_not_found), e, retryable = false)
+                400, 404 -> Result.Error(AppError.NotFound(Source.BLUESKY), e, retryable = false)
                 else -> Result.Error(
-                    strings.get(R.string.error_client, e.response.status.value, e.response.status.description),
+                    AppError.Client(e.response.status.value, e.response.status.description),
                     e,
                     retryable = false
                 )
             }
         } catch (e: ServerResponseException) {
             // 5xx — transient, worth retrying.
-            Result.Error(strings.get(R.string.bsky_error_server, e.response.status.value), e)
+            Result.Error(AppError.SourceServer(Source.BLUESKY, e.response.status.value), e)
         } catch (e: SocketTimeoutException) {
-            Result.Error(strings.get(R.string.bsky_error_timeout), e)
+            Result.Error(AppError.SourceTimeout(Source.BLUESKY), e)
         } catch (e: IOException) {
-            Result.Error(strings.get(R.string.error_network, e.message ?: ""), e)
+            Result.Error(AppError.Network(e.message), e)
         } catch (e: Exception) {
             Result.Error(
-                strings.get(R.string.bsky_error_fetch_failed, e.message ?: strings.get(R.string.error_unknown)),
+                AppError.FetchFailed(Source.BLUESKY, e.message),
                 e
             )
         }

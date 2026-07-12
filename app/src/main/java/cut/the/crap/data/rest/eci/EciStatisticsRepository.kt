@@ -2,7 +2,6 @@ package cut.the.crap.data.rest.eci
 
 import cut.the.crap.R
 import cut.the.crap.data.rest.Result
-import cut.the.crap.tools.StringProvider
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.network.sockets.SocketTimeoutException
@@ -12,6 +11,8 @@ import io.ktor.client.request.get
 import io.ktor.serialization.ContentConvertException
 import kotlinx.serialization.SerializationException
 import java.io.IOException
+import cut.the.crap.data.rest.AppError
+import cut.the.crap.data.rest.Source
 
 /**
  * Loads and parses the "signatures per country" statistics for a European Citizens'
@@ -44,7 +45,6 @@ interface EciStatisticsRepository {
 
 class EciStatisticsRepositoryImpl constructor(
     private val client: HttpClient,
-    private val strings: StringProvider
 ) : EciStatisticsRepository {
 
     companion object {
@@ -59,7 +59,7 @@ class EciStatisticsRepositoryImpl constructor(
     override suspend fun getStatistics(pageUrl: String): Result<EciStatistics> {
         val match = URL_PATTERN.find(pageUrl.trim())
             ?: return Result.Error(
-                strings.get(R.string.eci_error_unrecognised_url, pageUrl),
+                AppError.UnrecognisedUrl(pageUrl),
                 retryable = false
             )
         val (year, number) = match.destructured
@@ -69,7 +69,7 @@ class EciStatisticsRepositoryImpl constructor(
     override suspend fun getStatistics(year: Int, number: String): Result<EciStatistics> {
         // Keep the zero-padding the API expects (e.g. "000005"), reject junk early.
         if (!number.matches(Regex("""\d+"""))) {
-            return Result.Error(strings.get(R.string.eci_error_invalid_number, number), retryable = false)
+            return Result.Error(AppError.InvalidNumber(number), retryable = false)
         }
 
         return try {
@@ -77,26 +77,26 @@ class EciStatisticsRepositoryImpl constructor(
             Result.Success(dto.toStatistics(year, number))
         } catch (e: ClientRequestException) {
             when (e.response.status.value) {
-                404 -> Result.Error(strings.get(R.string.eci_error_not_found, year.toString(), number), e, retryable = false)
+                404 -> Result.Error(AppError.EciNotFound(year.toString(), number), e, retryable = false)
                 else -> Result.Error(
-                    strings.get(R.string.error_client, e.response.status.value, e.response.status.description),
+                    AppError.Client(e.response.status.value, e.response.status.description),
                     e,
                     retryable = false
                 )
             }
         } catch (e: ServerResponseException) {
-            Result.Error(strings.get(R.string.eci_error_server, e.response.status.value), e)
+            Result.Error(AppError.SourceServer(Source.ECI, e.response.status.value), e)
         } catch (e: SocketTimeoutException) {
-            Result.Error(strings.get(R.string.eci_error_timeout), e)
+            Result.Error(AppError.SourceTimeout(Source.ECI), e)
         } catch (e: ContentConvertException) {
             // A 2xx with a non-JSON/unexpected body (e.g. an error HTML page) — permanent.
-            Result.Error(strings.get(R.string.eci_error_unexpected_response), e, retryable = false)
+            Result.Error(AppError.UnexpectedResponse, e, retryable = false)
         } catch (e: SerializationException) {
-            Result.Error(strings.get(R.string.eci_error_parse), e, retryable = false)
+            Result.Error(AppError.ParseError, e, retryable = false)
         } catch (e: IOException) {
-            Result.Error(strings.get(R.string.error_network, e.message ?: strings.get(R.string.error_network_fallback)), e)
+            Result.Error(AppError.Network(e.message), e)
         } catch (e: Exception) {
-            Result.Error(strings.get(R.string.eci_error_load_failed, e.message ?: strings.get(R.string.error_unknown)), e)
+            Result.Error(AppError.LoadFailed(e.message), e)
         }
     }
 }

@@ -329,7 +329,7 @@ class LinksViewModel constructor(
                         contentRepository.update(updated)
                         Log.d("YT_META", "Update complete")
                     } else if (result is Result.Error) {
-                        Log.e("YT_META", "oEmbed failed: ${result.message}", result.exception)
+                        Log.e("YT_META", "oEmbed failed: ${result.error.debugText}", result.exception)
                     }
                 }
             }

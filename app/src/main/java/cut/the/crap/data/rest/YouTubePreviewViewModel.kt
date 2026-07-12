@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
  *             // Display video preview card
  *         }
  *         is YouTubePreviewState.Error -> {
- *             val error = (state as YouTubePreviewState.Error).message
+ *             val error = (state as YouTubePreviewState.Error).error.localized()
  *             // Display error message
  *         }
  *     }
@@ -52,7 +52,7 @@ class YouTubePreviewViewModel constructor(
                     _state.value = YouTubePreviewState.Success(result.data)
                 }
                 is Result.Error -> {
-                    _state.value = YouTubePreviewState.Error(result.message)
+                    _state.value = YouTubePreviewState.Error(result.error)
                 }
             }
         }
@@ -72,7 +72,7 @@ class YouTubePreviewViewModel constructor(
                     _state.value = YouTubePreviewState.Success(result.data)
                 }
                 is Result.Error -> {
-                    _state.value = YouTubePreviewState.Error(result.message)
+                    _state.value = YouTubePreviewState.Error(result.error)
                 }
             }
         }
@@ -108,5 +108,5 @@ sealed class YouTubePreviewState {
     /**
      * Error occurred while fetching metadata
      */
-    data class Error(val message: String) : YouTubePreviewState()
+    data class Error(val error: AppError) : YouTubePreviewState()
 }

@@ -14,8 +14,6 @@ import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.JobQueueRepositoryImpl
 import cut.the.crap.data.rest.tiktok.TikTokRepository
 import cut.the.crap.data.rest.tiktok.TikTokRepositoryImpl
-import cut.the.crap.tools.AndroidStringProvider
-import cut.the.crap.tools.StringProvider
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -34,7 +32,6 @@ val repositoryModule = module {
     factoryOf(::RedditRepositoryImpl) bind RedditRepository::class
     factoryOf(::JobQueueRepositoryImpl) bind JobQueueRepository::class
     factoryOf(::EciStatisticsRepositoryImpl) bind EciStatisticsRepository::class
-    factoryOf(::AndroidStringProvider) bind StringProvider::class
 
     // Previously provided implicitly by Hilt via constructors (unscoped).
     factoryOf(::SettingsRepository)

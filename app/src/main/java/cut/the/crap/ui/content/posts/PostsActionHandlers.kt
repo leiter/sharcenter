@@ -462,7 +462,7 @@ internal fun PostsViewModel.handleUploadAction(action: UploadAction, contentReso
                                     successCount++
                                 }
                                 is Result.Error -> {
-                                    Log.e("PostsViewModel", "Upload failed for $fileName: ${result.message}")
+                                    Log.e("PostsViewModel", "Upload failed for $fileName: ${result.error.debugText}")
                                     failCount++
                                 }
                             }

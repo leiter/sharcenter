@@ -75,6 +75,7 @@ import cut.the.crap.ui.components.api.TextAction
 import cut.the.crap.ui.components.api.UiAction
 import cut.the.crap.ui.components.api.UploadAction
 import cut.the.crap.ui.components.api.ContentItemAction
+import cut.the.crap.ui.localized
 import cut.the.crap.ui.theme.PreviewAppThemeProvider
 import cut.the.crap.ui.theme.PreviewThemeWrapper
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -105,7 +106,7 @@ fun PostsScreen(
             when (event) {
                 EciUiEvent.NavigateToTable -> navController.navigate("eci_statistics")
                 is EciUiEvent.ShowError ->
-                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, event.error.localized(context), Toast.LENGTH_LONG).show()
             }
         }
     }

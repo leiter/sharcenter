@@ -2,7 +2,6 @@ package cut.the.crap.data.rest.reddit
 
 import cut.the.crap.R
 import cut.the.crap.data.rest.Result
-import cut.the.crap.tools.StringProvider
 import cut.the.crap.tools.parseRedditUrl
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -16,6 +15,8 @@ import io.ktor.http.HttpHeaders
 import io.ktor.serialization.ContentConvertException
 import kotlinx.serialization.SerializationException
 import java.io.IOException
+import cut.the.crap.data.rest.AppError
+import cut.the.crap.data.rest.Source
 
 /**
  * Repository for fetching Reddit post metadata from the public oEmbed endpoint
@@ -35,7 +36,6 @@ interface RedditRepository {
 
 class RedditRepositoryImpl constructor(
     private val client: HttpClient,
-    private val strings: StringProvider
 ) : RedditRepository {
 
     companion object {
@@ -48,7 +48,7 @@ class RedditRepositoryImpl constructor(
         // Only posts have oEmbed content; subreddits, profiles and unresolved short links do not.
         val contentType = parseRedditUrl(url)?.contentType
         if (contentType != "post") {
-            return Result.Error(strings.get(R.string.reddit_error_invalid_url, url), retryable = false)
+            return Result.Error(AppError.InvalidUrl(Source.REDDIT, url), retryable = false)
         }
 
         return try {
@@ -59,32 +59,32 @@ class RedditRepositoryImpl constructor(
 
             RedditPostMetadata.fromOEmbed(response)
                 ?.let { Result.Success(it) }
-                ?: Result.Error(strings.get(R.string.reddit_error_unavailable), retryable = false)
+                ?: Result.Error(AppError.Unavailable(Source.REDDIT), retryable = false)
         } catch (e: ClientRequestException) {
             // 4xx — post removed/private (404) or blocked (403/429). Permanent for enrichment.
             when (e.response.status.value) {
-                403, 404, 429 -> Result.Error(strings.get(R.string.reddit_error_not_found), e, retryable = false)
+                403, 404, 429 -> Result.Error(AppError.NotFound(Source.REDDIT), e, retryable = false)
                 else -> Result.Error(
-                    strings.get(R.string.error_client, e.response.status.value, e.response.status.description),
+                    AppError.Client(e.response.status.value, e.response.status.description),
                     e,
                     retryable = false
                 )
             }
         } catch (e: ServerResponseException) {
             // 5xx — transient, worth retrying.
-            Result.Error(strings.get(R.string.reddit_error_server, e.response.status.value), e)
+            Result.Error(AppError.SourceServer(Source.REDDIT, e.response.status.value), e)
         } catch (e: SocketTimeoutException) {
-            Result.Error(strings.get(R.string.reddit_error_timeout), e)
+            Result.Error(AppError.SourceTimeout(Source.REDDIT), e)
         } catch (e: ContentConvertException) {
             // A non-JSON body (e.g. an HTML block page) returned with a 2xx status. Permanent.
-            Result.Error(strings.get(R.string.reddit_error_unavailable), e, retryable = false)
+            Result.Error(AppError.Unavailable(Source.REDDIT), e, retryable = false)
         } catch (e: SerializationException) {
-            Result.Error(strings.get(R.string.reddit_error_unavailable), e, retryable = false)
+            Result.Error(AppError.Unavailable(Source.REDDIT), e, retryable = false)
         } catch (e: IOException) {
-            Result.Error(strings.get(R.string.error_network, e.message ?: ""), e)
+            Result.Error(AppError.Network(e.message), e)
         } catch (e: Exception) {
             Result.Error(
-                strings.get(R.string.reddit_error_fetch_failed, e.message ?: strings.get(R.string.error_unknown)),
+                AppError.FetchFailed(Source.REDDIT, e.message),
                 e
             )
         }

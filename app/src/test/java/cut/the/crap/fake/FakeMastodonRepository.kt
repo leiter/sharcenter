@@ -3,6 +3,7 @@ package cut.the.crap.fake
 import cut.the.crap.data.rest.Result
 import cut.the.crap.data.rest.mastodon.MastodonPostMetadata
 import cut.the.crap.data.rest.mastodon.MastodonRepository
+import cut.the.crap.data.rest.AppError
 
 /**
  * Fake implementation of MastodonRepository for testing.
@@ -31,7 +32,7 @@ class FakeMastodonRepository : MastodonRepository {
     }
 
     fun setErrorResponse(message: String, exception: Throwable? = null) {
-        nextResult = Result.Error(message, exception)
+        nextResult = Result.Error(AppError.Unexpected(message), exception)
     }
 
     fun getFetchedUrls(): List<String> = fetchedUrls.toList()

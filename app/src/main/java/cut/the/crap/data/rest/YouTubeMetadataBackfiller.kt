@@ -84,7 +84,7 @@ class YouTubeMetadataBackfiller constructor(
                     if (!result.retryable) {
                         newlyFailed.add(link.link)
                     }
-                    Log.w(TAG, "Skipping ${link.link} (retryable=${result.retryable}): ${result.message}")
+                    Log.w(TAG, "Skipping ${link.link} (retryable=${result.retryable}): ${result.error.debugText}")
                 }
             }
             delay(DELAY_BETWEEN_FETCHES_MS)

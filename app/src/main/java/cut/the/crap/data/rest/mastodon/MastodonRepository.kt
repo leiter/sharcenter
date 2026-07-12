@@ -2,7 +2,6 @@ package cut.the.crap.data.rest.mastodon
 
 import cut.the.crap.R
 import cut.the.crap.data.rest.Result
-import cut.the.crap.tools.StringProvider
 import cut.the.crap.tools.mastodonStatusApiUrl
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -11,6 +10,8 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.get
 import java.io.IOException
+import cut.the.crap.data.rest.AppError
+import cut.the.crap.data.rest.Source
 
 /**
  * Repository for fetching Mastodon post metadata from the public status API
@@ -29,40 +30,39 @@ interface MastodonRepository {
 
 class MastodonRepositoryImpl constructor(
     private val client: HttpClient,
-    private val strings: StringProvider
 ) : MastodonRepository {
 
     override suspend fun getPostMetadata(url: String): Result<MastodonPostMetadata> {
         // Only post URLs resolve to a status endpoint; profile links have no post to fetch.
         val apiUrl = mastodonStatusApiUrl(url)
-            ?: return Result.Error(strings.get(R.string.mastodon_error_invalid_url, url), retryable = false)
+            ?: return Result.Error(AppError.InvalidUrl(Source.MASTODON, url), retryable = false)
 
         return try {
             val status = client.get(apiUrl).body<MastodonStatus>()
 
             MastodonPostMetadata.fromStatus(status)
                 ?.let { Result.Success(it) }
-                ?: Result.Error(strings.get(R.string.mastodon_error_unavailable), retryable = false)
+                ?: Result.Error(AppError.Unavailable(Source.MASTODON), retryable = false)
         } catch (e: ClientRequestException) {
             // 4xx — post deleted (410), private/blocked (401/403) or not found (404). Permanent.
             when (e.response.status.value) {
-                401, 403, 404, 410 -> Result.Error(strings.get(R.string.mastodon_error_not_found), e, retryable = false)
+                401, 403, 404, 410 -> Result.Error(AppError.NotFound(Source.MASTODON), e, retryable = false)
                 else -> Result.Error(
-                    strings.get(R.string.error_client, e.response.status.value, e.response.status.description),
+                    AppError.Client(e.response.status.value, e.response.status.description),
                     e,
                     retryable = false
                 )
             }
         } catch (e: ServerResponseException) {
             // 5xx — transient, worth retrying.
-            Result.Error(strings.get(R.string.mastodon_error_server, e.response.status.value), e)
+            Result.Error(AppError.SourceServer(Source.MASTODON, e.response.status.value), e)
         } catch (e: SocketTimeoutException) {
-            Result.Error(strings.get(R.string.mastodon_error_timeout), e)
+            Result.Error(AppError.SourceTimeout(Source.MASTODON), e)
         } catch (e: IOException) {
-            Result.Error(strings.get(R.string.error_network, e.message ?: ""), e)
+            Result.Error(AppError.Network(e.message), e)
         } catch (e: Exception) {
             Result.Error(
-                strings.get(R.string.mastodon_error_fetch_failed, e.message ?: strings.get(R.string.error_unknown)),
+                AppError.FetchFailed(Source.MASTODON, e.message),
                 e
             )
         }

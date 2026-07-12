@@ -11,14 +11,15 @@ sealed class Result<out T> {
 
     /**
      * Represents a failed API response
-     * @param message Human-readable error message
+     * @param error What went wrong, as a typed [AppError]. The data layer describes the
+     *        failure; the UI decides how to phrase it (see `AppError.localized()` in :app).
      * @param exception The underlying exception (optional)
      * @param retryable Whether the failure is transient (network/server) and worth
      *        retrying later. False for permanent failures such as a deleted/private
      *        resource or a malformed request that will never succeed.
      */
     data class Error(
-        val message: String,
+        val error: AppError,
         val exception: Throwable? = null,
         val retryable: Boolean = true
     ) : Result<Nothing>()
@@ -46,6 +47,6 @@ sealed class Result<out T> {
      */
     fun getOrThrow(): T = when (this) {
         is Success -> data
-        is Error -> throw exception ?: Exception(message)
+        is Error -> throw exception ?: Exception(error.debugText)
     }
 }

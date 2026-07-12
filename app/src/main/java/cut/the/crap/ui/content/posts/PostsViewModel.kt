@@ -9,6 +9,7 @@ import cut.the.crap.data.domain.KeywordRepository
 import cut.the.crap.data.domain.KeywordType
 import cut.the.crap.tools.TextValueWrapper
 import cut.the.crap.ui.components.FilterState
+import cut.the.crap.data.rest.AppError
 import cut.the.crap.data.rest.Result
 import cut.the.crap.data.rest.eci.EciStatistics
 import cut.the.crap.data.rest.eci.EciStatisticsRepository
@@ -54,7 +55,7 @@ sealed interface EciUiEvent {
     data object NavigateToTable : EciUiEvent
 
     /** Loading failed — show [message] in a toast. */
-    data class ShowError(val message: String) : EciUiEvent
+    data class ShowError(val error: AppError) : EciUiEvent
 }
 
 class PostsViewModel constructor(
@@ -127,7 +128,7 @@ class PostsViewModel constructor(
                     _eciEvents.emit(EciUiEvent.NavigateToTable)
                 }
                 is Result.Error -> {
-                    _eciEvents.emit(EciUiEvent.ShowError(result.message))
+                    _eciEvents.emit(EciUiEvent.ShowError(result.error))
                 }
             }
             _eciLoading.value = false
