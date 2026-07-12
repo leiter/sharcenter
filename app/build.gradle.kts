@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.compose.multiplatform)
 }
 
 
@@ -110,11 +111,13 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.compose.bom))
-    implementation(libs.compose.ui)
-    implementation(libs.compose.ui.graphics)
-    implementation(libs.compose.ui.tooling.preview)
-    implementation(libs.compose.material3)
+    // Compose Multiplatform (replaces the AndroidX compose-bom). On Android these
+    // resolve to the same androidx.compose artifacts, so behaviour is unchanged.
+    implementation(compose.runtime)
+    implementation(compose.foundation)
+    implementation(compose.material3)
+    implementation(compose.ui)
+    implementation(compose.uiTooling)
     implementation(libs.navigation.compose)
 
     implementation(libs.koin.android)
@@ -125,7 +128,7 @@ dependencies {
     // Multiplatform core: SQLDelight persistence + domain models/repositories
     implementation(project(":shared"))
 
-    implementation(libs.compose.material.icons.extended)
+    implementation(libs.compose.icons.extended)
 
     // DataStore for settings persistence
     implementation(libs.datastore.preferences)

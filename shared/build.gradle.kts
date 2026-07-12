@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.kotlin.compose)
 }
 
 /**
@@ -26,6 +28,15 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            // Compose Multiplatform. On Android these artifacts delegate to the same
+            // androidx.compose libraries, so :app renders identically.
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation(compose.material3)
+            implementation(compose.ui)
+            // JetBrains stopped publishing the icons artifact after 1.7.3; it resolves
+            // cleanly against CMP 1.8.2 (verified). The app uses 87 distinct icons.
+            api(libs.compose.icons.extended)
             implementation(libs.kotlinx.coroutines.core)
             // `api` so :app can still reference SqlDriver / the generated database types.
             api(libs.sqldelight.runtime)
