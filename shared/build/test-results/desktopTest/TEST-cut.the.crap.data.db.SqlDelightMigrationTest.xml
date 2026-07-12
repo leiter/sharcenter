@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cut.the.crap.data.db.SqlDelightMigrationTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-07-12T17:10:31.313Z" hostname="mandroider" time="0.151">
+  <properties/>
+  <testcase name="schemaVersionIs5[desktop]" classname="cut.the.crap.data.db.SqlDelightMigrationTest" time="0.124"/>
+  <testcase name="migrate4To5_preservesExistingDataAndAddsSubjectTables[desktop]" classname="cut.the.crap.data.db.SqlDelightMigrationTest" time="0.017"/>
+  <testcase name="freshInstall_createsV5SchemaAndRoundTripsRows[desktop]" classname="cut.the.crap.data.db.SqlDelightMigrationTest" time="0.009"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+]]></system-err>
+</testsuite>

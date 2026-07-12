@@ -165,9 +165,9 @@ fun ContentItemCard(
                     modifier = Modifier.padding(4.dp)
                 )
 
-                if (contentItem.category != null) {
+                contentItem.category?.let { category ->
                     Text(
-                        text = contentItem.category,
+                        text = category,
                         modifier = Modifier.padding(4.dp)
                     )
                 }

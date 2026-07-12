@@ -13,6 +13,7 @@ import cut.the.crap.data.db.SqlDelightSubjectDao
 import cut.the.crap.data.db.createDatabase
 import cut.the.crap.data.db.createDriver
 import cut.the.crap.data.db.sql.ShareDatabase
+import kotlinx.coroutines.Dispatchers
 import cut.the.crap.data.domain.ContentItemRepository
 import cut.the.crap.data.domain.ContentItemRepositoryImpl
 import cut.the.crap.data.domain.ContentLinkRepository
@@ -36,10 +37,12 @@ val databaseModule = module {
     single<SqlDriver> { createDriver(androidContext()) }
     single { createDatabase(get()) }
 
-    single<ContentLinkDao> { SqlDelightContentLinkDao(get<ShareDatabase>().contentLinkQueries) }
-    single<KeywordDao> { SqlDelightKeywordDao(get<ShareDatabase>().keywordQueries) }
-    single<ContentItemDao> { SqlDelightContentItemDao(get<ShareDatabase>().contentItemQueries) }
-    single<SubjectDao> { SqlDelightSubjectDao(get<ShareDatabase>().subjectQueries) }
+    // The DAOs live in :shared/commonMain, where Dispatchers.IO doesn't exist — the
+    // platform supplies the IO dispatcher here.
+    single<ContentLinkDao> { SqlDelightContentLinkDao(get<ShareDatabase>().contentLinkQueries, Dispatchers.IO) }
+    single<KeywordDao> { SqlDelightKeywordDao(get<ShareDatabase>().keywordQueries, Dispatchers.IO) }
+    single<ContentItemDao> { SqlDelightContentItemDao(get<ShareDatabase>().contentItemQueries, Dispatchers.IO) }
+    single<SubjectDao> { SqlDelightSubjectDao(get<ShareDatabase>().subjectQueries, Dispatchers.IO) }
 
     // Lazy handle so injecting the backup manager doesn't eagerly open the database.
     single<Lazy<SqlDriver>> { lazy { get<SqlDriver>() } }

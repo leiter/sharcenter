@@ -1,0 +1,58 @@
+{
+  "projectStructure": {
+    "formatVersion": "0.3.3",
+    "isPublishedAsRoot": "true",
+    "variants": [
+      {
+        "name": "debugApiElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "debugRuntimeElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "releaseApiElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "releaseRuntimeElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "desktopApiElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "desktopRuntimeElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      }
+    ],
+    "sourceSets": [
+      {
+        "name": "commonMain",
+        "dependsOn": [],
+        "moduleDependency": [
+          "app.cash.sqldelight:runtime",
+          "app.cash.sqldelight:coroutines-extensions",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "app.cash.sqldelight:primitive-adapters"
+        ],
+        "binaryLayout": "klib"
+      }
+    ]
+  }
+}

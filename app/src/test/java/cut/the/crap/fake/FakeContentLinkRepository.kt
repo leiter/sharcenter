@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import java.io.File
 
 /**
  * Fake implementation of ContentLinkRepository for testing.
@@ -92,10 +91,6 @@ class FakeContentLinkRepository : ContentLinkRepository {
                 else -> filtered
             }
         }
-    }
-
-    override suspend fun importFromFile(file: File) {
-        // Not implemented for testing
     }
 
     override suspend fun byTimeRange(start: Long, end: Long): List<ContentLink> {
