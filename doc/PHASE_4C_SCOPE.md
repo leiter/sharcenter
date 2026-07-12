@@ -45,9 +45,11 @@ Multiplatform. The app keeps running on Android throughout — CMP targets Andro
 - `lifecycle-viewmodel-compose` → `org.jetbrains.androidx.lifecycle:*`.
 - **Coil 2 → Coil 3** (`io.coil-kt.coil3`) — API rename, `LocalPlatformContext` (2 files).
 - `@Preview` → `org.jetbrains.compose.ui.tooling.preview.Preview` (21 files, mechanical).
-- ⚠ **`material-icons-extended`**: CMP's port is deprecated/dropped in recent versions. Likely
-  need to pin an older CMP icons artifact **or vendor the ~dozen icons actually used**. *This is
-  the most likely toolchain snag — resolve it first, it can block everything else.*
+- ⚠ **`material-icons-extended`**: CMP's port is deprecated/dropped in recent versions, and the
+  app uses **87 distinct icons** — too many to hand-vendor comfortably. Options: pin a CMP
+  version that still ships the icons artifact, or script-extract the 87 icon sources from
+  AndroidX into the project. *This is the most likely toolchain snag — resolve it FIRST, it
+  can block everything else.*
 
 ### WP2 — Resources → Compose Multiplatform Resources  *(L, low-risk, mostly scriptable)*
 **The single biggest line item (504 call sites), but far cheaper than it looks:**
