@@ -38,13 +38,20 @@ Ordered so **every package ends with a green Android build**. WP1–WP2 are the 
 WP3–WP5 can be parallelised; WP7 is the payoff.
 
 ### WP1 — Compose Multiplatform toolchain swap  *(M, high-risk)*
+**Status: WP1a ✅ (CMP swap, commit 3b08433) · WP1b ✅ (Coil 3, commit d5ed635) ·
+WP1d ⏸ deferred to WP7 · WP1c (navigation) ⬅ next**
 Replace AndroidX Compose (`compose-bom` + `kotlin.plugin.compose`) with JetBrains Compose
 Multiplatform. The app keeps running on Android throughout — CMP targets Android too.
 - `org.jetbrains.compose` plugin; `compose.runtime/foundation/material3/ui` from CMP.
 - `navigation-compose` → `org.jetbrains.androidx.navigation:navigation-compose` (11 files).
 - `lifecycle-viewmodel-compose` → `org.jetbrains.androidx.lifecycle:*`.
 - **Coil 2 → Coil 3** (`io.coil-kt.coil3`) — API rename, `LocalPlatformContext` (2 files).
-- `@Preview` → `org.jetbrains.compose.ui.tooling.preview.Preview` (21 files, mechanical).
+- ⏸ **`@Preview` — DEFERRED to WP7 (decided 2026-07-12), not mechanical.** 14 files use
+  `Devices` and 13 use `PreviewParameter`/`PreviewParameterProvider`; **CMP's `@Preview`
+  supports neither**. Converting now would strip working dev tooling from 21 files for zero
+  runtime benefit (previews never ship). Decide per-file at WP7, when each file actually
+  moves: simple previews → CMP `@Preview`; `Devices`/`PreviewParameter` ones → either drop,
+  or keep an Android-only preview file in `:app` alongside the moved composable.
 - ✅ **`material-icons-extended` — SPIKED AND RESOLVED (2026-07-12).** JetBrains stopped
   publishing the icons artifact after **1.7.3** (latest CMP is 1.8.2), and the app uses **87
   distinct icons**. Verified fix: **use CMP 1.8.2 and pin the icons artifact at 1.7.3.** They
