@@ -1,9 +1,10 @@
 # KMP Migration Plan — ShareCenter (`cut.the.crap`)
 
 **Targets:** Android · iOS · Desktop (JVM: Linux/Windows/macOS) · macOS-native
-**Status:** Planning — no migration code written yet
+**Status:** In progress on `kmp-migration` — Phases 0–3 done (version catalog, Hilt→Koin,
+Room→SQLDelight). Next: split `shared`/`androidApp`, then the iOS/desktop/macOS targets.
 **Last updated:** 2026-07-12
-**Baseline branch:** `feature/color-subjects`
+**Baseline branch:** `kmp-migration` (branched from `main`, with `feature/color-subjects` merged in; tag `pre-kmp-baseline`)
 
 > This plan is derived from a code audit of the current single-module Android app
 > (120 main Kotlin files). It converts the app to Kotlin Multiplatform + Compose
@@ -93,7 +94,7 @@ test runner needs), so Phase 0 added an `instrumentation` build type + `testBuil
 
 ---
 
-## Phase 1 — Foundation & de-risked sequencing
+## Phase 1 — Foundation & de-risked sequencing  ✅ DONE (2026-07-12)
 
 > **RESEQUENCED (2026-07-12, approved).** The original plan created the `shared` KMP
 > module *and* bumped the toolchain while Hilt/Room/kapt were still in place. But
@@ -116,11 +117,13 @@ test runner needs), so Phase 0 added an `instrumentation` build type + `testBuil
 
 **Phase 1 scope (this step): version catalog.**
 
-- [ ] Introduce a **version catalog** (`gradle/libs.versions.toml`) capturing all
-      current plugin + library versions; migrate root and `app` build scripts to it.
-- [ ] Keep the current toolchain and single-module structure — no behavior change.
+- [x] Introduced a **version catalog** (`gradle/libs.versions.toml`) capturing all plugin +
+      library versions; root and `app` build scripts migrated to `alias(libs…)`/`libs.…`.
+      No hardcoded coordinates remain.
+- [x] Kept the current toolchain and single-module structure — no behaviour change
+      (208 tests, unchanged).
 
-**Exit:** green build + 208 unit tests + on-device migration test still pass, with all
+**Exit:** ✅ green build, 208 unit tests + on-device migration test still passed, all
 versions centralised in `libs.versions.toml`.
 
 (The former Phase 1 module-split tasks — `kotlin("multiplatform")`, `shared`/`androidApp`,
