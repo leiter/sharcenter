@@ -93,29 +93,38 @@ test runner needs), so Phase 0 added an `instrumentation` build type + `testBuil
 
 ---
 
-## Phase 1 — Build restructure to a KMP skeleton
-**Goal:** app still ships on Android, but now builds from a multiplatform `shared` module.
+## Phase 1 — Foundation & de-risked sequencing
 
-- [ ] Introduce a **version catalog** (`gradle/libs.versions.toml`) if not present.
-- [ ] Add plugins: `kotlin("multiplatform")`, `org.jetbrains.compose`,
-      `com.android.library` (for `shared`), `com.android.application` (for `androidApp`),
-      `app.cash.sqldelight`, `com.google.devtools.ksp`.
-- [ ] Create `shared` with `android()` + `jvm("desktop")` targets first
-      (defer `iosX64/iosArm64/iosSimulatorArm64/macosArm64` until Phase 7 to keep
-      the early loop fast).
-- [ ] Move `MainActivity`, `ShareActivity`, `XLoginActivity`, manifest, and
-      Android resources into `androidApp`. Everything else stays put *for now* under
-      `shared/src/androidMain` (compiles as-is against Android) — we relocate to
-      `commonMain` incrementally in later phases.
-- [ ] **Drop kapt**; the only remaining processors are KSP-based (SQLDelight generates
-      without KSP; Koin annotations optional).
-- [ ] `jvmTarget` → 17 (Compose MP baseline); reconcile `compileOptions`.
+> **RESEQUENCED (2026-07-12, approved).** The original plan created the `shared` KMP
+> module *and* bumped the toolchain while Hilt/Room/kapt were still in place. But
+> **Hilt has no KMP support** (its Gradle plugin only applies to pure Android
+> modules), so splitting first would force nearly all code to stay in the Android
+> module anyway — churn with little gain, stacked on a risky AGP 9 bump. Instead we
+> remove the Android-only blockers *inside the current single module* first, then
+> split against a clean, kapt-free codebase. Revised order:
+>
+> 1. **Version catalog** (this phase) — foundational, low-risk.
+> 2. **Hilt → Koin** (was Phase 2) — in the single module, verifiable on Android.
+> 3. **Room → SQLDelight** (was Phase 3) — in the single module, verifiable on Android.
+> 4. **Split `shared` / `androidApp`** (the original Phase 1 module work) — now clean.
+> 5. iOS / Desktop / macOS targets (was Phase 7).
+> 6. **AGP 9 / Gradle 9 / Kotlin 2.4 bump — DECOUPLED**, done when convenient, not
+>    entangled with the restructure.
+>
+> The current toolchain (AGP 8.10.1 / Kotlin 2.1.21 / Gradle 8.14.3) already supports
+> Compose Multiplatform + SQLDelight + Koin, so the bump is not a prerequisite.
 
-**Risk:** Gradle plugin/version alignment (AGP ↔ Kotlin ↔ Compose MP ↔ SQLDelight).
-See the standing constraint that most dep bumps are gated on the AGP 9 / Gradle 9 /
-Kotlin 2.4 migration — **fold that coordinated bump into this phase** rather than fighting it twice.
+**Phase 1 scope (this step): version catalog.**
 
-**Exit:** `androidApp` builds and runs identically to today, sourced from `shared`.
+- [ ] Introduce a **version catalog** (`gradle/libs.versions.toml`) capturing all
+      current plugin + library versions; migrate root and `app` build scripts to it.
+- [ ] Keep the current toolchain and single-module structure — no behavior change.
+
+**Exit:** green build + 208 unit tests + on-device migration test still pass, with all
+versions centralised in `libs.versions.toml`.
+
+(The former Phase 1 module-split tasks — `kotlin("multiplatform")`, `shared`/`androidApp`,
+`jvmTarget → 17`, dropping kapt — move to **step 4** above, after Koin + SQLDelight land.)
 
 ---
 

@@ -2,12 +2,12 @@ import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("dagger.hilt.android.plugin")
-    id("kotlin-kapt")
-    id("org.jetbrains.kotlin.plugin.serialization")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -119,64 +119,62 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.17.0")
-    implementation("androidx.activity:activity-compose:1.13.0")
-    implementation(platform("androidx.compose:compose-bom:2025.10.01"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.navigation:navigation-compose:2.9.8")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.compose.bom))
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.graphics)
+    implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.compose.material3)
+    implementation(libs.navigation.compose)
 
-    val hiltVersion = "2.56.2"
-    implementation ("androidx.hilt:hilt-navigation-compose:1.3.0")
-    kapt ("androidx.hilt:hilt-compiler:1.3.0")
-    kapt ("com.google.dagger:hilt-android-compiler:$hiltVersion")
-    implementation ("com.google.dagger:hilt-android:$hiltVersion")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
-    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
+    implementation(libs.hilt.navigation.compose)
+    kapt(libs.hilt.compiler)
+    kapt(libs.hilt.android.compiler)
+    implementation(libs.hilt.android)
+    implementation(libs.lifecycle.viewmodel.ktx)
+    implementation(libs.lifecycle.runtime.ktx)
 
-    val roomVersion = "2.8.4" // Check for the latest version
-    implementation("androidx.room:room-runtime:$roomVersion")
-    kapt ("androidx.room:room-compiler:$roomVersion" )
+    implementation(libs.room.runtime)
+    kapt(libs.room.compiler)
     // Optional: Room Kotlin Extensions and Coroutines support
-    implementation( "androidx.room:room-ktx:$roomVersion")
+    implementation(libs.room.ktx)
 
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.compose.material.icons.extended)
 
     // DataStore for settings persistence
-    implementation("androidx.datastore:datastore-preferences:1.2.1")
+    implementation(libs.datastore.preferences)
 
-    implementation("io.ktor:ktor-client-core:2.3.5")
-    implementation("io.ktor:ktor-client-okhttp:2.3.5") // or ktor-client-cio for other engines
-    implementation("io.ktor:ktor-client-content-negotiation:2.3.5")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.5")
-    implementation("io.ktor:ktor-client-logging:2.3.5")
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp) // or ktor-client-cio for other engines
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.logging)
 
     // Kotlinx Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+    implementation(libs.kotlinx.serialization.json)
 
     // Coil for image loading (thumbnails)
-    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation(libs.coil.compose)
 
-    testImplementation("junit:junit:4.13.2")
+    testImplementation(libs.junit)
     // Coroutines testing
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+    testImplementation(libs.kotlinx.coroutines.test)
     // MockK for Kotlin mocking
-    testImplementation("io.mockk:mockk:1.14.11")
+    testImplementation(libs.mockk)
     // Turbine for Flow testing
-    testImplementation("app.cash.turbine:turbine:1.2.1")
+    testImplementation(libs.turbine)
     // Architecture components testing
-    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    testImplementation(libs.androidx.arch.core.testing)
     // Truth assertions for readability
-    testImplementation("com.google.truth:truth:1.4.5")
+    testImplementation(libs.truth)
 
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.espresso.core)
     // Room migration testing (Phase 0 baseline safety net)
-    androidTestImplementation("androidx.room:room-testing:$roomVersion")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.10.01"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    androidTestImplementation(libs.room.testing)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.tooling)
+    debugImplementation(libs.compose.ui.test.manifest)
 }
