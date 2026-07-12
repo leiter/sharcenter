@@ -63,18 +63,33 @@ ShareCenter/
 
 ---
 
-## Phase 0 — Baseline & safety net
+## Phase 0 — Baseline & safety net  ✅ DONE (2026-07-12)
 **Goal:** lock a known-good starting point; make behavior verifiable before moving anything.
 
-- [ ] Confirm green build + all unit tests pass on `feature/color-subjects`; record counts.
-- [ ] **Validate the pending Room v4→v5 migration on a device with existing data**
-      (still an open item from the color-subjects work) — do this *before* touching the DB layer.
-- [ ] Snapshot the exported Room schemas (`app/schemas/**`) — these become the source
-      of truth for the SQLDelight schema + migration files in Phase 3.
-- [ ] Freeze new data-layer feature work during the migration window.
-- [ ] Tag the commit: `pre-kmp-baseline`.
+- [x] **Baseline scope decided:** merge `feature/color-subjects` into `kmp-migration`
+      so the baseline is **DB v5** (SubjectDB + `post/link_subject_cross_ref`, color
+      history). Merge was clean (no conflicts).
+- [x] Confirm green build + all unit tests pass — forced full rerun:
+      **208 tests, 0 failures, 6 skipped** (24 suites); `compileDebugSources` +
+      `testDebugUnitTest` green.
+- [x] **Validated the Room v4→v5 migration on-device** (Pixel 7a) via an automated
+      `MigrationTestHelper` test (`app/src/androidTest/.../data/db/MigrationTest.kt`):
+      seeded v4 rows survive, new subject/cross-ref tables are created, and Room's
+      schema-5 validation passes. This is the reference behaviour the SQLDelight port
+      must reproduce in Phase 3.
+- [x] Snapshot the exported Room schemas — `4.json` + `5.json` present under
+      `app/schemas/cut.the.crap.data.db.AppDatabase/` (source of truth for Phase 3).
+- [ ] **DATA-LAYER FEATURE FREEZE (in effect):** no new entities/DAOs/migrations or
+      schema changes on `kmp-migration` until the SQLDelight port (Phase 3) lands.
+      Bug-fix-only for the DB layer during the migration window.
+- [x] Tagged `pre-kmp-baseline` at commit `7b4aa95` (Phase 0 changes committed on `fb6341d`+`7b4aa95`).
 
-**Exit:** reproducible green build, migration verified, schemas archived.
+**Build note (new):** running instrumented tests required a non-minified build type.
+The `debug` type deliberately minifies/obfuscates (strips Kotlin stdlib the AndroidX
+test runner needs), so Phase 0 added an `instrumentation` build type + `testBuildType =
+"instrumentation"`. Run device tests with `./gradlew connectedInstrumentationAndroidTest`.
+
+**Exit:** reproducible green build ✅, migration verified on-device ✅, schemas archived ✅.
 
 ---
 

@@ -73,7 +73,19 @@ android {
                 "proguard-rules.pro"
             )
         }
+        // Non-minified variant used only to run instrumented (androidTest) tests.
+        // The `debug` type deliberately minifies/obfuscates, which strips Kotlin
+        // stdlib the AndroidX test runner needs; testing against this variant keeps
+        // that production-like obfuscation intact while letting tests actually run.
+        create("instrumentation") {
+            initWith(getByName("debug"))
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
     }
+    // Run instrumented tests against the non-minified `instrumentation` build type.
+    testBuildType = "instrumentation"
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -95,6 +107,14 @@ android {
         // Use custom lint configuration to ignore markdown files
         lintConfig = file("lint.xml")
         abortOnError = false
+    }
+
+    // Expose the exported Room schemas to instrumented tests so MigrationTestHelper
+    // can load them (used by MigrationTest to validate v4 -> v5). Phase 0 safety net.
+    sourceSets {
+        getByName("androidTest") {
+            assets.srcDirs(files("$projectDir/schemas"))
+        }
     }
 }
 
@@ -153,6 +173,8 @@ dependencies {
 
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+    // Room migration testing (Phase 0 baseline safety net)
+    androidTestImplementation("androidx.room:room-testing:$roomVersion")
     androidTestImplementation(platform("androidx.compose:compose-bom:2025.10.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
