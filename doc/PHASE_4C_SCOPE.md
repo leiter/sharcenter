@@ -45,11 +45,14 @@ Multiplatform. The app keeps running on Android throughout — CMP targets Andro
 - `lifecycle-viewmodel-compose` → `org.jetbrains.androidx.lifecycle:*`.
 - **Coil 2 → Coil 3** (`io.coil-kt.coil3`) — API rename, `LocalPlatformContext` (2 files).
 - `@Preview` → `org.jetbrains.compose.ui.tooling.preview.Preview` (21 files, mechanical).
-- ⚠ **`material-icons-extended`**: CMP's port is deprecated/dropped in recent versions, and the
-  app uses **87 distinct icons** — too many to hand-vendor comfortably. Options: pin a CMP
-  version that still ships the icons artifact, or script-extract the 87 icon sources from
-  AndroidX into the project. *This is the most likely toolchain snag — resolve it FIRST, it
-  can block everything else.*
+- ✅ **`material-icons-extended` — SPIKED AND RESOLVED (2026-07-12).** JetBrains stopped
+  publishing the icons artifact after **1.7.3** (latest CMP is 1.8.2), and the app uses **87
+  distinct icons**. Verified fix: **use CMP 1.8.2 and pin the icons artifact at 1.7.3.** They
+  coexist — Gradle upgrades the icons' transitive `compose.ui:ui:1.7.3 -> 1.8.2`, and a
+  `commonMain` composable using `Icons.Default.*` / `Icons.AutoMirrored.*` **compiled for both
+  the Android and desktop targets**. Catalog entries are already in place
+  (`composeMultiplatform = "1.8.2"`, `composeIcons = "1.7.3"`).
+  *The biggest WP1 unknown is now closed; no icon vendoring needed.*
 
 ### WP2 — Resources → Compose Multiplatform Resources  *(L, low-risk, mostly scriptable)*
 **The single biggest line item (504 call sites), but far cheaper than it looks:**
@@ -110,14 +113,14 @@ aren't `Int`s.
   errors/results; the UI maps them to strings. Architecturally correct, and it deletes
   `StringProvider` entirely — but it touches all 8 repos and their call sites.
 
-### Decision B — is **iOS** actually in scope? *(potentially cuts a whole target)*
-You asked for **desktop + macOS**. A Compose **Desktop (JVM)** app *runs natively on macOS*
-(packaged as a `.app`). If "macOS" means "the desktop app works on my Mac", then:
-- ✅ you need **no Kotlin/Native targets at all**, no `NativeSqliteDriver`, no Darwin engine,
-  no Xcode project — the JDBC driver already works (proven by the `[desktop]` tests);
-- ❌ only **iOS** forces Kotlin/Native, and it roughly **doubles** WP3/WP8.
+### Decision B — iOS scope  ✅ **DECIDED (2026-07-12): NO iOS.**
+**Targets are Android + Desktop (JVM).** macOS is served by the Compose Desktop app (packaged
+as a `.app`) — no Kotlin/Native, no `NativeSqliteDriver`, no Darwin engine, no Xcode project.
+The JDBC driver already works (proven by the `[desktop]` tests).
 
-**This is the biggest single scope lever in the whole migration.** Confirm before WP1.
+**However — seams are still built properly.** Platform code goes behind `expect`/`actual` and
+interfaces rather than `if (isAndroid)` branching, so iOS remains *addable* later (it would mean
+adding actuals, not re-architecting). Estimate: **~2 weeks**, not 3.5.
 
 ### Decision C — desktop feature parity?
 Recommend **reduced desktop v1**: no WebView login, no Android share-intents, no MediaStore
@@ -144,6 +147,10 @@ stake and failures are **compile-time, not silent**. The danger isn't corruption
 build. Mitigation: land WP1 first (it's the one that can genuinely block), keep every WP
 ending green on Android, and don't move UI until its couplings are gone.
 
-## 5. Recommended first step
-**WP1, and inside it, `material-icons-extended` first** — it's the one dependency that could
-force a rethink (vendoring icons). Everything else is tractable churn.
+## 5. Status / next step
+- ✅ **Decision B decided** (no iOS; Android + Desktop, seams kept iOS-ready).
+- ✅ **WP1 icons spike done** — CMP 1.8.2 + icons 1.7.3 verified on both targets.
+- ⏳ **Open: Decision A** (data-layer strings) — blocks WP2 + WP5.
+- ⏳ **Open: Decision C** (desktop feature parity; recommend reduced v1 + capability flags).
+
+**Next step:** WP1 proper — swap `:app` from AndroidX Compose to CMP, keeping Android green.

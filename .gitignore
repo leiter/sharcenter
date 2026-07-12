@@ -11,6 +11,8 @@
 /.idea/assetWizardSettings.xml
 .DS_Store
 /build
+# any module's build output (app/, shared/, future desktopApp/)
+build/
 /captures
 .externalNativeBuild
 .cxx
