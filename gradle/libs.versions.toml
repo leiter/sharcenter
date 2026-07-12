@@ -9,7 +9,8 @@ ktor = "2.3.5"
 coreKtx = "1.17.0"
 activityCompose = "1.13.0"
 composeBom = "2025.10.01"
-navigationCompose = "2.9.8"
+navigationCompose = "2.9.0-beta03"   # Compose Multiplatform navigation
+lifecycleCompose = "2.9.1"
 lifecycle = "2.9.4"
 datastore = "1.2.1"
 kotlinxSerializationJson = "1.8.1"
@@ -36,7 +37,8 @@ compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-mani
 compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+navigation-compose = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleCompose" }
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }
 koin-test = { group = "io.insert-koin", name = "koin-test", version.ref = "koin" }

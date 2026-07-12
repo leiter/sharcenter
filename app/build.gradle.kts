@@ -118,7 +118,10 @@ dependencies {
     implementation(compose.material3)
     implementation(compose.ui)
     implementation(compose.uiTooling)
+    // Compose Multiplatform navigation — same androidx.navigation package names,
+    // so the call sites are unchanged.
     implementation(libs.navigation.compose)
+    implementation(libs.lifecycle.viewmodel.compose)
 
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)

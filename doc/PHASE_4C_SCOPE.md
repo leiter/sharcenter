@@ -38,13 +38,19 @@ Ordered so **every package ends with a green Android build**. WP1–WP2 are the 
 WP3–WP5 can be parallelised; WP7 is the payoff.
 
 ### WP1 — Compose Multiplatform toolchain swap  *(M, high-risk)*
-**Status: WP1a ✅ (CMP swap, commit 3b08433) · WP1b ✅ (Coil 3, commit d5ed635) ·
-WP1d ⏸ deferred to WP7 · WP1c (navigation) ⬅ next**
+**WP1 COMPLETE.** WP1a ✅ CMP swap (3b08433) · WP1b ✅ Coil 3 (d5ed635) ·
+WP1c ✅ CMP navigation · WP1d ⏸ deferred to WP7 (see below).
 Replace AndroidX Compose (`compose-bom` + `kotlin.plugin.compose`) with JetBrains Compose
 Multiplatform. The app keeps running on Android throughout — CMP targets Android too.
 - `org.jetbrains.compose` plugin; `compose.runtime/foundation/material3/ui` from CMP.
-- `navigation-compose` → `org.jetbrains.androidx.navigation:navigation-compose` (11 files).
-- `lifecycle-viewmodel-compose` → `org.jetbrains.androidx.lifecycle:*`.
+- ✅ **`navigation-compose` → `org.jetbrains.androidx.navigation` — turned out to be a PURE
+  DEPENDENCY SWAP, zero code changes.** JetBrains publishes it under the *same*
+  `androidx.navigation` package names, and on Android it delegates to `androidx.navigation`
+  (2.9.0). The app's nav surface is small and conservative — string routes only, no type-safe
+  routes, no deep links, no nav-args — so all 11 files compiled untouched.
+  ⚠ Caveat: CMP navigation's latest is **2.9.0-beta03** (a beta), vs the stable androidx 2.9.8
+  it replaces; this also pins the underlying androidx nav down from 2.9.8 to 2.9.0.
+  Also added `org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose` 2.9.1 (stable).
 - **Coil 2 → Coil 3** (`io.coil-kt.coil3`) — API rename, `LocalPlatformContext` (2 files).
 - ⏸ **`@Preview` — DEFERRED to WP7 (decided 2026-07-12), not mechanical.** 14 files use
   `Devices` and 13 use `PreviewParameter`/`PreviewParameterProvider`; **CMP's `@Preview`
