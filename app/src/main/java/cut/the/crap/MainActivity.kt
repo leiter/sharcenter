@@ -16,10 +16,14 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import coil.ImageLoader
-import coil.ImageLoaderFactory
-import coil.disk.DiskCache
-import coil.memory.MemoryCache
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.disk.DiskCache
+import coil3.memory.MemoryCache
+import coil3.network.ktor2.KtorNetworkFetcherFactory
+import coil3.request.crossfade
+import okio.Path.Companion.toOkioPath
 import cut.the.crap.data.backup.DatabaseBackupManager
 import cut.the.crap.data.rest.YouTubeMetadataBackfiller
 import cut.the.crap.data.rest.task.JobQueueRepository
@@ -54,7 +58,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.context.startKoin
 
-class MyApplication : Application(), ImageLoaderFactory {
+class MyApplication : Application(), SingletonImageLoader.Factory {
 
     override fun onCreate() {
         super.onCreate()
@@ -73,24 +77,31 @@ class MyApplication : Application(), ImageLoaderFactory {
     /**
      * Provides the app-wide Coil [ImageLoader] used by every AsyncImage (currently the link
      * thumbnails). Explicitly wires a memory cache and a persistent disk cache so thumbnails
-     * survive scrolling and app restarts, and disables cache-header respect: some thumbnail
-     * hosts (e.g. YouTube) send short-lived / no-store Cache-Control headers that would
-     * otherwise force Coil to re-download the same image.
+     * survive scrolling and app restarts.
+     *
+     * Coil 3 ships no network fetcher, so one is registered explicitly; the Ktor 2 fetcher
+     * reuses the HTTP stack the app already depends on (and works on desktop later).
+     *
+     * Cache-header behaviour: Coil 2 needed `respectCacheHeaders(false)` here because some
+     * thumbnail hosts (e.g. YouTube) send short-lived / no-store Cache-Control headers that
+     * would otherwise force a re-download. Coil 3 ignores cache headers *by default* — you
+     * opt in via the `coil-network-cache-control` artifact, which we deliberately do not add.
+     * So omitting the old call preserves the previous behaviour.
      */
-    override fun newImageLoader(): ImageLoader {
-        return ImageLoader.Builder(this)
+    override fun newImageLoader(context: PlatformContext): ImageLoader {
+        return ImageLoader.Builder(context)
+            .components { add(KtorNetworkFetcherFactory()) }
             .memoryCache {
-                MemoryCache.Builder(this)
-                    .maxSizePercent(0.25)
+                MemoryCache.Builder()
+                    .maxSizePercent(context, 0.25)
                     .build()
             }
             .diskCache {
                 DiskCache.Builder()
-                    .directory(cacheDir.resolve("image_cache"))
+                    .directory(cacheDir.resolve("image_cache").toOkioPath())
                     .maxSizePercent(0.02)
                     .build()
             }
-            .respectCacheHeaders(false)
             .crossfade(true)
             .build()
     }

@@ -142,8 +142,10 @@ dependencies {
     // Kotlinx Serialization
     implementation(libs.kotlinx.serialization.json)
 
-    // Coil for image loading (thumbnails)
+    // Coil 3 for image loading (thumbnails). Coil 3 ships no network fetcher, so the
+    // Ktor 2 one is added explicitly — it reuses the HTTP stack the app already has.
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.ktor2)
 
     testImplementation(libs.junit)
     // Coroutines testing

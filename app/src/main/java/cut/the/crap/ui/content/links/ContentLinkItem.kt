@@ -69,7 +69,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import cut.the.crap.R
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.data.rest.YouTubeUrlParser
