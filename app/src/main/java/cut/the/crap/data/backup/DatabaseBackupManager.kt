@@ -67,7 +67,7 @@ class DatabaseBackupManager @Inject constructor(
         // Keep in sync with the @Database(version = ...) value in AppDatabase.
         // A backup whose user_version is higher than this would require a
         // downgrade, which Room cannot do — such backups are rejected.
-        private const val CURRENT_SCHEMA_VERSION = 4
+        private const val CURRENT_SCHEMA_VERSION = 5
     }
 
     /**

@@ -161,7 +161,7 @@ data class AppSettings(
     val linksDateRangePreset: DateRangePreset = DateRangePreset.SEVEN_DAYS,
     val postsFavoriteFilterPreset: FavoriteFilterPreset = FavoriteFilterPreset.ALL,
     val linksFavoriteFilterPreset: FavoriteFilterPreset = FavoriteFilterPreset.ALL,
-    val postsSortOrderPreset: SortOrderPreset = SortOrderPreset.BY_ORDER,
+    val postsSortOrderPreset: SortOrderPreset = SortOrderPreset.BY_DATE,
     val linksSortOrderPreset: SortOrderPreset = SortOrderPreset.BY_DATE,
     val customStartDate: Long? = null,
     val customEndDate: Long? = null,

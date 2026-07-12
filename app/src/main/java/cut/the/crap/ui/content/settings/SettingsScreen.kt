@@ -26,7 +26,10 @@ import cut.the.crap.R
 import androidx.compose.ui.graphics.Color
 import cut.the.crap.ui.XLoginActivity
 import cut.the.crap.ui.components.BottomNavigationBar
+import androidx.hilt.navigation.compose.hiltViewModel
+import cut.the.crap.ui.components.ColorHistoryViewModel
 import cut.the.crap.ui.components.ColorPickerDialog
+import cut.the.crap.ui.components.colorFromHex
 import cut.the.crap.ui.components.toHexString
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.FileAction
@@ -57,6 +60,10 @@ fun SettingsScreen(
     // Demo state for the reusable ColorPicker. Not yet persisted or applied to the theme —
     // this is a live showcase of the component ahead of wiring it to a real target.
     var accentColorDemo by remember { mutableStateOf(Color(0xFF3A7BD5)) }
+    // Persistent, shared colour-pick history feeding the picker's history strip.
+    val colorHistoryViewModel: ColorHistoryViewModel = hiltViewModel()
+    val recentColorHexes by colorHistoryViewModel.recentColors.collectAsState()
+    val recentColors = remember(recentColorHexes) { recentColorHexes.mapNotNull(::colorFromHex) }
     var showXCredentialsDialog by remember { mutableStateOf(false) }
     var showBackupFrequencyDialog by remember { mutableStateOf(false) }
     var showBackupRetentionDialog by remember { mutableStateOf(false) }
@@ -189,9 +196,11 @@ fun SettingsScreen(
             confirmLabel = stringResource(R.string.color_picker_confirm),
             dismissLabel = stringResource(R.string.dialog_cancel),
             hexLabel = stringResource(R.string.color_picker_hex_label),
+            recentColors = recentColors,
             onDismiss = { showColorPickerDialog = false },
             onConfirm = { chosen ->
                 accentColorDemo = chosen
+                colorHistoryViewModel.recordColor(chosen.toHexString())
                 showColorPickerDialog = false
             }
         )
