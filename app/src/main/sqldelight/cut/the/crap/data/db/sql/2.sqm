@@ -1,0 +1,17 @@
+-- v2 -> v3 : mirrors Room MIGRATION_2_3
+CREATE TABLE IF NOT EXISTS handle_tag_table (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    text TEXT NOT NULL,
+    type INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    lastUsed INTEGER NOT NULL,
+    usageCount INTEGER NOT NULL,
+    isFavorite INTEGER NOT NULL,
+    category TEXT,
+    color TEXT,
+    isArchived INTEGER NOT NULL,
+    sortOrder INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS index_handle_tag_table_type ON handle_tag_table(type);
+CREATE INDEX IF NOT EXISTS index_handle_tag_table_lastUsed ON handle_tag_table(lastUsed);
+CREATE UNIQUE INDEX IF NOT EXISTS index_handle_tag_table_text_type ON handle_tag_table(text, type);

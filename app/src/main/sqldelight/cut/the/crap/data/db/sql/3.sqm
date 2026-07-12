@@ -1,0 +1,14 @@
+-- v3 -> v4 : mirrors Room MIGRATION_3_4
+CREATE TABLE IF NOT EXISTS content_items_table (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    text TEXT NOT NULL,
+    created INTEGER NOT NULL,
+    lastModified INTEGER NOT NULL,
+    sortOrder INTEGER NOT NULL,
+    isFavorite INTEGER NOT NULL,
+    category TEXT,
+    isActive INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS index_content_items_table_created ON content_items_table(created);
+CREATE INDEX IF NOT EXISTS index_content_items_table_lastModified ON content_items_table(lastModified);
+CREATE INDEX IF NOT EXISTS index_content_items_table_sortOrder ON content_items_table(sortOrder);

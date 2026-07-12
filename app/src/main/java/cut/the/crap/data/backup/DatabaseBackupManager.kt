@@ -14,7 +14,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import cut.the.crap.data.db.AppDatabase
+import app.cash.sqldelight.db.SqlDriver
 import cut.the.crap.data.preferences.SettingsRepository
 import cut.the.crap.ui.content.settings.BackupFrequency
 import kotlinx.coroutines.flow.first
@@ -46,7 +46,7 @@ private val Context.backupDataStore: DataStore<Preferences> by preferencesDataSt
 class DatabaseBackupManager constructor(
     private val context: Context,
     // Lazy so injecting the manager doesn't eagerly open the database.
-    private val database: Lazy<AppDatabase>,
+    private val database: Lazy<SqlDriver>,
     private val settingsRepository: SettingsRepository
 ) {
     private object PreferencesKeys {
@@ -59,10 +59,10 @@ class DatabaseBackupManager constructor(
         private const val BACKUP_PREFIX = "ShareCare_Backup"
         private const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000
 
-        // Keep in sync with the @Database(version = ...) value in AppDatabase.
+        // Keep in sync with the SQLDelight schema version (see DatabaseFactory).
         // A backup whose user_version is higher than this would require a
-        // downgrade, which Room cannot do — such backups are rejected.
-        private const val CURRENT_SCHEMA_VERSION = 5
+        // downgrade, which we cannot do — such backups are rejected.
+        private const val CURRENT_SCHEMA_VERSION = cut.the.crap.data.db.CURRENT_SCHEMA_VERSION
     }
 
     /**
@@ -390,7 +390,7 @@ class DatabaseBackupManager constructor(
             val validation = validateBackup(tempFile)
             validation.exceptionOrNull()?.let { return Result.failure(it) }
 
-            // Replace the live database file. Close Room first so the file isn't held open.
+            // Replace the live database file. Close the driver first so the file isn't held open.
             database.value.close()
 
             val dbFile = context.getDatabasePath(DATABASE_NAME)

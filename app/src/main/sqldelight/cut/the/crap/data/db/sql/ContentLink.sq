@@ -1,0 +1,49 @@
+import kotlin.Boolean;
+import kotlin.Int;
+
+-- Links. Legacy table name kept so existing Room-created databases open unchanged.
+CREATE TABLE IF NOT EXISTS tweets_table (
+    id INTEGER AS Int PRIMARY KEY AUTOINCREMENT NOT NULL,
+    link TEXT NOT NULL,
+    added INTEGER NOT NULL,
+    position INTEGER AS Int NOT NULL DEFAULT 0,
+    description TEXT NOT NULL DEFAULT '',
+    favourite INTEGER AS Boolean NOT NULL DEFAULT 0,
+    hideItem INTEGER AS Boolean NOT NULL DEFAULT 0
+);
+
+-- Room's @Insert(REPLACE) with autoGenerate treats id == 0 as "new row" (NULL pk).
+insert:
+INSERT OR REPLACE INTO tweets_table(link, added, position, description, favourite, hideItem)
+VALUES (?, ?, ?, ?, ?, ?);
+
+insertWithId:
+INSERT OR REPLACE INTO tweets_table(id, link, added, position, description, favourite, hideItem)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE tweets_table
+SET link = ?, added = ?, position = ?, description = ?, favourite = ?, hideItem = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM tweets_table WHERE id = ?;
+
+getById:
+SELECT * FROM tweets_table WHERE id = ?;
+
+getItems:
+SELECT * FROM tweets_table
+WHERE (:includeFavourite IS NULL OR favourite = :includeFavourite)
+  AND (:includeHidden IS NULL OR hideItem = :includeHidden)
+  AND (:linkSubstring IS NULL OR link LIKE '%' || :linkSubstring || '%')
+  AND (:startTime IS NULL OR added >= :startTime)
+  AND (:endTime IS NULL OR added <= :endTime)
+ORDER BY
+  CASE WHEN :sortByListPosition THEN position END ASC,
+  CASE WHEN :sortByDate THEN added END DESC;
+
+getByTimeRange:
+SELECT * FROM tweets_table
+WHERE added BETWEEN :start AND :end
+ORDER BY added DESC;

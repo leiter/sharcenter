@@ -1,8 +1,18 @@
 package cut.the.crap.di
 
-import androidx.room.Room
+import app.cash.sqldelight.db.SqlDriver
 import cut.the.crap.data.backup.DatabaseBackupManager
-import cut.the.crap.data.db.AppDatabase
+import cut.the.crap.data.db.ContentItemDao
+import cut.the.crap.data.db.ContentLinkDao
+import cut.the.crap.data.db.KeywordDao
+import cut.the.crap.data.db.SubjectDao
+import cut.the.crap.data.db.SqlDelightContentItemDao
+import cut.the.crap.data.db.SqlDelightContentLinkDao
+import cut.the.crap.data.db.SqlDelightKeywordDao
+import cut.the.crap.data.db.SqlDelightSubjectDao
+import cut.the.crap.data.db.createDatabase
+import cut.the.crap.data.db.createDriver
+import cut.the.crap.data.db.sql.ShareDatabase
 import cut.the.crap.data.domain.ContentItemRepository
 import cut.the.crap.data.domain.ContentItemRepositoryImpl
 import cut.the.crap.data.domain.ContentLinkRepository
@@ -11,36 +21,28 @@ import cut.the.crap.data.domain.KeywordRepository
 import cut.the.crap.data.domain.KeywordRepositoryImpl
 import cut.the.crap.data.domain.SubjectRepository
 import cut.the.crap.data.domain.SubjectRepositoryImpl
-import cut.the.crap.tools.MIGRATION_1_2
-import cut.the.crap.tools.MIGRATION_2_3
-import cut.the.crap.tools.MIGRATION_3_4
-import cut.the.crap.tools.MIGRATION_4_5
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /**
- * Database + DAO + local-repository bindings (formerly the Hilt `AppModule`).
- * `single` mirrors the previous `@Singleton` scoping.
+ * Database + DAO + local-repository bindings.
+ *
+ * The store is SQLDelight (was Room); the DAO contracts are unchanged, so the
+ * repositories above them are untouched. `single` mirrors the original `@Singleton` scoping.
  */
 val databaseModule = module {
-    single {
-        Room.databaseBuilder(
-            androidContext(),
-            AppDatabase::class.java,
-            "app_database"
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
-            .build()
-    }
+    single<SqlDriver> { createDriver(androidContext()) }
+    single { createDatabase(get()) }
 
-    single { get<AppDatabase>().contentLinkDao() }
-    single { get<AppDatabase>().keywordDao() }
-    single { get<AppDatabase>().contentItemDao() }
-    single { get<AppDatabase>().subjectDao() }
+    single<ContentLinkDao> { SqlDelightContentLinkDao(get<ShareDatabase>().contentLinkQueries) }
+    single<KeywordDao> { SqlDelightKeywordDao(get<ShareDatabase>().keywordQueries) }
+    single<ContentItemDao> { SqlDelightContentItemDao(get<ShareDatabase>().contentItemQueries) }
+    single<SubjectDao> { SqlDelightSubjectDao(get<ShareDatabase>().subjectQueries) }
 
     // Lazy handle so injecting the backup manager doesn't eagerly open the database.
-    single<Lazy<AppDatabase>> { lazy { get<AppDatabase>() } }
+    single<Lazy<SqlDriver>> { lazy { get<SqlDriver>() } }
 
     singleOf(::ContentLinkRepositoryImpl) bind ContentLinkRepository::class
     singleOf(::KeywordRepositoryImpl) bind KeywordRepository::class

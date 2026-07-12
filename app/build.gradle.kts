@@ -5,8 +5,20 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.sqldelight)
+}
+
+sqldelight {
+    databases {
+        create("ShareDatabase") {
+            packageName.set("cut.the.crap.data.db.sql")
+            // Schema version is derived from the migration files (1..4.sqm -> version 5),
+            // which matches the user_version Room already writes, so existing installs
+            // open without a spurious upgrade.
+            migrationOutputDirectory.set(layout.buildDirectory.dir("generated/sqldelight/migrations"))
+        }
+    }
 }
 
 android {
@@ -23,11 +35,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
-        }
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments["room.schemaLocation"] = "$projectDir/schemas"
-            }
         }
     }
 
@@ -80,6 +87,9 @@ android {
             initWith(getByName("debug"))
             isMinifyEnabled = false
             isShrinkResources = false
+            // Dependencies (e.g. SQLDelight's AAR) only publish debug/release variants,
+            // so resolve this custom build type against their debug variant.
+            matchingFallbacks += "debug"
         }
     }
     // Run instrumented tests against the non-minified `instrumentation` build type.
@@ -107,14 +117,6 @@ android {
         lintConfig = file("lint.xml")
         abortOnError = false
     }
-
-    // Expose the exported Room schemas to instrumented tests so MigrationTestHelper
-    // can load them (used by MigrationTest to validate v4 -> v5). Phase 0 safety net.
-    sourceSets {
-        getByName("androidTest") {
-            assets.srcDirs(files("$projectDir/schemas"))
-        }
-    }
 }
 
 dependencies {
@@ -132,10 +134,10 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.lifecycle.runtime.ktx)
 
-    implementation(libs.room.runtime)
-    kapt(libs.room.compiler)
-    // Optional: Room Kotlin Extensions and Coroutines support
-    implementation(libs.room.ktx)
+    // SQLDelight: multiplatform-capable DB layer (Android/iOS/desktop/macOS drivers)
+    implementation(libs.sqldelight.android.driver)
+    implementation(libs.sqldelight.coroutines)
+    implementation(libs.sqldelight.primitive.adapters)
 
     implementation(libs.compose.material.icons.extended)
 
@@ -168,11 +170,12 @@ dependencies {
     // Koin dependency-graph verification
     testImplementation(libs.koin.test)
     testImplementation(libs.koin.test.junit4)
+    // SQLDelight JDBC driver: runs the schema + migrations on the JVM (this is the same
+    // driver desktop/macOS will use), so migrations are verified without a device.
+    testImplementation(libs.sqldelight.sqlite.driver)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.espresso.core)
-    // Room migration testing (Phase 0 baseline safety net)
-    androidTestImplementation(libs.room.testing)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.tooling)
