@@ -2,11 +2,13 @@ package cut.the.crap.di
 
 import cut.the.crap.platform.AndroidClipboard
 import cut.the.crap.platform.AndroidFileAccess
+import cut.the.crap.platform.AndroidLoginFlow
 import cut.the.crap.platform.AndroidNotifier
 import cut.the.crap.platform.AndroidSharer
 import cut.the.crap.platform.AndroidUrlOpener
 import cut.the.crap.platform.Clipboard
 import cut.the.crap.platform.FileAccess
+import cut.the.crap.platform.LoginFlow
 import cut.the.crap.platform.Notifier
 import cut.the.crap.platform.Sharer
 import cut.the.crap.platform.UrlOpener
@@ -32,4 +34,5 @@ val platformModule = module {
     single<Clipboard> { AndroidClipboard(androidContext()) }
     single<UrlOpener> { AndroidUrlOpener(androidContext()) }
     single<Sharer> { AndroidSharer(androidContext()) }
+    single<LoginFlow> { AndroidLoginFlow(androidContext()) }
 }

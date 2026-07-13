@@ -109,7 +109,7 @@ JVM again with no Android stubs, and `LinksViewModel` is that much closer to `co
 *Note: the old "hard 10%" (8 `data/rest` repos using `StringProvider`) was already dissolved by
 the A2 work in `63c9418`; `data/rest` never touched a resource in WP2.*
 
-### WP3 — Platform seams  *(M, low-risk)* — **WP3a–d COMPLETE**
+### WP3 — Platform seams  *(M, low-risk)* — **WP3a–e COMPLETE**
 Common interfaces + Android actuals; desktop actuals are mostly trivial or no-ops.
 
 Only `Log` ended up as `expect`/`actual`. Everything else is a plain **interface + DI binding**,
@@ -125,7 +125,8 @@ because every other seam needs a `Context` on Android and an `expect object` can
 | `UrlOpener` | `Intent.ACTION_VIEW` | `Desktop.browse` | ✅ WP3d |
 | `Sharer` | `ACTION_SEND` chooser | `isSupported = false` | ✅ WP3d |
 | ~~`InstalledApps`~~ | — | — | ✅ **dissolved** (see below) |
-| `LoginFlow` (WebView) | `XLoginActivity` | **unsupported — capability flag** | WP3e |
+| `LoginFlow` (WebView) | `XLoginActivity` | `isSupported = false` | ✅ WP3e |
+| `FilePicker` | `rememberLauncherForActivityResult` | AWT `FileDialog` | ⏳ **WP3f — still needed** |
 
 **`InstalledApps` did not need to exist.** Its only live caller asked "is X installed?" purely to
 decide whether to pin an `ACTION_VIEW` intent to the X package. That is not a question shared code
@@ -134,9 +135,24 @@ became `UrlOpener.open(url, preferApp = ExternalApp.X)`, and the `PackageManager
 private detail of `AndroidUrlOpener`. `TranslateIntent.kt` (the other `PackageManager` user, 230
 lines) turned out to be **dead code** and was deleted rather than ported.
 
-**`FilePicker` is not needed either.** Picking is already done by Compose's
-`rememberLauncherForActivityResult` in the UI; only *reading* the result crossed the boundary, and
-that is `FileAccess` (WP3c).
+> ⚠️ **Correction (WP3e).** WP3d claimed "`FilePicker` is not needed — picking is already done by
+> Compose's `rememberLauncherForActivityResult`". **That was wrong**, and it was wrong because the
+> metric was wrong: I was counting `import android.*` lines, which misses both fully-qualified
+> usages *and* `androidx.activity.*`. `rememberLauncherForActivityResult` /
+> `ActivityResultContracts` are **`androidx.activity.compose`, Android-only** — they do not exist
+> in CMP common. Three screens use them (`LinksScreen`, `PostsScreen`, `SettingsScreen`), so the
+> seam is real and is now **WP3f**. Lesson: *count the coupling you have, not the coupling your
+> grep can see.*
+>
+> `BackHandler` (`PostsScreen`, `MySearchBar`) is **not** a seam — CMP ships
+> `org.jetbrains.compose.ui:ui-backhandler` for every target, so it is a one-line import swap.
+
+**`LoginFlow` is the one seam that stays unsupported (WP3e).** Sign-in scrapes session cookies out
+of a WebView; a desktop JVM has none, and a fake login is worse than no login. So the capability is
+declared, not faked: the settings screen renders the "X Login" row only `if (loginFlow.isSupported)`
+and **Manual X Credentials** — which works on every platform — stays as the way in. There is no
+result to await: the flow persists credentials itself and the screen already renders from that
+state, which is what keeps Android's activity-result plumbing out of common code.
 
 **Gotcha (WP3d):** `TwitterIntent`/`FacebookIntent` built their URLs with `android.net.Uri.encode`.
 Swapping that for a common encoder is invisible to the compiler *and* to a smoke test — a wrong
@@ -230,13 +246,19 @@ couplings are gone.
 - ✅ **WP1 complete** — CMP toolchain, Coil 3, CMP navigation. (`@Preview` deferred to WP7.)
 - ✅ **WP2 complete** — resources in `:shared/commonMain/composeResources`; `:app` has no
   `R.string`/`R.plurals`/`R.drawable` left (only 3 `R.mipmap` in an Android-only `@Preview`).
-- ✅ **WP3a–d complete** — `Log`, `Notifier`, `FileAccess`, `BackupManager`, `Clipboard`,
-  `UrlOpener`, `Sharer`. `InstalledApps` and `FilePicker` proved unnecessary; `TranslateIntent`
-  was dead code and is gone. The intent builders now live in `commonMain`.
+- ✅ **WP3a–e complete** — `Log`, `Notifier`, `FileAccess`, `BackupManager`, `Clipboard`,
+  `UrlOpener`, `Sharer`, `LoginFlow`. `InstalledApps` proved unnecessary; `TranslateIntent` was
+  dead code and is gone. The intent builders now live in `commonMain`.
 - ⏳ **Open: Decision C** (desktop feature parity; recommend reduced v1 + capability flags).
+  `LoginFlow` is the first concrete instance of the capability-flag pattern this decision needs.
 
-**UI files importing `android.*`: 14 (WP3 start) → 1.** The one left is `XLoginActivity`
-(WebView), which is Android-only by design and is WP3e's capability flag.
+**Android coupling in the UI layer (`android.*` imports *and* fully-qualified usages): 14 → 0**,
+apart from `XLoginActivity` itself, which is a WebView and Android-only by design — it is now
+behind the `LoginFlow` seam, so no other screen names it.
 
-**Next step:** WP3e — `LoginFlow` capability flag, so the desktop build can compile without a
-WebView and the UI can hide the X-login affordance rather than offer a dead button. Then WP4.
+**Remaining, and the reason WP3f exists:** 4 UI files still use `androidx.activity.*`, which is
+Android-only and was invisible to the `android.*` metric.
+
+**Next step:** WP3f — the `FilePicker` seam (`rememberLauncherForActivityResult` in `LinksScreen`,
+`PostsScreen`, `SettingsScreen`) plus the `BackHandler` import swap. That closes WP3 for real.
+Then WP4.

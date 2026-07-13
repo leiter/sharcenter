@@ -2,7 +2,10 @@ package cut.the.crap.ui.content.settings
 
 import cut.the.crap.platform.toPlatformUri
 
+import cut.the.crap.platform.LoginFlow
+import cut.the.crap.platform.LoginReason
 import cut.the.crap.platform.Notifier
+import cut.the.crap.platform.PlatformUri
 
 import org.koin.compose.koinInject
 
@@ -78,7 +81,6 @@ import cut.the.crap.shared.resources.settings_timestamp_format
 import cut.the.crap.shared.resources.settings_title
 import cut.the.crap.shared.resources.settings_toast_x_credentials_cleared
 import cut.the.crap.shared.resources.settings_toast_x_credentials_saved
-import cut.the.crap.shared.resources.settings_toast_x_login_success
 import cut.the.crap.shared.resources.settings_version
 import cut.the.crap.shared.resources.settings_x_api_credentials
 import cut.the.crap.shared.resources.settings_x_cookies_help
@@ -89,7 +91,6 @@ import cut.the.crap.shared.resources.settings_x_logged_in
 import cut.the.crap.shared.resources.settings_x_manual_credentials
 import cut.the.crap.shared.resources.settings_x_not_logged_in
 import androidx.compose.ui.graphics.Color
-import cut.the.crap.ui.XLoginActivity
 import cut.the.crap.ui.components.BottomNavigationBar
 import org.koin.androidx.compose.koinViewModel
 import cut.the.crap.ui.components.ColorHistoryViewModel
@@ -114,8 +115,7 @@ fun SettingsScreen(
     val currentSettings by settings.collectAsState()
     val context = LocalContext.current
     val notifier: Notifier = koinInject()
-    // Resolved in composition; the launcher callback below is not composable.
-    val xLoginSuccessMessage = stringResource(Res.string.settings_toast_x_login_success)
+    val loginFlow: LoginFlow = koinInject()
     var showPostsDateRangeDialog by remember { mutableStateOf(false) }
     var showLinksDateRangeDialog by remember { mutableStateOf(false) }
     var showPostsFavoriteFilterDialog by remember { mutableStateOf(false) }
@@ -136,23 +136,15 @@ fun SettingsScreen(
     var showBackupFrequencyDialog by remember { mutableStateOf(false) }
     var showBackupRetentionDialog by remember { mutableStateOf(false) }
     var developerTapCount by remember { mutableIntStateOf(0) }
-    var pendingRestoreUri by remember { mutableStateOf<android.net.Uri?>(null) }
-
-    // X Login launcher
-    val xLoginLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == XLoginActivity.RESULT_LOGIN_SUCCESS) {
-            notifier.show(xLoginSuccessMessage)
-        }
-    }
+    var pendingRestoreUri by remember { mutableStateOf<PlatformUri?>(null) }
 
     // Database restore file picker (.db backup). Downloads exposes these as
     // octet-stream, so we accept any type and validate the contents on restore.
     val restoreFilePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        pendingRestoreUri = uri // null if the user cancelled; triggers confirm dialog
+        // Converted at the boundary so the Android Uri never enters screen state.
+        pendingRestoreUri = uri?.toPlatformUri() // null if cancelled; triggers confirm dialog
     }
 
     pendingRestoreUri?.let { uri ->
@@ -164,7 +156,7 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    action(FileAction.RestoreDatabase(uri.toPlatformUri()))
+                    action(FileAction.RestoreDatabase(uri))
                     pendingRestoreUri = null
                 }) { Text(stringResource(Res.string.settings_restore_confirm)) }
             },
@@ -566,20 +558,23 @@ fun SettingsScreen(
                     )
                 }
 
-                item {
-                    val hasCredentials = currentSettings.xAuthToken != null && currentSettings.xCt0Token != null
-                    SettingsItem(
-                        icon = Icons.Default.Key,
-                        title = "X Login",
-                        subtitle = if (hasCredentials) stringResource(Res.string.settings_x_logged_in) else stringResource(Res.string.settings_x_not_logged_in),
-                        onClick = {
-                            val intent = XLoginActivity.createIntent(
-                                context,
-                                if (hasCredentials) XLoginActivity.REASON_AUTH_EXPIRED else XLoginActivity.REASON_INITIAL_SETUP
-                            )
-                            xLoginLauncher.launch(intent)
-                        }
-                    )
+                // Only offered where the platform can actually run the sign-in flow. On a
+                // platform without a WebView there is no button here at all — the manual
+                // credential item below is the way in.
+                if (loginFlow.isSupported) {
+                    item {
+                        val hasCredentials = currentSettings.xAuthToken != null && currentSettings.xCt0Token != null
+                        SettingsItem(
+                            icon = Icons.Default.Key,
+                            title = "X Login",
+                            subtitle = if (hasCredentials) stringResource(Res.string.settings_x_logged_in) else stringResource(Res.string.settings_x_not_logged_in),
+                            onClick = {
+                                loginFlow.launch(
+                                    if (hasCredentials) LoginReason.SessionExpired else LoginReason.InitialSetup
+                                )
+                            }
+                        )
+                    }
                 }
 
                 // Manual credential entry as fallback
