@@ -22,7 +22,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -40,8 +39,10 @@ import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.ShareLinksTask
 import cut.the.crap.intent.FacebookIntent
 import cut.the.crap.intent.TwitterIntent
-import cut.the.crap.tools.copyToClipboard
 import cut.the.crap.intent.extractTweetId
+import cut.the.crap.platform.Clipboard
+import cut.the.crap.platform.Sharer
+import cut.the.crap.platform.UrlOpener
 import cut.the.crap.tools.insertText
 import android.widget.Toast
 import cut.the.crap.ui.components.api.Action
@@ -133,6 +134,12 @@ class MainActivity : ComponentActivity() {
 
     val youTubeMetadataBackfiller: YouTubeMetadataBackfiller by inject()
 
+    private val clipboard: Clipboard by inject()
+
+    private val urlOpener: UrlOpener by inject()
+
+    private val sharer: Sharer by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
 
         enableEdgeToEdge()
@@ -173,7 +180,16 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
 
                 val action: (Action) -> Unit = {
-                    handleAction(it, linksViewModel, postsViewModel, navController, this)
+                    handleAction(
+                        action = it,
+                        linksViewModel = linksViewModel,
+                        postsViewModel = postsViewModel,
+                        navController = navController,
+                        activity = this,
+                        clipboard = clipboard,
+                        urlOpener = urlOpener,
+                        sharer = sharer,
+                    )
                 }
 
                 Surface(
@@ -198,17 +214,16 @@ private fun handleAction(
     linksViewModel: LinksViewModel,
     postsViewModel: PostsViewModel,
     navController: NavHostController,
-    activity: ComponentActivity
+    activity: ComponentActivity,
+    clipboard: Clipboard,
+    urlOpener: UrlOpener,
+    sharer: Sharer,
 ) {
     when(action){
         // Handle Activity-level actions (type-safe, no casts!)
-        is ContentLinkAction.Open -> activity.startActivity(
-            Intent(Intent.ACTION_VIEW, action.item.link.toUri())
-        )
-        is ContentLinkAction.OpenProfile -> activity.startActivity(
-            Intent(Intent.ACTION_VIEW, action.url.toUri())
-        )
-        is ContentLinkAction.CopyToClipboard -> copyToClipboard(activity, action.item.link)
+        is ContentLinkAction.Open -> urlOpener.open(action.item.link)
+        is ContentLinkAction.OpenProfile -> urlOpener.open(action.url)
+        is ContentLinkAction.CopyToClipboard -> clipboard.copy(action.item.link)
 
         is ContentLinkAction.ComposePost -> {
             // Bridge Links → Posts: seed the editor with this link's URL + saved markers,
@@ -220,7 +235,7 @@ private fun handleAction(
             }
         }
 
-        is ContentItemAction.CopyToClipboard -> copyToClipboard(activity, action.contentItem.text)
+        is ContentItemAction.CopyToClipboard -> clipboard.copy(action.contentItem.text)
 
         is FileAction.BackupDatabase -> {
             // Access DatabaseBackupManager from MainActivity
@@ -272,17 +287,12 @@ private fun handleAction(
         }
 
         is TextAction.PasteFromClipboard -> {
-            // Get text from clipboard
-            val clipboardManager = activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-            val clipData = clipboardManager.primaryClip
-            if (clipData != null && clipData.itemCount > 0) {
-                val pastedText = clipData.getItemAt(0).text?.toString() ?: ""
-                if (pastedText.isNotEmpty()) {
-                    // Insert the pasted text into the current content
-                    val currentText = postsViewModel.screenState.value.focusedContentText
-                    val updatedText = currentText.insertText(pastedText)
-                    postsViewModel.consumeAction(TextAction.EditContentText(updatedText))
-                }
+            val pastedText = clipboard.paste()
+            if (!pastedText.isNullOrEmpty()) {
+                // Insert the pasted text into the current content
+                val currentText = postsViewModel.screenState.value.focusedContentText
+                val updatedText = currentText.insertText(pastedText)
+                postsViewModel.consumeAction(TextAction.EditContentText(updatedText))
             }
         }
 
@@ -290,7 +300,7 @@ private fun handleAction(
             // Copy the current editor content to the clipboard
             val currentText = postsViewModel.screenState.value.focusedContentText.newText
             if (currentText.isNotEmpty()) {
-                copyToClipboard(activity, currentText)
+                clipboard.copy(currentText)
             }
         }
 
@@ -298,10 +308,7 @@ private fun handleAction(
             // Post the current draft text as a new tweet on Twitter/X
             val currentText = postsViewModel.screenState.value.focusedContentText.newText
             if (currentText.isNotEmpty()) {
-                val twitterIntent = TwitterIntent.PostTweet(text = currentText)
-                activity.startActivity(
-                    Intent(Intent.ACTION_VIEW, twitterIntent.url.toUri())
-                )
+                urlOpener.open(TwitterIntent.PostTweet(text = currentText).url)
             }
         }
 
@@ -309,73 +316,45 @@ private fun handleAction(
             // Share the current draft text as a new post on Facebook
             val currentText = postsViewModel.screenState.value.focusedContentText.newText
             if (currentText.isNotEmpty()) {
-                val facebookIntent = FacebookIntent.SharePost(text = currentText)
                 // Facebook's web sharer does not reliably prefill the post text, so copy it to the
                 // clipboard first so the user can paste it into the composer.
-                copyToClipboard(activity, currentText)
-                activity.startActivity(
-                    Intent(Intent.ACTION_VIEW, facebookIntent.url.toUri())
-                )
+                clipboard.copy(currentText)
+                urlOpener.open(FacebookIntent.SharePost(text = currentText).url)
             }
         }
 
         is TextAction.ShareContentViaSheet -> {
-            // Hand the current draft text to the native Android share sheet (ACTION_SEND).
+            // Hand the current draft text to the platform share sheet.
             val currentText = postsViewModel.screenState.value.focusedContentText.newText
             if (currentText.isNotEmpty()) {
-                val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, currentText)
-                }
+                // The chooser title is a resource, and reading the catalogue suspends.
                 activity.lifecycleScope.launch {
-                    activity.startActivity(
-                        Intent.createChooser(sendIntent, getString(Res.string.share_chooser_title))
-                    )
+                    sharer.shareText(currentText, getString(Res.string.share_chooser_title))
                 }
             }
         }
 
         is ContentItemAction.PostOnTwitter -> {
-            // Post the content as a new tweet on Twitter/X
             // TwitterIntent.PostTweet automatically extracts any URLs from the content to use as link preview
-            val twitterIntent = TwitterIntent.PostTweet(
-                text = action.contentItem.text
-            )
-
-            // Launch the Twitter/X intent
-            activity.startActivity(
-                Intent(Intent.ACTION_VIEW, twitterIntent.url.toUri())
-            )
+            urlOpener.open(TwitterIntent.PostTweet(text = action.contentItem.text).url)
         }
 
         is ContentItemAction.PostOnFacebook -> {
-            // Share the content as a new post on Facebook
             // FacebookIntent.SharePost automatically extracts any URLs from the content to use as link preview
-            val facebookIntent = FacebookIntent.SharePost(
-                text = action.contentItem.text
-            )
-
             // Facebook's web sharer does not reliably prefill the post text, so copy it to the
             // clipboard first so the user can paste it into the composer.
-            copyToClipboard(activity, action.contentItem.text)
-
-            // Launch the Facebook intent
-            activity.startActivity(
-                Intent(Intent.ACTION_VIEW, facebookIntent.url.toUri())
-            )
+            clipboard.copy(action.contentItem.text)
+            urlOpener.open(FacebookIntent.SharePost(text = action.contentItem.text).url)
         }
 
         is ContentItemAction.ShareViaSheet -> {
-            // Hand the post text to the native Android share sheet (ACTION_SEND). This exposes
-            // every installed app that accepts plain text — WhatsApp, LinkedIn, Bluesky,
-            // Mastodon, Telegram, etc. — without a dedicated intent class per network.
-            val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, action.contentItem.text)
-            }
+            // Hand the post text to the platform share sheet. This exposes every installed app
+            // that accepts plain text — WhatsApp, LinkedIn, Bluesky, Mastodon, Telegram, etc. —
+            // without a dedicated intent class per network.
             activity.lifecycleScope.launch {
-                activity.startActivity(
-                    Intent.createChooser(sendIntent, getString(Res.string.share_chooser_title))
+                sharer.shareText(
+                    action.contentItem.text,
+                    getString(Res.string.share_chooser_title),
                 )
             }
         }
@@ -402,9 +381,7 @@ private fun handleAction(
                 )
             }
 
-            activity.startActivity(
-                Intent(Intent.ACTION_VIEW, twitterIntent.url.toUri())
-            )
+            urlOpener.open(twitterIntent.url)
         }
 
         is ContentLinkAction.CreateQuote -> {
@@ -429,9 +406,7 @@ private fun handleAction(
                 )
             }
 
-            activity.startActivity(
-                Intent(Intent.ACTION_VIEW, twitterIntent.url.toUri())
-            )
+            urlOpener.open(twitterIntent.url)
         }
 
         // Route to appropriate ViewModel

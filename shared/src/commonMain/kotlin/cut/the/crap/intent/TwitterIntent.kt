@@ -1,6 +1,6 @@
 package cut.the.crap.intent
 
-import android.net.Uri
+import cut.the.crap.tools.urlEncode
 
 private const val TWITTER_BASE_URL: String = "https://twitter.com/intent/"
 
@@ -46,9 +46,9 @@ sealed interface TwitterIntent {
                 }
 
                 val path = if (attachmentUrl.isEmpty()) {
-                    "tweet?text=${Uri.encode(preparedText)}"
+                    "tweet?text=${preparedText.urlEncode()}"
                 } else {
-                    "tweet?text=${Uri.encode(preparedText)}&url=${Uri.encode(attachmentUrl)}"
+                    "tweet?text=${preparedText.urlEncode()}&url=${attachmentUrl.urlEncode()}"
                 }
                 return "$TWITTER_BASE_URL$path"
             }
@@ -78,7 +78,7 @@ sealed interface TwitterIntent {
             get() {
                 // Quote tweets use the tweet URL as an attachment to a new tweet
                 val tweetUrl = "https://x.com/i/status/$tweetId"
-                return "${TWITTER_BASE_URL}tweet?text=${Uri.encode(comment)}&url=${Uri.encode(tweetUrl)}"
+                return "${TWITTER_BASE_URL}tweet?text=${comment.urlEncode()}&url=${tweetUrl.urlEncode()}"
             }
     }
 
@@ -92,7 +92,7 @@ sealed interface TwitterIntent {
         val replyText: String,
     ) : TwitterIntent {
         override val url: String =
-            "${TWITTER_BASE_URL}tweet?in_reply_to=${Uri.encode(tweetId)}&text=${Uri.encode(replyText)}"
+            "${TWITTER_BASE_URL}tweet?in_reply_to=${tweetId.urlEncode()}&text=${replyText.urlEncode()}"
     }
 }
 

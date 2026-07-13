@@ -1,8 +1,5 @@
 package cut.the.crap.tools
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import java.net.MalformedURLException
 import java.net.URL
 import java.time.Instant
@@ -20,13 +17,6 @@ fun String.ensureTrailingSpace(): String {
 }
 
 const val CONTENT = "content_2025.txt"
-
-fun copyToClipboard(context: Context, text: String) {
-    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val clip = ClipData.newPlainText("Copied Text", text)
-    clipboard.setPrimaryClip(clip)
-    println("Text copied to clipboard")
-}
 
 // private val domainRegex = Regex("^(?:www\\.)?([^.]+)")
 private val tldRegex = Regex("\\.(com|org|net|gov|edu|io|co|uk|de|fr|es|it|us|ru|jp|cn)$")

@@ -1,6 +1,6 @@
 package cut.the.crap.intent
 
-import android.net.Uri
+import cut.the.crap.tools.urlEncode
 
 private const val FACEBOOK_BASE_URL: String = "https://www.facebook.com/"
 private const val FACEBOOK_SHARER_URL: String = "https://www.facebook.com/sharer/sharer.php"
@@ -49,10 +49,10 @@ sealed interface FacebookIntent {
                 return if (attachmentUrl.isEmpty()) {
                     // Facebook doesn't have a direct API for posting text-only via URL intent
                     // This opens the share dialog without a URL
-                    "${FACEBOOK_BASE_URL}dialog/share?quote=${Uri.encode(preparedText)}"
+                    "${FACEBOOK_BASE_URL}dialog/share?quote=${preparedText.urlEncode()}"
                 } else {
                     // Share with URL and optional quote
-                    "$FACEBOOK_SHARER_URL?u=${Uri.encode(attachmentUrl)}&quote=${Uri.encode(preparedText)}"
+                    "$FACEBOOK_SHARER_URL?u=${attachmentUrl.urlEncode()}&quote=${preparedText.urlEncode()}"
                 }
             }
     }
@@ -69,9 +69,9 @@ sealed interface FacebookIntent {
         override val url: String
             get() {
                 return if (quote.isNullOrEmpty()) {
-                    "$FACEBOOK_SHARER_URL?u=${Uri.encode(urlToShare)}"
+                    "$FACEBOOK_SHARER_URL?u=${urlToShare.urlEncode()}"
                 } else {
-                    "$FACEBOOK_SHARER_URL?u=${Uri.encode(urlToShare)}&quote=${Uri.encode(quote)}"
+                    "$FACEBOOK_SHARER_URL?u=${urlToShare.urlEncode()}&quote=${quote.urlEncode()}"
                 }
             }
     }
@@ -86,7 +86,7 @@ sealed interface FacebookIntent {
         val comment: String,
     ) : FacebookIntent {
         override val url: String
-            get() = "$FACEBOOK_SHARER_URL?u=${Uri.encode(postUrl)}&quote=${Uri.encode(comment)}"
+            get() = "$FACEBOOK_SHARER_URL?u=${postUrl.urlEncode()}&quote=${comment.urlEncode()}"
     }
 
     /**

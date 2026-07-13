@@ -109,18 +109,41 @@ JVM again with no Android stubs, and `LinksViewModel` is that much closer to `co
 *Note: the old "hard 10%" (8 `data/rest` repos using `StringProvider`) was already dissolved by
 the A2 work in `63c9418`; `data/rest` never touched a resource in WP2.*
 
-### WP3 — Platform seams (`expect`/`actual`)  *(M, low-risk)*
+### WP3 — Platform seams  *(M, low-risk)* — **WP3a–d COMPLETE**
 Common interfaces + Android actuals; desktop actuals are mostly trivial or no-ops.
-| Seam | Android actual | Desktop actual |
-|---|---|---|
-| `Logger` | `android.util.Log` | stdout |
-| `Notifier` (Toast) | `Toast` | Compose snackbar |
-| `Clipboard` | `ClipboardManager` | AWT |
-| `Sharer` (Intent) | `ACTION_SEND` | open URL / copy |
-| `UrlOpener` | `Intent.ACTION_VIEW` | `Desktop.browse` |
-| `FilePicker` (SAF/MediaStore) | SAF | AWT `FileDialog` |
-| `InstalledApps` | `PackageManager` | returns `false` |
-| `LoginFlow` (WebView) | `XLoginActivity` | **unsupported — capability flag** |
+
+Only `Log` ended up as `expect`/`actual`. Everything else is a plain **interface + DI binding**,
+because every other seam needs a `Context` on Android and an `expect object` cannot carry state.
+
+| Seam | Android | Desktop | Status |
+|---|---|---|---|
+| `Log` | `android.util.Log` | stdout/stderr | ✅ WP3a |
+| `Notifier` | `Toast` | `SharedFlow` for a snackbar | ✅ WP3b |
+| `FileAccess` | `ContentResolver` | `java.io.File` | ✅ WP3c |
+| `BackupManager` | MediaStore/SAF | *(WP8)* | ✅ WP3c |
+| `Clipboard` | `ClipboardManager` | AWT | ✅ WP3d |
+| `UrlOpener` | `Intent.ACTION_VIEW` | `Desktop.browse` | ✅ WP3d |
+| `Sharer` | `ACTION_SEND` chooser | `isSupported = false` | ✅ WP3d |
+| ~~`InstalledApps`~~ | — | — | ✅ **dissolved** (see below) |
+| `LoginFlow` (WebView) | `XLoginActivity` | **unsupported — capability flag** | WP3e |
+
+**`InstalledApps` did not need to exist.** Its only live caller asked "is X installed?" purely to
+decide whether to pin an `ACTION_VIEW` intent to the X package. That is not a question shared code
+ever needs answered — it only ever wanted *the URL opened, preferably in the native client*. So it
+became `UrlOpener.open(url, preferApp = ExternalApp.X)`, and the `PackageManager` check is now a
+private detail of `AndroidUrlOpener`. `TranslateIntent.kt` (the other `PackageManager` user, 230
+lines) turned out to be **dead code** and was deleted rather than ported.
+
+**`FilePicker` is not needed either.** Picking is already done by Compose's
+`rememberLauncherForActivityResult` in the UI; only *reading* the result crossed the boundary, and
+that is `FileAccess` (WP3c).
+
+**Gotcha (WP3d):** `TwitterIntent`/`FacebookIntent` built their URLs with `android.net.Uri.encode`.
+Swapping that for a common encoder is invisible to the compiler *and* to a smoke test — a wrong
+encoding still yields a valid URL, just with mangled text in it. `Uri.encode`'s safe set is
+`[A-Za-z0-9]` + `_-!.~'()*` (note the apostrophe, which a strict RFC 3986 encoder would escape,
+changing every tweet containing "don't"). `tools/urlEncode` reproduces it exactly and is pinned by
+22 JVM tests — which also prove the share URLs are correct *off* Android, where `Uri` does not exist.
 
 ### WP4 — JVM stdlib → multiplatform  *(M, low-risk)*
 `java.time`/`SimpleDateFormat`/`Locale`/`NumberFormat` → **kotlinx-datetime** + a small
@@ -188,9 +211,17 @@ import — expose these as capability flags rather than blocking the build.
 | **Total** | **~2 weeks** | **~3–3.5 weeks** |
 
 **Risk profile — the inverse of Phases 2–3:** *low consequence, high churn.* No user data is at
-stake and failures are **compile-time, not silent**. The danger isn't corruption, it's a long red
-build. Mitigation: land WP1 first (it's the one that can genuinely block), keep every WP
-ending green on Android, and don't move UI until its couplings are gone.
+stake. The danger isn't corruption, it's a long red build. Mitigation: land WP1 first (it's the
+one that can genuinely block), keep every WP ending green on Android, and don't move UI until its
+couplings are gone.
+
+> ⚠️ **The original claim here — "failures are compile-time, not silent" — is wrong, and it has
+> now been falsified twice.** WP2's placeholder bug (CMP substitutes only `%1$d`, never a bare
+> `%d`) compiled, passed 212 tests, logged nothing, and broke *every plural in the app*; it was
+> caught only by looking at the running screen. WP3d's `Uri.encode` swap had the same shape: a
+> wrong encoder still produces a *valid* URL, just with the wrong text in it.
+> **Anything that resolves at runtime — resources, URLs, DI, `startActivity` flags — must be
+> proven at runtime.** A green build is not evidence about any of them.
 
 ## 5. Status / next step
 - ✅ **Decision A decided + done** (A2: typed errors; the UI localises). Extended to the
@@ -199,8 +230,13 @@ ending green on Android, and don't move UI until its couplings are gone.
 - ✅ **WP1 complete** — CMP toolchain, Coil 3, CMP navigation. (`@Preview` deferred to WP7.)
 - ✅ **WP2 complete** — resources in `:shared/commonMain/composeResources`; `:app` has no
   `R.string`/`R.plurals`/`R.drawable` left (only 3 `R.mipmap` in an Android-only `@Preview`).
+- ✅ **WP3a–d complete** — `Log`, `Notifier`, `FileAccess`, `BackupManager`, `Clipboard`,
+  `UrlOpener`, `Sharer`. `InstalledApps` and `FilePicker` proved unnecessary; `TranslateIntent`
+  was dead code and is gone. The intent builders now live in `commonMain`.
 - ⏳ **Open: Decision C** (desktop feature parity; recommend reduced v1 + capability flags).
 
-**Next step:** WP3 — platform seams (`expect`/`actual`): Logger, Notifier(Toast), Clipboard,
-Sharer, UrlOpener, FilePicker, InstalledApps, LoginFlow. WP2 already surfaced most of the Toast
-call sites, so the `Notifier` seam has a clear shape.
+**UI files importing `android.*`: 14 (WP3 start) → 1.** The one left is `XLoginActivity`
+(WebView), which is Android-only by design and is WP3e's capability flag.
+
+**Next step:** WP3e — `LoginFlow` capability flag, so the desktop build can compile without a
+WebView and the UI can hide the X-login affordance rather than offer a dead button. Then WP4.
