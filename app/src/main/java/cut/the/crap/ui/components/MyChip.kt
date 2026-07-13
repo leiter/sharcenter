@@ -40,30 +40,6 @@ import cut.the.crap.ui.theme.customClick
 import cut.the.crap.ui.theme.textDependentHeight
 import cut.the.crap.ui.theme.textDependentSize
 
-enum class ActiveState {
-    Disabled, Default, Include, Exclude;
-
-    fun click(): ActiveState {
-        return when (this.ordinal) {
-            Disabled.ordinal -> Disabled
-            Default.ordinal -> Include
-            Include.ordinal -> Exclude
-            Exclude.ordinal -> Default
-            else -> Default
-        }
-    }
-
-    fun toBoolean(): Boolean? {
-        return when (this.ordinal) {
-            Disabled.ordinal -> null
-            Default.ordinal -> null
-            Include.ordinal -> true
-            Exclude.ordinal -> false
-            else -> null
-        }
-    }
-}
-
 enum class DateType {
     START, END
 }

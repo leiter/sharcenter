@@ -282,19 +282,36 @@ an Activity, and nothing else names it.
 **WP3 is closed.** Every platform seam exists, has an Android and a desktop implementation, and is
 verified on a real device.
 
-**Next step: the compile gate — and it should have come sooner.** Everything above was verified by
-an *Android* build, which by construction cannot tell you whether the code would compile in
-`commonMain`; `:app` resolves `android.*` and `androidx.activity.*` perfectly well. That left a
-grep as the only check, and the grep was wrong twice (WP3c's fully-qualified `Uri`, WP3d's
-`FilePicker` claim). WP3f then produced the proof: the desktop target caught a compile error in
-`FilePicker.desktop.kt` that the green Android build had said nothing about.
+### The compile gate — ✅ DONE (and it should have come sooner)
 
-So before WP4/WP5, move the code that is *already* clean — `ColorPicker`, the pure `tools/`
-helpers, the leaf components — into `shared/commonMain`, so the **compiler** enforces the boundary
-from here on instead of me. `:shared` already has the Compose dependencies and a desktop target, so
-this is mostly file moves.
+Everything up to WP3f was verified by an *Android* build, which by construction **cannot tell you
+whether code would compile in `commonMain`**: `:app` resolves `android.*` and `androidx.activity.*`
+perfectly well. That left a grep as the only check, and the grep was wrong three times:
 
-After that: **spike WP5's two real unknowns early** — does `datastore-preferences-core` work
-multiplatform with a per-platform path factory, and can `UrlResolver` (which drives redirects
-manually) be rewritten off raw `okhttp3` onto Ktor? Those can invalidate the plan; WP4 cannot.
-Do the risky unknowns first and keep WP4 as filler.
+1. WP3c: a fully-qualified `android.net.Uri` in `SettingsScreen` (invisible to `^import android.`)
+2. WP3d: the "`FilePicker` is not needed" claim (invisible to a metric that ignored `androidx.*`)
+3. The gate's own first run: `SettingsModels` referencing a **fully-qualified**
+   `cut.the.crap.ui.components.ActiveState` — same blind spot, third time.
+
+So a canary set of already-clean UI now lives in `shared/commonMain` and is compiled for desktop on
+every build: the four `theme/` files, `ColorPicker`, `StateIndicators`, `SettingsModels`,
+`CharCountUtils`, and `ActiveState` (extracted from `MyChip`, whose `@Preview`s keep it in `:app`).
+**The compiler now enforces the boundary instead of me.**
+
+Three real problems surfaced the moment it ran — none of which a single-module build can produce:
+
+- **`internal` is *module*-scoped.** `ModifierExt`'s `textDependentHeight`/`textDependentSize` were
+  `internal`; moving them to `:shared` hid them from `:app`. Made public.
+- **Smart casts stop at the module boundary.** `if (settings.xAuthToken != null)` no longer
+  narrows, because Kotlin cannot prove a getter in another module is stable. Bind to a local first.
+  Expect more of these as `AppSettings`-shaped types move.
+- **A missing `getValue` import** in `FilePicker.desktop.kt` — green on Android, red on desktop.
+
+Every one of these is a fact about crossing a module boundary that WP6/WP7 would have hit *en
+masse*. They now arrive one file at a time.
+
+**Next: spike WP5's two real unknowns before doing WP4.** Does `datastore-preferences-core` work
+multiplatform with a per-platform path factory, and can `UrlResolver` — which drives redirects
+manually — be rewritten off raw `okhttp3` onto Ktor? Either can invalidate the plan. WP4
+(`java.time` → kotlinx-datetime) cannot; it is grunt work with no unknowns, so it makes better
+filler than prologue.

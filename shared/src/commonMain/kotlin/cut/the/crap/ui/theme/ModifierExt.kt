@@ -74,13 +74,13 @@ fun Modifier.conditional(
 }
 
 @Composable
-internal fun Modifier.textDependentSize(width: Dp, height: Dp): Modifier {
+fun Modifier.textDependentSize(width: Dp, height: Dp): Modifier {
     val fontScale = LocalDensity.current.fontScale
     val multiplier = if (fontScale<1f)1f else fontScale
     return this then Modifier.size(width = width*multiplier,height = height*multiplier)
 }
 @Composable
-internal fun Modifier.textDependentHeight(height: Dp): Modifier {
+fun Modifier.textDependentHeight(height: Dp): Modifier {
     val fontScale = LocalDensity.current.fontScale
     val multiplier = if (fontScale<1f)1f else fontScale
     return this then Modifier.height(height = height*multiplier)

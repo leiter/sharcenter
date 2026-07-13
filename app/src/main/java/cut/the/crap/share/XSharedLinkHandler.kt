@@ -23,8 +23,12 @@ class XSharedLinkHandler constructor(
         if (!UrlResolver.isXRedirectUrl(url)) return UrlResolution.Resolved(url, changed = false)
 
         val settings = settingsRepository.settingsFlow.first()
-        val credentials = if (settings.xAuthToken != null && settings.xCt0Token != null) {
-            UrlResolver.XCredentials(settings.xAuthToken, settings.xCt0Token)
+        // Bound to locals: AppSettings now lives in :shared, and Kotlin will not smart-cast a
+        // property declared in another module (it cannot prove the getter is stable).
+        val authToken = settings.xAuthToken
+        val ct0Token = settings.xCt0Token
+        val credentials = if (authToken != null && ct0Token != null) {
+            UrlResolver.XCredentials(authToken, ct0Token)
         } else {
             null
         }
