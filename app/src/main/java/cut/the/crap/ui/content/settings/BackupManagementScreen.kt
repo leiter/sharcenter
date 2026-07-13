@@ -1,5 +1,9 @@
 package cut.the.crap.ui.content.settings
 
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getPluralString
+
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -15,11 +19,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.action_back
+import cut.the.crap.shared.resources.backup_cd_delete_selected
+import cut.the.crap.shared.resources.backup_delete_body
+import cut.the.crap.shared.resources.backup_delete_title
+import cut.the.crap.shared.resources.backup_deleted
+import cut.the.crap.shared.resources.backup_empty_message
+import cut.the.crap.shared.resources.backup_empty_title
+import cut.the.crap.shared.resources.dialog_cancel
+import cut.the.crap.shared.resources.dialog_delete
+import cut.the.crap.shared.resources.settings_manage_backups
+import cut.the.crap.shared.resources.tag_dialog_selected_count
 import org.koin.androidx.compose.koinViewModel
 import androidx.navigation.NavHostController
 import cut.the.crap.data.backup.BackupInfo
@@ -35,6 +50,7 @@ fun BackupManagementScreen(
     viewModel: BackupViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val backups by viewModel.backups.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
@@ -53,11 +69,11 @@ fun BackupManagementScreen(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(R.string.backup_delete_title)) },
+            title = { Text(stringResource(Res.string.backup_delete_title)) },
             text = {
                 Text(
                     pluralStringResource(
-                        R.plurals.backup_delete_body, selectedUris.size, selectedUris.size
+                        Res.plurals.backup_delete_body, selectedUris.size, selectedUris.size
                     )
                 )
             },
@@ -66,19 +82,21 @@ fun BackupManagementScreen(
                     val toDelete = selectedUris.toList()
                     showDeleteConfirm = false
                     viewModel.deleteBackups(toDelete) { deleted ->
-                        Toast.makeText(
-                            context,
-                            context.resources.getQuantityString(
-                                R.plurals.backup_deleted, deleted, deleted
-                            ),
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        // The count is only known when the delete completes, so the plural
+                        // can't be hoisted into composition; resolve it in a coroutine.
+                        scope.launch {
+                            Toast.makeText(
+                                context,
+                                getPluralString(Res.plurals.backup_deleted, deleted, deleted),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                     selectedUris = emptySet()
-                }) { Text(stringResource(R.string.dialog_delete)) }
+                }) { Text(stringResource(Res.string.dialog_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.dialog_cancel)) }
+                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(Res.string.dialog_cancel)) }
             }
         )
     }
@@ -88,8 +106,8 @@ fun BackupManagementScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        if (inSelectionMode) stringResource(R.string.tag_dialog_selected_count, selectedUris.size)
-                        else stringResource(R.string.settings_manage_backups)
+                        if (inSelectionMode) stringResource(Res.string.tag_dialog_selected_count, selectedUris.size)
+                        else stringResource(Res.string.settings_manage_backups)
                     )
                 },
                 navigationIcon = {
@@ -99,7 +117,7 @@ fun BackupManagementScreen(
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
+                            contentDescription = stringResource(Res.string.action_back)
                         )
                     }
                 },
@@ -108,7 +126,7 @@ fun BackupManagementScreen(
                         IconButton(onClick = { showDeleteConfirm = true }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = stringResource(R.string.backup_cd_delete_selected)
+                                contentDescription = stringResource(Res.string.backup_cd_delete_selected)
                             )
                         }
                     }
@@ -208,12 +226,12 @@ private fun EmptyBackups(modifier: Modifier = Modifier) {
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = stringResource(R.string.backup_empty_title),
+            text = stringResource(Res.string.backup_empty_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = stringResource(R.string.backup_empty_message),
+            text = stringResource(Res.string.backup_empty_message),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center

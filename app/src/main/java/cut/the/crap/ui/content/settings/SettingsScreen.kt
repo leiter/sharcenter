@@ -1,5 +1,7 @@
 package cut.the.crap.ui.content.settings
 
+import org.jetbrains.compose.resources.getString
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,7 +15,7 @@ import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -22,7 +24,65 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.color_picker_confirm
+import cut.the.crap.shared.resources.color_picker_hex_label
+import cut.the.crap.shared.resources.color_picker_title
+import cut.the.crap.shared.resources.dialog_cancel
+import cut.the.crap.shared.resources.dialog_ok
+import cut.the.crap.shared.resources.settings_about
+import cut.the.crap.shared.resources.settings_accent_color
+import cut.the.crap.shared.resources.settings_appearance
+import cut.the.crap.shared.resources.settings_backup_database
+import cut.the.crap.shared.resources.settings_backup_database_desc
+import cut.the.crap.shared.resources.settings_backup_frequency
+import cut.the.crap.shared.resources.settings_backup_retention
+import cut.the.crap.shared.resources.settings_clear
+import cut.the.crap.shared.resources.settings_data_management
+import cut.the.crap.shared.resources.settings_default_date_range
+import cut.the.crap.shared.resources.settings_default_favorite_filter
+import cut.the.crap.shared.resources.settings_default_sort_order
+import cut.the.crap.shared.resources.settings_developer_options
+import cut.the.crap.shared.resources.settings_dialog_links_date_range
+import cut.the.crap.shared.resources.settings_dialog_links_favorite_filter
+import cut.the.crap.shared.resources.settings_dialog_links_sort_order
+import cut.the.crap.shared.resources.settings_dialog_posts_date_range
+import cut.the.crap.shared.resources.settings_dialog_posts_favorite_filter
+import cut.the.crap.shared.resources.settings_dialog_posts_sort_order
+import cut.the.crap.shared.resources.settings_disable_developer_mode
+import cut.the.crap.shared.resources.settings_disable_developer_mode_desc
+import cut.the.crap.shared.resources.settings_display
+import cut.the.crap.shared.resources.settings_edit_shared_link
+import cut.the.crap.shared.resources.settings_edit_shared_link_desc
+import cut.the.crap.shared.resources.settings_import_export
+import cut.the.crap.shared.resources.settings_import_export_desc
+import cut.the.crap.shared.resources.settings_links_screen
+import cut.the.crap.shared.resources.settings_manage_backups
+import cut.the.crap.shared.resources.settings_manage_backups_desc
+import cut.the.crap.shared.resources.settings_posts_screen
+import cut.the.crap.shared.resources.settings_restore_body
+import cut.the.crap.shared.resources.settings_restore_confirm
+import cut.the.crap.shared.resources.settings_restore_database
+import cut.the.crap.shared.resources.settings_restore_database_desc
+import cut.the.crap.shared.resources.settings_restore_title
+import cut.the.crap.shared.resources.settings_sharing
+import cut.the.crap.shared.resources.settings_show_performance_metrics
+import cut.the.crap.shared.resources.settings_show_performance_metrics_desc
+import cut.the.crap.shared.resources.settings_theme
+import cut.the.crap.shared.resources.settings_timestamp_format
+import cut.the.crap.shared.resources.settings_title
+import cut.the.crap.shared.resources.settings_toast_x_credentials_cleared
+import cut.the.crap.shared.resources.settings_toast_x_credentials_saved
+import cut.the.crap.shared.resources.settings_toast_x_login_success
+import cut.the.crap.shared.resources.settings_version
+import cut.the.crap.shared.resources.settings_x_api_credentials
+import cut.the.crap.shared.resources.settings_x_cookies_help
+import cut.the.crap.shared.resources.settings_x_cookies_hint
+import cut.the.crap.shared.resources.settings_x_edit_manually
+import cut.the.crap.shared.resources.settings_x_enter_manually
+import cut.the.crap.shared.resources.settings_x_logged_in
+import cut.the.crap.shared.resources.settings_x_manual_credentials
+import cut.the.crap.shared.resources.settings_x_not_logged_in
 import androidx.compose.ui.graphics.Color
 import cut.the.crap.ui.XLoginActivity
 import cut.the.crap.ui.components.BottomNavigationBar
@@ -48,6 +108,8 @@ fun SettingsScreen(
 ) {
     val currentSettings by settings.collectAsState()
     val context = LocalContext.current
+    // Resolved in composition; the launcher callback below is not composable.
+    val xLoginSuccessMessage = stringResource(Res.string.settings_toast_x_login_success)
     var showPostsDateRangeDialog by remember { mutableStateOf(false) }
     var showLinksDateRangeDialog by remember { mutableStateOf(false) }
     var showPostsFavoriteFilterDialog by remember { mutableStateOf(false) }
@@ -75,7 +137,7 @@ fun SettingsScreen(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == XLoginActivity.RESULT_LOGIN_SUCCESS) {
-            Toast.makeText(context, context.getString(R.string.settings_toast_x_login_success), Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, xLoginSuccessMessage, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -90,25 +152,25 @@ fun SettingsScreen(
     pendingRestoreUri?.let { uri ->
         AlertDialog(
             onDismissRequest = { pendingRestoreUri = null },
-            title = { Text(stringResource(R.string.settings_restore_title)) },
+            title = { Text(stringResource(Res.string.settings_restore_title)) },
             text = {
-                Text(stringResource(R.string.settings_restore_body))
+                Text(stringResource(Res.string.settings_restore_body))
             },
             confirmButton = {
                 TextButton(onClick = {
                     action(FileAction.RestoreDatabase(uri))
                     pendingRestoreUri = null
-                }) { Text(stringResource(R.string.settings_restore_confirm)) }
+                }) { Text(stringResource(Res.string.settings_restore_confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { pendingRestoreUri = null }) { Text(stringResource(R.string.dialog_cancel)) }
+                TextButton(onClick = { pendingRestoreUri = null }) { Text(stringResource(Res.string.dialog_cancel)) }
             }
         )
     }
 
     if (showPostsDateRangeDialog) {
         DateRangeDialog(
-            title = stringResource(R.string.settings_dialog_posts_date_range),
+            title = stringResource(Res.string.settings_dialog_posts_date_range),
             currentPreset = currentSettings.postsDateRangePreset,
             onDismiss = { showPostsDateRangeDialog = false },
             onConfirm = { preset ->
@@ -120,7 +182,7 @@ fun SettingsScreen(
 
     if (showLinksDateRangeDialog) {
         DateRangeDialog(
-            title = stringResource(R.string.settings_dialog_links_date_range),
+            title = stringResource(Res.string.settings_dialog_links_date_range),
             currentPreset = currentSettings.linksDateRangePreset,
             onDismiss = { showLinksDateRangeDialog = false },
             onConfirm = { preset ->
@@ -132,7 +194,7 @@ fun SettingsScreen(
 
     if (showPostsFavoriteFilterDialog) {
         FavoriteFilterDialog(
-            title = stringResource(R.string.settings_dialog_posts_favorite_filter),
+            title = stringResource(Res.string.settings_dialog_posts_favorite_filter),
             currentPreset = currentSettings.postsFavoriteFilterPreset,
             onDismiss = { showPostsFavoriteFilterDialog = false },
             onConfirm = { preset ->
@@ -144,7 +206,7 @@ fun SettingsScreen(
 
     if (showLinksFavoriteFilterDialog) {
         FavoriteFilterDialog(
-            title = stringResource(R.string.settings_dialog_links_favorite_filter),
+            title = stringResource(Res.string.settings_dialog_links_favorite_filter),
             currentPreset = currentSettings.linksFavoriteFilterPreset,
             onDismiss = { showLinksFavoriteFilterDialog = false },
             onConfirm = { preset ->
@@ -156,7 +218,7 @@ fun SettingsScreen(
 
     if (showPostsSortOrderDialog) {
         SortOrderDialog(
-            title = stringResource(R.string.settings_dialog_posts_sort_order),
+            title = stringResource(Res.string.settings_dialog_posts_sort_order),
             currentPreset = currentSettings.postsSortOrderPreset,
             onDismiss = { showPostsSortOrderDialog = false },
             onConfirm = { preset ->
@@ -168,7 +230,7 @@ fun SettingsScreen(
 
     if (showLinksSortOrderDialog) {
         SortOrderDialog(
-            title = stringResource(R.string.settings_dialog_links_sort_order),
+            title = stringResource(Res.string.settings_dialog_links_sort_order),
             currentPreset = currentSettings.linksSortOrderPreset,
             onDismiss = { showLinksSortOrderDialog = false },
             onConfirm = { preset ->
@@ -192,10 +254,10 @@ fun SettingsScreen(
     if (showColorPickerDialog) {
         ColorPickerDialog(
             initialColor = accentColorDemo,
-            title = stringResource(R.string.color_picker_title),
-            confirmLabel = stringResource(R.string.color_picker_confirm),
-            dismissLabel = stringResource(R.string.dialog_cancel),
-            hexLabel = stringResource(R.string.color_picker_hex_label),
+            title = stringResource(Res.string.color_picker_title),
+            confirmLabel = stringResource(Res.string.color_picker_confirm),
+            dismissLabel = stringResource(Res.string.dialog_cancel),
+            hexLabel = stringResource(Res.string.color_picker_hex_label),
             recentColors = recentColors,
             onDismiss = { showColorPickerDialog = false },
             onConfirm = { chosen ->
@@ -257,7 +319,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.settings_title)) },
+                title = { Text(stringResource(Res.string.settings_title)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -275,13 +337,13 @@ fun SettingsScreen(
         ) {
             // Posts Screen Section
             item {
-                SettingsSectionHeader(title = stringResource(R.string.settings_posts_screen))
+                SettingsSectionHeader(title = stringResource(Res.string.settings_posts_screen))
             }
 
             item {
                 SettingsItem(
                     icon = Icons.Default.DateRange,
-                    title = stringResource(R.string.settings_default_date_range),
+                    title = stringResource(Res.string.settings_default_date_range),
                     subtitle = stringResource(currentSettings.postsDateRangePreset.displayNameResId),
                     onClick = { showPostsDateRangeDialog = true }
                 )
@@ -290,7 +352,7 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     icon = Icons.Default.Favorite,
-                    title = stringResource(R.string.settings_default_favorite_filter),
+                    title = stringResource(Res.string.settings_default_favorite_filter),
                     subtitle = stringResource(currentSettings.postsFavoriteFilterPreset.displayNameResId),
                     onClick = { showPostsFavoriteFilterDialog = true }
                 )
@@ -299,7 +361,7 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     icon = Icons.AutoMirrored.Filled.Sort,
-                    title = stringResource(R.string.settings_default_sort_order),
+                    title = stringResource(Res.string.settings_default_sort_order),
                     subtitle = stringResource(currentSettings.postsSortOrderPreset.displayNameResId),
                     onClick = { showPostsSortOrderDialog = true }
                 )
@@ -307,13 +369,13 @@ fun SettingsScreen(
 
             // Links Screen Section
             item {
-                SettingsSectionHeader(title = stringResource(R.string.settings_links_screen))
+                SettingsSectionHeader(title = stringResource(Res.string.settings_links_screen))
             }
 
             item {
                 SettingsItem(
                     icon = Icons.Default.DateRange,
-                    title = stringResource(R.string.settings_default_date_range),
+                    title = stringResource(Res.string.settings_default_date_range),
                     subtitle = stringResource(currentSettings.linksDateRangePreset.displayNameResId),
                     onClick = { showLinksDateRangeDialog = true }
                 )
@@ -322,7 +384,7 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     icon = Icons.Default.Favorite,
-                    title = stringResource(R.string.settings_default_favorite_filter),
+                    title = stringResource(Res.string.settings_default_favorite_filter),
                     subtitle = stringResource(currentSettings.linksFavoriteFilterPreset.displayNameResId),
                     onClick = { showLinksFavoriteFilterDialog = true }
                 )
@@ -331,7 +393,7 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     icon = Icons.AutoMirrored.Filled.Sort,
-                    title = stringResource(R.string.settings_default_sort_order),
+                    title = stringResource(Res.string.settings_default_sort_order),
                     subtitle = stringResource(currentSettings.linksSortOrderPreset.displayNameResId),
                     onClick = { showLinksSortOrderDialog = true }
                 )
@@ -339,13 +401,13 @@ fun SettingsScreen(
 
             // Appearance Section
             item {
-                SettingsSectionHeader(title = stringResource(R.string.settings_appearance))
+                SettingsSectionHeader(title = stringResource(Res.string.settings_appearance))
             }
 
             item {
                 SettingsItem(
                     icon = Icons.Default.Palette,
-                    title = stringResource(R.string.settings_theme),
+                    title = stringResource(Res.string.settings_theme),
                     subtitle = stringResource(currentSettings.themePreference.displayNameResId),
                     onClick = { showThemeDialog = true }
                 )
@@ -354,7 +416,7 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     icon = Icons.Default.ColorLens,
-                    title = stringResource(R.string.settings_accent_color),
+                    title = stringResource(Res.string.settings_accent_color),
                     subtitle = "#${accentColorDemo.toHexString()}",
                     onClick = { showColorPickerDialog = true },
                     color = accentColorDemo
@@ -363,13 +425,13 @@ fun SettingsScreen(
 
             // Display Section
             item {
-                SettingsSectionHeader(title = stringResource(R.string.settings_display))
+                SettingsSectionHeader(title = stringResource(Res.string.settings_display))
             }
 
             item {
                 SettingsItem(
                     icon = Icons.Default.Schedule,
-                    title = stringResource(R.string.settings_timestamp_format),
+                    title = stringResource(Res.string.settings_timestamp_format),
                     subtitle = stringResource(currentSettings.timestampFormat.displayNameResId),
                     onClick = { showTimestampFormatDialog = true }
                 )
@@ -377,14 +439,14 @@ fun SettingsScreen(
 
             // Data Management Section
             item {
-                SettingsSectionHeader(title = stringResource(R.string.settings_data_management))
+                SettingsSectionHeader(title = stringResource(Res.string.settings_data_management))
             }
 
             item {
                 SettingsItem(
                     icon = Icons.Default.ImportExport,
-                    title = stringResource(R.string.settings_import_export),
-                    subtitle = stringResource(R.string.settings_import_export_desc),
+                    title = stringResource(Res.string.settings_import_export),
+                    subtitle = stringResource(Res.string.settings_import_export_desc),
                     onClick = {
                         navController.navigate("import_export")
                     }
@@ -394,8 +456,8 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     icon = Icons.Default.Backup,
-                    title = stringResource(R.string.settings_backup_database),
-                    subtitle = stringResource(R.string.settings_backup_database_desc),
+                    title = stringResource(Res.string.settings_backup_database),
+                    subtitle = stringResource(Res.string.settings_backup_database_desc),
                     onClick = {
                         action(FileAction.BackupDatabase)
                     }
@@ -405,8 +467,8 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     icon = Icons.Default.Restore,
-                    title = stringResource(R.string.settings_restore_database),
-                    subtitle = stringResource(R.string.settings_restore_database_desc),
+                    title = stringResource(Res.string.settings_restore_database),
+                    subtitle = stringResource(Res.string.settings_restore_database_desc),
                     onClick = {
                         restoreFilePickerLauncher.launch(arrayOf("*/*"))
                     }
@@ -416,7 +478,7 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     icon = Icons.Default.Schedule,
-                    title = stringResource(R.string.settings_backup_frequency),
+                    title = stringResource(Res.string.settings_backup_frequency),
                     subtitle = stringResource(currentSettings.backupFrequency.displayNameResId),
                     onClick = { showBackupFrequencyDialog = true }
                 )
@@ -425,7 +487,7 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     icon = Icons.Default.DeleteSweep,
-                    title = stringResource(R.string.settings_backup_retention),
+                    title = stringResource(Res.string.settings_backup_retention),
                     subtitle = stringResource(currentSettings.backupRetention.displayNameResId),
                     onClick = { showBackupRetentionDialog = true }
                 )
@@ -434,22 +496,22 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     icon = Icons.Default.FolderOpen,
-                    title = stringResource(R.string.settings_manage_backups),
-                    subtitle = stringResource(R.string.settings_manage_backups_desc),
+                    title = stringResource(Res.string.settings_manage_backups),
+                    subtitle = stringResource(Res.string.settings_manage_backups_desc),
                     onClick = { navController.navigate("backup_management") }
                 )
             }
 
             // Sharing Section
             item {
-                SettingsSectionHeader(title = stringResource(R.string.settings_sharing))
+                SettingsSectionHeader(title = stringResource(Res.string.settings_sharing))
             }
 
             item {
                 SettingsSwitchItem(
                     icon = Icons.Default.Share,
-                    title = stringResource(R.string.settings_edit_shared_link),
-                    subtitle = stringResource(R.string.settings_edit_shared_link_desc),
+                    title = stringResource(Res.string.settings_edit_shared_link),
+                    subtitle = stringResource(Res.string.settings_edit_shared_link_desc),
                     checked = currentSettings.editSharedLinkBeforeSave,
                     onCheckedChange = { checked ->
                         onSettingsChanged(currentSettings.copy(editSharedLinkBeforeSave = checked))
@@ -459,13 +521,13 @@ fun SettingsScreen(
 
             // About Section
             item {
-                SettingsSectionHeader(title = stringResource(R.string.settings_about))
+                SettingsSectionHeader(title = stringResource(Res.string.settings_about))
             }
 
             item {
                 SettingsItem(
                     icon = Icons.Default.Info,
-                    title = stringResource(R.string.settings_version),
+                    title = stringResource(Res.string.settings_version),
                     subtitle = "1.0.0",
                     onClick = {
                         developerTapCount++
@@ -481,7 +543,7 @@ fun SettingsScreen(
             if (currentSettings.developerMode) {
                 item {
                     SettingsSectionHeader(
-                        title = stringResource(R.string.settings_developer_options),
+                        title = stringResource(Res.string.settings_developer_options),
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -489,8 +551,8 @@ fun SettingsScreen(
                 item {
                     SettingsSwitchItem(
                         icon = Icons.Default.BugReport,
-                        title = stringResource(R.string.settings_show_performance_metrics),
-                        subtitle = stringResource(R.string.settings_show_performance_metrics_desc),
+                        title = stringResource(Res.string.settings_show_performance_metrics),
+                        subtitle = stringResource(Res.string.settings_show_performance_metrics_desc),
                         checked = currentSettings.showPerformanceMetrics,
                         onCheckedChange = { checked ->
                             onSettingsChanged(currentSettings.copy(showPerformanceMetrics = checked))
@@ -503,7 +565,7 @@ fun SettingsScreen(
                     SettingsItem(
                         icon = Icons.Default.Key,
                         title = "X Login",
-                        subtitle = if (hasCredentials) stringResource(R.string.settings_x_logged_in) else stringResource(R.string.settings_x_not_logged_in),
+                        subtitle = if (hasCredentials) stringResource(Res.string.settings_x_logged_in) else stringResource(Res.string.settings_x_not_logged_in),
                         onClick = {
                             val intent = XLoginActivity.createIntent(
                                 context,
@@ -519,8 +581,8 @@ fun SettingsScreen(
                     val hasCredentials = currentSettings.xAuthToken != null && currentSettings.xCt0Token != null
                     SettingsItem(
                         icon = Icons.Default.Edit,
-                        title = stringResource(R.string.settings_x_manual_credentials),
-                        subtitle = if (hasCredentials) stringResource(R.string.settings_x_edit_manually) else stringResource(R.string.settings_x_enter_manually),
+                        title = stringResource(Res.string.settings_x_manual_credentials),
+                        subtitle = if (hasCredentials) stringResource(Res.string.settings_x_edit_manually) else stringResource(Res.string.settings_x_enter_manually),
                         onClick = { showXCredentialsDialog = true }
                     )
                 }
@@ -528,8 +590,8 @@ fun SettingsScreen(
                 item {
                     SettingsItem(
                         icon = Icons.Default.DeveloperMode,
-                        title = stringResource(R.string.settings_disable_developer_mode),
-                        subtitle = stringResource(R.string.settings_disable_developer_mode_desc),
+                        title = stringResource(Res.string.settings_disable_developer_mode),
+                        subtitle = stringResource(Res.string.settings_disable_developer_mode_desc),
                         onClick = {
                             onSettingsChanged(currentSettings.copy(
                                 developerMode = false,
@@ -684,12 +746,12 @@ private fun DateRangeDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(selectedPreset) }) {
-                Text(stringResource(R.string.dialog_ok))
+                Text(stringResource(Res.string.dialog_ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_cancel))
+                Text(stringResource(Res.string.dialog_cancel))
             }
         }
     )
@@ -705,7 +767,7 @@ private fun ThemeDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_theme)) },
+        title = { Text(stringResource(Res.string.settings_theme)) },
         text = {
             Column {
                 ThemePreference.entries.forEach { theme ->
@@ -728,12 +790,12 @@ private fun ThemeDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(selectedTheme) }) {
-                Text(stringResource(R.string.dialog_ok))
+                Text(stringResource(Res.string.dialog_ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_cancel))
+                Text(stringResource(Res.string.dialog_cancel))
             }
         }
     )
@@ -749,7 +811,7 @@ private fun TimestampFormatDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_timestamp_format)) },
+        title = { Text(stringResource(Res.string.settings_timestamp_format)) },
         text = {
             Column {
                 TimestampFormat.entries.forEach { format ->
@@ -772,12 +834,12 @@ private fun TimestampFormatDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(selectedFormat) }) {
-                Text(stringResource(R.string.dialog_ok))
+                Text(stringResource(Res.string.dialog_ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_cancel))
+                Text(stringResource(Res.string.dialog_cancel))
             }
         }
     )
@@ -817,12 +879,12 @@ private fun FavoriteFilterDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(selectedPreset) }) {
-                Text(stringResource(R.string.dialog_ok))
+                Text(stringResource(Res.string.dialog_ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_cancel))
+                Text(stringResource(Res.string.dialog_cancel))
             }
         }
     )
@@ -862,12 +924,12 @@ private fun SortOrderDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(selectedPreset) }) {
-                Text(stringResource(R.string.dialog_ok))
+                Text(stringResource(Res.string.dialog_ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_cancel))
+                Text(stringResource(Res.string.dialog_cancel))
             }
         }
     )
@@ -883,14 +945,17 @@ private fun XCredentialsDialog(
     var authToken by remember { mutableStateOf(currentAuthToken) }
     var ct0Token by remember { mutableStateOf(currentCt0Token) }
     val context = LocalContext.current
+    // Resolved in composition; the Toasts below run in non-composable callbacks.
+    val credentialsSavedMessage = stringResource(Res.string.settings_toast_x_credentials_saved)
+    val credentialsClearedMessage = stringResource(Res.string.settings_toast_x_credentials_cleared)
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_x_api_credentials)) },
+        title = { Text(stringResource(Res.string.settings_x_api_credentials)) },
         text = {
             Column {
                 Text(
-                    text = stringResource(R.string.settings_x_cookies_help),
+                    text = stringResource(Res.string.settings_x_cookies_help),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -912,7 +977,7 @@ private fun XCredentialsDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = stringResource(R.string.settings_x_cookies_hint),
+                    text = stringResource(Res.string.settings_x_cookies_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -922,10 +987,10 @@ private fun XCredentialsDialog(
             TextButton(
                 onClick = {
                     onConfirm(authToken, ct0Token)
-                    Toast.makeText(context, context.getString(R.string.settings_toast_x_credentials_saved), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, credentialsSavedMessage, Toast.LENGTH_SHORT).show()
                 }
             ) {
-                Text(stringResource(R.string.dialog_ok))
+                Text(stringResource(Res.string.dialog_ok))
             }
         },
         dismissButton = {
@@ -934,14 +999,14 @@ private fun XCredentialsDialog(
                     TextButton(
                         onClick = {
                             onConfirm("", "")
-                            Toast.makeText(context, context.getString(R.string.settings_toast_x_credentials_cleared), Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, credentialsClearedMessage, Toast.LENGTH_SHORT).show()
                         }
                     ) {
-                        Text(stringResource(R.string.settings_clear), color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(Res.string.settings_clear), color = MaterialTheme.colorScheme.error)
                     }
                 }
                 TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.dialog_cancel))
+                    Text(stringResource(Res.string.dialog_cancel))
                 }
             }
         }
@@ -958,7 +1023,7 @@ private fun BackupFrequencyDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_backup_frequency)) },
+        title = { Text(stringResource(Res.string.settings_backup_frequency)) },
         text = {
             Column {
                 BackupFrequency.entries.forEach { frequency ->
@@ -981,12 +1046,12 @@ private fun BackupFrequencyDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(selected) }) {
-                Text(stringResource(R.string.dialog_ok))
+                Text(stringResource(Res.string.dialog_ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_cancel))
+                Text(stringResource(Res.string.dialog_cancel))
             }
         }
     )
@@ -1002,7 +1067,7 @@ private fun BackupRetentionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_backup_retention)) },
+        title = { Text(stringResource(Res.string.settings_backup_retention)) },
         text = {
             Column {
                 BackupRetention.entries.forEach { retention ->
@@ -1025,12 +1090,12 @@ private fun BackupRetentionDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(selected) }) {
-                Text(stringResource(R.string.dialog_ok))
+                Text(stringResource(Res.string.dialog_ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_cancel))
+                Text(stringResource(Res.string.dialog_cancel))
             }
         }
     )

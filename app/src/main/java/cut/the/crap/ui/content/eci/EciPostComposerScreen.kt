@@ -1,5 +1,11 @@
 package cut.the.crap.ui.content.eci
 
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getPluralString
+
+import org.jetbrains.compose.resources.StringResource
+
 import android.widget.Toast
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
@@ -37,19 +43,48 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.annotation.StringRes
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.action_back
+import cut.the.crap.shared.resources.chars
+import cut.the.crap.shared.resources.eci_band_margin
+import cut.the.crap.shared.resources.eci_band_push
+import cut.the.crap.shared.resources.eci_band_safe
+import cut.the.crap.shared.resources.eci_band_unknown
+import cut.the.crap.shared.resources.eci_composer_title
+import cut.the.crap.shared.resources.eci_copy_post
+import cut.the.crap.shared.resources.eci_create_posts_button
+import cut.the.crap.shared.resources.eci_drafts_created
+import cut.the.crap.shared.resources.eci_filter_below
+import cut.the.crap.shared.resources.eci_filter_chip
+import cut.the.crap.shared.resources.eci_filter_eligible
+import cut.the.crap.shared.resources.eci_filter_margin
+import cut.the.crap.shared.resources.eci_filter_none
+import cut.the.crap.shared.resources.eci_hide_preview
+import cut.the.crap.shared.resources.eci_label_colon
+import cut.the.crap.shared.resources.eci_no_statistics
+import cut.the.crap.shared.resources.eci_not_collecting
+import cut.the.crap.shared.resources.eci_post_copied
+import cut.the.crap.shared.resources.eci_row_needed
+import cut.the.crap.shared.resources.eci_select_countries
+import cut.the.crap.shared.resources.eci_show_preview
+import cut.the.crap.shared.resources.eci_sort_alpha
+import cut.the.crap.shared.resources.eci_sort_closest
+import cut.the.crap.shared.resources.eci_sort_label
+import cut.the.crap.shared.resources.eci_sort_needed
+import cut.the.crap.shared.resources.eci_tone_margin
+import cut.the.crap.shared.resources.eci_tone_push
+import cut.the.crap.shared.resources.eci_variant
 import cut.the.crap.data.rest.eci.EciBand
 import cut.the.crap.data.rest.eci.EciCountrySignatures
 import cut.the.crap.data.rest.eci.EciGeneratedPost
@@ -58,17 +93,17 @@ import cut.the.crap.data.rest.eci.EciReferenceData
 import cut.the.crap.data.rest.eci.EciStatistics
 import cut.the.crap.ui.content.Screen
 
-private enum class CountryFilter(@StringRes val labelRes: Int) {
-    NONE(R.string.eci_filter_none),
-    ELIGIBLE(R.string.eci_filter_eligible),
-    BELOW(R.string.eci_filter_below),
-    MARGIN(R.string.eci_filter_margin)
+private enum class CountryFilter(val labelRes: StringResource) {
+    NONE(Res.string.eci_filter_none),
+    ELIGIBLE(Res.string.eci_filter_eligible),
+    BELOW(Res.string.eci_filter_below),
+    MARGIN(Res.string.eci_filter_margin)
 }
 
-private enum class CountrySort(@StringRes val labelRes: Int) {
-    CLOSEST_TO_AIM(R.string.eci_sort_closest),
-    FEWEST_NEEDED(R.string.eci_sort_needed),
-    ALPHABETICAL(R.string.eci_sort_alpha)
+private enum class CountrySort(val labelRes: StringResource) {
+    CLOSEST_TO_AIM(Res.string.eci_sort_closest),
+    FEWEST_NEEDED(Res.string.eci_sort_needed),
+    ALPHABETICAL(Res.string.eci_sort_alpha)
 }
 
 /**
@@ -83,6 +118,7 @@ fun EciPostComposerScreen(
     onCreateDrafts: (List<String>) -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     var filter by remember { mutableStateOf(CountryFilter.BELOW) }
     var sort by remember { mutableStateOf(CountrySort.CLOSEST_TO_AIM) }
@@ -102,12 +138,12 @@ fun EciPostComposerScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.eci_composer_title)) },
+                title = { Text(stringResource(Res.string.eci_composer_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
+                            contentDescription = stringResource(Res.string.action_back)
                         )
                     }
                 },
@@ -129,13 +165,17 @@ fun EciPostComposerScreen(
                             }
                             .map { it.text }
                         onCreateDrafts(texts)
-                        Toast.makeText(
-                            context,
-                            context.resources.getQuantityString(
-                                R.plurals.eci_drafts_created, texts.size, texts.size
-                            ),
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        // The quantity is only known at click time, so the plural can't be
+                        // hoisted into composition; resolve it in a coroutine instead.
+                        scope.launch {
+                            Toast.makeText(
+                                context,
+                                getPluralString(
+                                    Res.plurals.eci_drafts_created, texts.size, texts.size
+                                ),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                         // Land on the Posts screen and drop the ECI screens from the back stack.
                         navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.Home.route) { inclusive = false }
@@ -149,9 +189,9 @@ fun EciPostComposerScreen(
                 ) {
                     Text(
                         if (totalPosts > 0) pluralStringResource(
-                            R.plurals.eci_create_posts_button, totalPosts, totalPosts
+                            Res.plurals.eci_create_posts_button, totalPosts, totalPosts
                         )
-                        else stringResource(R.string.eci_select_countries)
+                        else stringResource(Res.string.eci_select_countries)
                     )
                 }
             }
@@ -160,7 +200,7 @@ fun EciPostComposerScreen(
         if (statistics == null) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text(
-                    stringResource(R.string.eci_no_statistics),
+                    stringResource(Res.string.eci_no_statistics),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -170,7 +210,7 @@ fun EciPostComposerScreen(
         Column(Modifier.fillMaxSize().padding(padding)) {
             if (!statistics.isCollectionOpen) {
                 Text(
-                    stringResource(R.string.eci_not_collecting),
+                    stringResource(Res.string.eci_not_collecting),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -187,7 +227,7 @@ fun EciPostComposerScreen(
                         label = {
                             Text(
                                 stringResource(
-                                    R.string.eci_filter_chip,
+                                    Res.string.eci_filter_chip,
                                     stringResource(f.labelRes),
                                     count
                                 )
@@ -201,7 +241,7 @@ fun EciPostComposerScreen(
             // Sort chips
             ChipRow {
                 Text(
-                    stringResource(R.string.eci_sort_label),
+                    stringResource(Res.string.eci_sort_label),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.CenterVertically).padding(end = 8.dp)
@@ -220,10 +260,10 @@ fun EciPostComposerScreen(
             val hasBelow = visibleRows.any { it.band == EciBand.BELOW_THRESHOLD }
             val hasMargin = visibleRows.any { it.band == EciBand.BUILDING_MARGIN }
             if (hasBelow) {
-                VariantPicker(stringResource(R.string.eci_tone_push), belowVariant) { belowVariant = it }
+                VariantPicker(stringResource(Res.string.eci_tone_push), belowVariant) { belowVariant = it }
             }
             if (hasMargin) {
-                VariantPicker(stringResource(R.string.eci_tone_margin), marginVariant) { marginVariant = it }
+                VariantPicker(stringResource(Res.string.eci_tone_margin), marginVariant) { marginVariant = it }
             }
 
             Spacer(Modifier.size(4.dp))
@@ -273,7 +313,7 @@ private fun ChipRow(content: @Composable androidx.compose.foundation.layout.RowS
 private fun VariantPicker(label: String, selectedIndex: Int, onSelect: (Int) -> Unit) {
     ChipRow {
         Text(
-            stringResource(R.string.eci_label_colon, label),
+            stringResource(Res.string.eci_label_colon, label),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.align(Alignment.CenterVertically).padding(end = 8.dp)
@@ -282,7 +322,7 @@ private fun VariantPicker(label: String, selectedIndex: Int, onSelect: (Int) -> 
             FilterChip(
                 selected = selectedIndex == i,
                 onClick = { onSelect(i) },
-                label = { Text(stringResource(R.string.eci_variant, i + 1)) },
+                label = { Text(stringResource(Res.string.eci_variant, i + 1)) },
                 modifier = Modifier.padding(end = 8.dp)
             )
         }
@@ -304,17 +344,19 @@ private fun CountryRow(
     val flag = EciReferenceData.flagEmoji(row.countryCode)
     val percent = row.thresholdFraction?.let { " (${(it * 100).toInt()}%)" } ?: ""
     val bandLabel = when (row.band) {
-        EciBand.BELOW_THRESHOLD -> stringResource(R.string.eci_band_push)
-        EciBand.BUILDING_MARGIN -> stringResource(R.string.eci_band_margin)
-        EciBand.SAFE -> stringResource(R.string.eci_band_safe)
-        EciBand.UNKNOWN -> stringResource(R.string.eci_band_unknown)
+        EciBand.BELOW_THRESHOLD -> stringResource(Res.string.eci_band_push)
+        EciBand.BUILDING_MARGIN -> stringResource(Res.string.eci_band_margin)
+        EciBand.SAFE -> stringResource(Res.string.eci_band_safe)
+        EciBand.UNKNOWN -> stringResource(Res.string.eci_band_unknown)
     }
 
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
+    // Resolved in composition so the (non-composable) callback can just use the String.
+    val postCopiedMessage = stringResource(Res.string.eci_post_copied)
     val copyPost: (String) -> Unit = { text ->
         clipboard.setText(AnnotatedString(text))
-        Toast.makeText(context, R.string.eci_post_copied, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, postCopiedMessage, Toast.LENGTH_SHORT).show()
     }
 
     // One generated post per official language of the country.
@@ -352,7 +394,7 @@ private fun CountryRow(
                 val remaining = row.remainingToAim
                 Text(
                     text = if (remaining != null)
-                        stringResource(R.string.eci_row_needed, bandLabel, remaining)
+                        stringResource(Res.string.eci_row_needed, bandLabel, remaining)
                     else bandLabel,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -365,7 +407,7 @@ private fun CountryRow(
                     IconButton(onClick = { copyPost(posts.first().text) }) {
                         Icon(
                             Icons.Filled.ContentCopy,
-                            contentDescription = stringResource(R.string.eci_copy_post)
+                            contentDescription = stringResource(Res.string.eci_copy_post)
                         )
                     }
                 }
@@ -373,7 +415,7 @@ private fun CountryRow(
                     Icon(
                         if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
                         contentDescription = stringResource(
-                            if (expanded) R.string.eci_hide_preview else R.string.eci_show_preview
+                            if (expanded) Res.string.eci_hide_preview else Res.string.eci_show_preview
                         )
                     )
                 }
@@ -396,7 +438,7 @@ private fun CountryRow(
                             IconButton(onClick = { copyPost(post.text) }) {
                                 Icon(
                                     Icons.Filled.ContentCopy,
-                                    contentDescription = stringResource(R.string.eci_copy_post)
+                                    contentDescription = stringResource(Res.string.eci_copy_post)
                                 )
                             }
                         }
@@ -407,7 +449,7 @@ private fun CountryRow(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        pluralStringResource(R.plurals.chars, post.text.length, post.text.length),
+                        pluralStringResource(Res.plurals.chars, post.text.length, post.text.length),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (post.text.length > 280) MaterialTheme.colorScheme.error
                         else MaterialTheme.colorScheme.onSurfaceVariant

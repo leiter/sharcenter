@@ -54,12 +54,57 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.dialog_cancel
+import cut.the.crap.shared.resources.dialog_ok
+import cut.the.crap.shared.resources.keyword_cd_clear_search
+import cut.the.crap.shared.resources.keyword_cd_settings
+import cut.the.crap.shared.resources.keyword_filter_all
+import cut.the.crap.shared.resources.keyword_filter_favorites
+import cut.the.crap.shared.resources.keyword_filter_non_favorites
+import cut.the.crap.shared.resources.tag_dialog_add_handle
+import cut.the.crap.shared.resources.tag_dialog_add_keyword
+import cut.the.crap.shared.resources.tag_dialog_add_new
+import cut.the.crap.shared.resources.tag_dialog_add_tag
+import cut.the.crap.shared.resources.tag_dialog_add_to_favorites
+import cut.the.crap.shared.resources.tag_dialog_back_to_list
+import cut.the.crap.shared.resources.tag_dialog_button_add
+import cut.the.crap.shared.resources.tag_dialog_button_delete
+import cut.the.crap.shared.resources.tag_dialog_button_select_items
+import cut.the.crap.shared.resources.tag_dialog_delete
+import cut.the.crap.shared.resources.tag_dialog_delete_handles
+import cut.the.crap.shared.resources.tag_dialog_delete_keywords
+import cut.the.crap.shared.resources.tag_dialog_delete_mode
+import cut.the.crap.shared.resources.tag_dialog_delete_tags
+import cut.the.crap.shared.resources.tag_dialog_enter_handle
+import cut.the.crap.shared.resources.tag_dialog_enter_tag
+import cut.the.crap.shared.resources.tag_dialog_item_deleted
+import cut.the.crap.shared.resources.tag_dialog_items_deleted
+import cut.the.crap.shared.resources.tag_dialog_no_items
+import cut.the.crap.shared.resources.tag_dialog_no_matching_items
+import cut.the.crap.shared.resources.tag_dialog_not_selected
+import cut.the.crap.shared.resources.tag_dialog_placeholder_handle
+import cut.the.crap.shared.resources.tag_dialog_placeholder_keyword
+import cut.the.crap.shared.resources.tag_dialog_placeholder_tag
+import cut.the.crap.shared.resources.tag_dialog_prefix_help_handle
+import cut.the.crap.shared.resources.tag_dialog_prefix_help_tag
+import cut.the.crap.shared.resources.tag_dialog_remove_from_favorites
+import cut.the.crap.shared.resources.tag_dialog_reverse_list
+import cut.the.crap.shared.resources.tag_dialog_search
+import cut.the.crap.shared.resources.tag_dialog_search_placeholder
+import cut.the.crap.shared.resources.tag_dialog_select_handles
+import cut.the.crap.shared.resources.tag_dialog_select_items
+import cut.the.crap.shared.resources.tag_dialog_select_keywords
+import cut.the.crap.shared.resources.tag_dialog_select_tags
+import cut.the.crap.shared.resources.tag_dialog_selected
+import cut.the.crap.shared.resources.tag_dialog_selected_count
+import cut.the.crap.shared.resources.tag_dialog_selected_for_deletion
+import cut.the.crap.shared.resources.tag_dialog_undo
 import cut.the.crap.data.domain.KeyWord
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.ChipsType
@@ -138,22 +183,22 @@ fun KeywordSelectionDialog(
     }
 
     val title = when {
-        showAddMode && type == ChipsType.Handle -> stringResource(R.string.tag_dialog_add_handle)
-        showAddMode && type == ChipsType.Tag -> stringResource(R.string.tag_dialog_add_tag)
-        showAddMode && type == ChipsType.KeyWords -> stringResource(R.string.tag_dialog_add_keyword)
-        deleteMode && type == ChipsType.Handle -> stringResource(R.string.tag_dialog_delete_handles)
-        deleteMode && type == ChipsType.Tag -> stringResource(R.string.tag_dialog_delete_tags)
-        deleteMode && type == ChipsType.KeyWords -> stringResource(R.string.tag_dialog_delete_keywords)
-        type == ChipsType.Handle -> stringResource(R.string.tag_dialog_select_handles)
-        type == ChipsType.Tag -> stringResource(R.string.tag_dialog_select_tags)
-        type == ChipsType.KeyWords -> stringResource(R.string.tag_dialog_select_keywords)
-        else -> stringResource(R.string.tag_dialog_select_items)
+        showAddMode && type == ChipsType.Handle -> stringResource(Res.string.tag_dialog_add_handle)
+        showAddMode && type == ChipsType.Tag -> stringResource(Res.string.tag_dialog_add_tag)
+        showAddMode && type == ChipsType.KeyWords -> stringResource(Res.string.tag_dialog_add_keyword)
+        deleteMode && type == ChipsType.Handle -> stringResource(Res.string.tag_dialog_delete_handles)
+        deleteMode && type == ChipsType.Tag -> stringResource(Res.string.tag_dialog_delete_tags)
+        deleteMode && type == ChipsType.KeyWords -> stringResource(Res.string.tag_dialog_delete_keywords)
+        type == ChipsType.Handle -> stringResource(Res.string.tag_dialog_select_handles)
+        type == ChipsType.Tag -> stringResource(Res.string.tag_dialog_select_tags)
+        type == ChipsType.KeyWords -> stringResource(Res.string.tag_dialog_select_keywords)
+        else -> stringResource(Res.string.tag_dialog_select_items)
     }
 
     val placeholder = when (type) {
-        ChipsType.Handle -> stringResource(R.string.tag_dialog_placeholder_handle)
-        ChipsType.Tag -> stringResource(R.string.tag_dialog_placeholder_tag)
-        ChipsType.KeyWords -> stringResource(R.string.tag_dialog_placeholder_keyword)
+        ChipsType.Handle -> stringResource(Res.string.tag_dialog_placeholder_handle)
+        ChipsType.Tag -> stringResource(Res.string.tag_dialog_placeholder_tag)
+        ChipsType.KeyWords -> stringResource(Res.string.tag_dialog_placeholder_keyword)
         else -> ""
     }
 
@@ -204,7 +249,7 @@ fun KeywordSelectionDialog(
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.tag_dialog_back_to_list))
+                            contentDescription = stringResource(Res.string.tag_dialog_back_to_list))
                     }
                 }
                 Text(text = title, modifier = Modifier.weight(1f))
@@ -213,7 +258,7 @@ fun KeywordSelectionDialog(
                     IconButton(onClick = { showAddMode = true }) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = stringResource(R.string.tag_dialog_add_new))
+                            contentDescription = stringResource(Res.string.tag_dialog_add_new))
                     }
 
                     // Overflow menu (rightmost position)
@@ -221,7 +266,7 @@ fun KeywordSelectionDialog(
                         IconButton(onClick = { showOverflowMenu = true }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = stringResource(R.string.keyword_cd_settings)
+                                contentDescription = stringResource(Res.string.keyword_cd_settings)
                             )
                         }
 
@@ -231,7 +276,7 @@ fun KeywordSelectionDialog(
                         ) {
                             // Delete mode option
                             DropdownMenuItem(
-                                text = { Text(stringResource(R.string.tag_dialog_delete_mode)) },
+                                text = { Text(stringResource(Res.string.tag_dialog_delete_mode)) },
                                 onClick = {
                                     deleteMode = true
                                     showOverflowMenu = false
@@ -249,9 +294,9 @@ fun KeywordSelectionDialog(
                                 text = {
                                     Text(
                                         when (favoriteFilter) {
-                                            FavoriteFilter.ALL -> stringResource(R.string.keyword_filter_all)
-                                            FavoriteFilter.FAVORITES -> stringResource(R.string.keyword_filter_favorites)
-                                            FavoriteFilter.NON_FAVORITES -> stringResource(R.string.keyword_filter_non_favorites)
+                                            FavoriteFilter.ALL -> stringResource(Res.string.keyword_filter_all)
+                                            FavoriteFilter.FAVORITES -> stringResource(Res.string.keyword_filter_favorites)
+                                            FavoriteFilter.NON_FAVORITES -> stringResource(Res.string.keyword_filter_non_favorites)
                                         }
                                     )
                                 },
@@ -277,7 +322,7 @@ fun KeywordSelectionDialog(
 
                             // Reverse list option
                             DropdownMenuItem(
-                                text = { Text(stringResource(R.string.tag_dialog_reverse_list)) },
+                                text = { Text(stringResource(Res.string.tag_dialog_reverse_list)) },
                                 onClick = {
                                     reverseOrder = !reverseOrder
                                     showOverflowMenu = false
@@ -327,7 +372,7 @@ fun KeywordSelectionDialog(
                                 }
                             ) {
                                 Text(
-                                    text = stringResource(R.string.tag_dialog_undo),
+                                    text = stringResource(Res.string.tag_dialog_undo),
                                     color = MaterialTheme.colorScheme.onErrorContainer)
                             }
                         }
@@ -342,9 +387,9 @@ fun KeywordSelectionDialog(
                         label = {
                             Text(
                                 if (type == ChipsType.Handle)
-                                    stringResource(R.string.tag_dialog_enter_handle)
+                                    stringResource(Res.string.tag_dialog_enter_handle)
                                 else
-                                    stringResource(R.string.tag_dialog_enter_tag)
+                                    stringResource(Res.string.tag_dialog_enter_tag)
                             )
                         },
                         placeholder = { Text(placeholder) },
@@ -354,9 +399,9 @@ fun KeywordSelectionDialog(
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = if (type == ChipsType.Handle)
-                            stringResource(R.string.tag_dialog_prefix_help_handle)
+                            stringResource(Res.string.tag_dialog_prefix_help_handle)
                         else
-                            stringResource(R.string.tag_dialog_prefix_help_tag),
+                            stringResource(Res.string.tag_dialog_prefix_help_tag),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -366,18 +411,18 @@ fun KeywordSelectionDialog(
                         OutlinedTextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
-                            placeholder = { Text(stringResource(R.string.tag_dialog_search_placeholder)) },
+                            placeholder = { Text(stringResource(Res.string.tag_dialog_search_placeholder)) },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Search,
-                                    contentDescription = stringResource(R.string.tag_dialog_search))
+                                    contentDescription = stringResource(Res.string.tag_dialog_search))
                             },
                             trailingIcon = {
                                 if (searchQuery.isNotEmpty()) {
                                     IconButton(onClick = { searchQuery = "" }) {
                                         Icon(
                                             imageVector = Icons.Default.Clear,
-                                            contentDescription = stringResource(R.string.keyword_cd_clear_search)
+                                            contentDescription = stringResource(Res.string.keyword_cd_clear_search)
                                         )
                                     }
                                 }
@@ -397,9 +442,9 @@ fun KeywordSelectionDialog(
                         ) {
                             Text(
                                 text = if (searchQuery.isBlank())
-                                    stringResource(R.string.tag_dialog_no_items)
+                                    stringResource(Res.string.tag_dialog_no_items)
                                 else
-                                    stringResource(R.string.tag_dialog_no_matching_items),
+                                    stringResource(Res.string.tag_dialog_no_matching_items),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -446,9 +491,9 @@ fun KeywordSelectionDialog(
                                                 else
                                                     Icons.Outlined.Circle,
                                                 contentDescription = if (isMarkedForDeletion)
-                                                    stringResource(R.string.tag_dialog_selected)
+                                                    stringResource(Res.string.tag_dialog_selected)
                                                 else
-                                                    stringResource(R.string.tag_dialog_not_selected),
+                                                    stringResource(Res.string.tag_dialog_not_selected),
                                                 tint = if (isMarkedForDeletion)
                                                     MaterialTheme.colorScheme.onErrorContainer
                                                 else MaterialTheme.colorScheme.onSurface,
@@ -469,9 +514,9 @@ fun KeywordSelectionDialog(
                                             Icon(
                                                 imageVector = if (item.isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
                                                 contentDescription = if (item.isFavorite)
-                                                    stringResource(R.string.tag_dialog_remove_from_favorites)
+                                                    stringResource(Res.string.tag_dialog_remove_from_favorites)
                                                 else
-                                                    stringResource(R.string.tag_dialog_add_to_favorites),
+                                                    stringResource(Res.string.tag_dialog_add_to_favorites),
                                                 tint = if (item.isFavorite) {
                                                     if (isMarkedForDeletion) MaterialTheme.colorScheme.onErrorContainer else Color(0xFFFFD700)
                                                 } else {
@@ -488,7 +533,7 @@ fun KeywordSelectionDialog(
                     if (itemsToDelete.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = stringResource(R.string.tag_dialog_selected_for_deletion, itemsToDelete.size),
+                            text = stringResource(Res.string.tag_dialog_selected_for_deletion, itemsToDelete.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -499,14 +544,14 @@ fun KeywordSelectionDialog(
                         OutlinedTextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
-                            placeholder = { Text(stringResource(R.string.tag_dialog_search_placeholder)) },
-                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = stringResource(R.string.tag_dialog_search)) },
+                            placeholder = { Text(stringResource(Res.string.tag_dialog_search_placeholder)) },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = stringResource(Res.string.tag_dialog_search)) },
                             trailingIcon = {
                                 if (searchQuery.isNotEmpty()) {
                                     IconButton(onClick = { searchQuery = "" }) {
                                         Icon(
                                             imageVector = Icons.Default.Clear,
-                                            contentDescription = stringResource(R.string.keyword_cd_clear_search)
+                                            contentDescription = stringResource(Res.string.keyword_cd_clear_search)
                                         )
                                     }
                                 }
@@ -526,9 +571,9 @@ fun KeywordSelectionDialog(
                         ) {
                             Text(
                                 text = if (searchQuery.isBlank())
-                                    stringResource(R.string.tag_dialog_no_items)
+                                    stringResource(Res.string.tag_dialog_no_items)
                                 else
-                                    stringResource(R.string.tag_dialog_no_matching_items),
+                                    stringResource(Res.string.tag_dialog_no_matching_items),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -545,7 +590,7 @@ fun KeywordSelectionDialog(
                                 val isSelected = selectedItems.contains(item.id)
                                 val isHidden = hiddenItemIds.contains(item.id)
                                 val deletedText = stringResource(
-                                    R.string.tag_dialog_item_deleted, item.text
+                                    Res.string.tag_dialog_item_deleted, item.text
                                 )
 
                                 // Use key to force recreation when hidden state changes
@@ -593,7 +638,7 @@ fun KeywordSelectionDialog(
                                                 ) {
                                                     Icon(
                                                         imageVector = Icons.Default.Delete,
-                                                        contentDescription = stringResource(R.string.tag_dialog_delete),
+                                                        contentDescription = stringResource(Res.string.tag_dialog_delete),
                                                         tint = iconTint
                                                     )
                                                 }
@@ -633,9 +678,9 @@ fun KeywordSelectionDialog(
                                                         Icon(
                                                             imageVector = if (item.isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
                                                             contentDescription = if (item.isFavorite)
-                                                                stringResource(R.string.tag_dialog_remove_from_favorites)
+                                                                stringResource(Res.string.tag_dialog_remove_from_favorites)
                                                             else
-                                                                stringResource(R.string.tag_dialog_add_to_favorites),
+                                                                stringResource(Res.string.tag_dialog_add_to_favorites),
                                                             tint = if (item.isFavorite) Color(0xFFFFD700) else MaterialTheme.colorScheme.onSurface
                                                         )
                                                     }
@@ -651,7 +696,7 @@ fun KeywordSelectionDialog(
                     if (selectedItems.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = stringResource(R.string.tag_dialog_selected_count, selectedItems.size),
+                            text = stringResource(Res.string.tag_dialog_selected_count, selectedItems.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -663,11 +708,11 @@ fun KeywordSelectionDialog(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     val buttonText = when {
-                        showAddMode -> stringResource(R.string.tag_dialog_button_add)
+                        showAddMode -> stringResource(Res.string.tag_dialog_button_add)
                         deleteMode -> if (itemsToDelete.isNotEmpty())
-                            stringResource(R.string.tag_dialog_button_delete, itemsToDelete.size)
+                            stringResource(Res.string.tag_dialog_button_delete, itemsToDelete.size)
                         else
-                            stringResource(R.string.tag_dialog_button_select_items)
+                            stringResource(Res.string.tag_dialog_button_select_items)
 
                         else -> ""
                     }
@@ -682,9 +727,9 @@ fun KeywordSelectionDialog(
                     val itemsToDeleteList = items.filter { itemsToDelete.contains(it.id) }
 
                     val deletedNames = if (itemsToDeleteList.size == 1) {
-                        stringResource(R.string.tag_dialog_item_deleted, itemsToDeleteList.first().text)
+                        stringResource(Res.string.tag_dialog_item_deleted, itemsToDeleteList.first().text)
                     } else {
-                        stringResource(R.string.tag_dialog_items_deleted, itemsToDeleteList.size)
+                        stringResource(Res.string.tag_dialog_items_deleted, itemsToDeleteList.size)
                     }
 
                     Button(
@@ -747,7 +792,7 @@ fun KeywordSelectionDialog(
                     onClick = onConfirm,
                     enabled = selectedItems.isNotEmpty()
                 ) {
-                    Text(stringResource(R.string.dialog_ok))
+                    Text(stringResource(Res.string.dialog_ok))
                 }
             }
         },
@@ -763,7 +808,7 @@ fun KeywordSelectionDialog(
                     onDismiss()
                 }
             }) {
-                Text(stringResource(R.string.dialog_cancel))
+                Text(stringResource(Res.string.dialog_cancel))
             }
         }
     )

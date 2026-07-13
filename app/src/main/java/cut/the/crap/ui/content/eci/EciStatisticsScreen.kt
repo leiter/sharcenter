@@ -1,6 +1,7 @@
 package cut.the.crap.ui.content.eci
 
-import androidx.annotation.StringRes
+import org.jetbrains.compose.resources.StringResource
+
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,10 +31,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.action_back
+import cut.the.crap.shared.resources.eci_create_posts_cd
+import cut.the.crap.shared.resources.eci_filter_below
+import cut.the.crap.shared.resources.eci_filter_chip
+import cut.the.crap.shared.resources.eci_filter_none
+import cut.the.crap.shared.resources.eci_filter_reached
+import cut.the.crap.shared.resources.eci_no_statistics
+import cut.the.crap.shared.resources.eci_screen_title
+import cut.the.crap.shared.resources.eci_sort_alpha
+import cut.the.crap.shared.resources.eci_sort_label
+import cut.the.crap.shared.resources.eci_sort_percentage
+import cut.the.crap.shared.resources.eci_sort_signatures
 import cut.the.crap.data.rest.eci.EciCountrySignatures
 import cut.the.crap.data.rest.eci.EciStatistics
 import cut.the.crap.ui.components.BottomNavigationBar
@@ -52,12 +65,12 @@ fun EciStatisticsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.eci_screen_title)) },
+                title = { Text(stringResource(Res.string.eci_screen_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
+                            contentDescription = stringResource(Res.string.action_back)
                         )
                     }
                 },
@@ -66,7 +79,7 @@ fun EciStatisticsScreen(
                         IconButton(onClick = { navController.navigate("eci_post_composer") }) {
                             Icon(
                                 imageVector = Icons.Filled.Campaign,
-                                contentDescription = stringResource(R.string.eci_create_posts_cd)
+                                contentDescription = stringResource(Res.string.eci_create_posts_cd)
                             )
                         }
                     }
@@ -87,7 +100,7 @@ fun EciStatisticsScreen(
         ) {
             if (statistics == null) {
                 Text(
-                    text = stringResource(R.string.eci_no_statistics),
+                    text = stringResource(Res.string.eci_no_statistics),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.Center)
@@ -117,7 +130,7 @@ fun EciStatisticsScreen(
                                 label = {
                                     Text(
                                         stringResource(
-                                            R.string.eci_filter_chip,
+                                            Res.string.eci_filter_chip,
                                             stringResource(f.labelRes),
                                             count
                                         )
@@ -131,7 +144,7 @@ fun EciStatisticsScreen(
                     // Sort chips
                     ChipRow {
                         Text(
-                            stringResource(R.string.eci_sort_label),
+                            stringResource(Res.string.eci_sort_label),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.align(Alignment.CenterVertically).padding(end = 8.dp)
@@ -164,16 +177,16 @@ fun EciStatisticsScreen(
     }
 }
 
-private enum class StatFilter(@StringRes val labelRes: Int) {
-    ALL(R.string.eci_filter_none),
-    REACHED(R.string.eci_filter_reached),
-    BELOW(R.string.eci_filter_below)
+private enum class StatFilter(val labelRes: StringResource) {
+    ALL(Res.string.eci_filter_none),
+    REACHED(Res.string.eci_filter_reached),
+    BELOW(Res.string.eci_filter_below)
 }
 
-private enum class StatSort(@StringRes val labelRes: Int) {
-    PERCENTAGE(R.string.eci_sort_percentage),
-    SIGNATURES(R.string.eci_sort_signatures),
-    ALPHABETICAL(R.string.eci_sort_alpha)
+private enum class StatSort(val labelRes: StringResource) {
+    PERCENTAGE(Res.string.eci_sort_percentage),
+    SIGNATURES(Res.string.eci_sort_signatures),
+    ALPHABETICAL(Res.string.eci_sort_alpha)
 }
 
 private fun List<EciCountrySignatures>.applyFilter(filter: StatFilter) = when (filter) {

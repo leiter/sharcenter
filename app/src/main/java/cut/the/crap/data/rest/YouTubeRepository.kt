@@ -8,7 +8,6 @@ import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.serialization.ContentConvertException
-import cut.the.crap.R
 import kotlinx.serialization.SerializationException
 import java.io.IOException
 

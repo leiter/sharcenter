@@ -1,10 +1,8 @@
 package cut.the.crap.ui.content.links
 
 import androidx.lifecycle.viewModelScope
-import cut.the.crap.R
 import cut.the.crap.data.domain.KeyWord
 import cut.the.crap.data.domain.KeywordType
-import cut.the.crap.ui.localized
 import cut.the.crap.ui.components.DateType
 import cut.the.crap.ui.components.FilterState
 import cut.the.crap.ui.components.MyEditDialogStyle
@@ -437,11 +435,7 @@ internal fun LinksViewModel.handleListAction(action: ListAction) {
                     it.copy(selectedItems = emptyList(), checkMarks = false)
                 }
                 if (toDelete.isNotEmpty()) {
-                    emitSnackBarMessage(
-                        context.resources.getQuantityString(
-                            R.plurals.links_snackbar_deleted, toDelete.size, toDelete.size
-                        )
-                    )
+                    emitSnackBarMessage(LinksSnackbar.Deleted(toDelete.size))
                 }
             }
         }
@@ -457,11 +451,7 @@ internal fun LinksViewModel.handleListAction(action: ListAction) {
                 val newFavourite = !selected.all { it.favourite }
                 selected.forEach { contentRepository.update(it.copy(favourite = newFavourite)) }
                 emitSnackBarMessage(
-                    context.resources.getQuantityString(
-                        if (newFavourite) R.plurals.links_snackbar_favorited
-                        else R.plurals.links_snackbar_unfavorited,
-                        selected.size, selected.size
-                    )
+                    LinksSnackbar.FavouritesChanged(selected.size, favourited = newFavourite)
                 )
             }
         }
@@ -482,11 +472,7 @@ internal fun LinksViewModel.handleListAction(action: ListAction) {
                 }
                 internalScreenState.update { it.copy(bulkTagType = null) }
                 if (selected.isNotEmpty()) {
-                    emitSnackBarMessage(
-                        context.resources.getQuantityString(
-                            R.plurals.links_snackbar_tagged, selected.size, selected.size
-                        )
-                    )
+                    emitSnackBarMessage(LinksSnackbar.Tagged(selected.size))
                 }
             }
         }
@@ -501,20 +487,10 @@ internal fun LinksViewModel.handleListAction(action: ListAction) {
                 if (selectedLinks.isNotEmpty()) {
                     when (val result = jobQueueRepository.submitTask(ShareLinksTask(selectedLinks))) {
                         is cut.the.crap.data.rest.Result.Success -> {
-                            emitSnackBarMessage(
-                                context.resources.getQuantityString(
-                                    R.plurals.links_snackbar_submitted,
-                                    selectedLinks.size, selectedLinks.size
-                                )
-                            )
+                            emitSnackBarMessage(LinksSnackbar.Submitted(selectedLinks.size))
                         }
                         is cut.the.crap.data.rest.Result.Error -> {
-                            emitSnackBarMessage(
-                                context.getString(
-                                    R.string.links_snackbar_submit_failed,
-                                    result.error.localized(context),
-                                )
-                            )
+                            emitSnackBarMessage(LinksSnackbar.SubmitFailed(result.error))
                         }
                     }
                 }
@@ -533,26 +509,13 @@ internal fun LinksViewModel.handleFileAction(action: FileAction) {
         is FileAction.Export -> {
             viewModelScope.launch(Dispatchers.IO) {
                 val result = exportSelectedItems(action.outputStream)
-                result.onSuccess { message ->
-                    emitSnackBarMessage(message)
-                }.onFailure { error ->
-                    emitSnackBarMessage(
-                        context.getString(R.string.links_snackbar_export_failed, error.message ?: "")
-                    )
-                }
+                emitSnackBarMessage(result)
             }
         }
 
         is FileAction.Import -> {
             viewModelScope.launch(Dispatchers.IO) {
-                val result = importFromFile(action.uri, context)
-                result.onSuccess { message ->
-                    emitSnackBarMessage(message)
-                }.onFailure { error ->
-                    emitSnackBarMessage(
-                        context.getString(R.string.links_snackbar_import_failed, error.message ?: "")
-                    )
-                }
+                emitSnackBarMessage(importFromFile(action.uri, context))
             }
         }
 

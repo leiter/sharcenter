@@ -36,13 +36,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.card_cd_collapse
+import cut.the.crap.shared.resources.card_cd_expand
+import cut.the.crap.shared.resources.card_cd_load_editor
+import cut.the.crap.shared.resources.card_cd_toggle_favorite
+import cut.the.crap.shared.resources.cd_copy_clipboard
+import cut.the.crap.shared.resources.context_menu_delete
+import cut.the.crap.shared.resources.context_menu_post_facebook
+import cut.the.crap.shared.resources.context_menu_post_twitter
+import cut.the.crap.shared.resources.context_menu_share
+import cut.the.crap.shared.resources.facebook
+import cut.the.crap.shared.resources.posts_cd_toggle_selection
+import cut.the.crap.shared.resources.x
 import cut.the.crap.data.domain.ContentItem
 import cut.the.crap.tools.formatTimestampWithLocalizedFormatter
 import cut.the.crap.ui.components.MenuItem
@@ -141,7 +153,7 @@ fun ContentItemCard(
                     ) {
                         Icon(
                             imageVector = if (isExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                            contentDescription = stringResource(if (isExpanded) R.string.card_cd_collapse else R.string.card_cd_expand)
+                            contentDescription = stringResource(if (isExpanded) Res.string.card_cd_collapse else Res.string.card_cd_expand)
                         )
                     }
                 }
@@ -186,7 +198,7 @@ fun ContentItemCard(
                 Icon(
                     imageVector = if (isSelected) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
                     tint = if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    contentDescription = stringResource(R.string.posts_cd_toggle_selection),
+                    contentDescription = stringResource(Res.string.posts_cd_toggle_selection),
                     modifier = Modifier.padding(12.dp)
                 )
               } else {
@@ -198,7 +210,7 @@ fun ContentItemCard(
                     ) {
                         Icon(
                             imageVector = if (contentItem.isFavorite) Icons.Filled.Star else Icons.Filled.StarOutline,
-                            contentDescription = stringResource(R.string.card_cd_toggle_favorite)
+                            contentDescription = stringResource(Res.string.card_cd_toggle_favorite)
                         )
                     }
 
@@ -209,7 +221,7 @@ fun ContentItemCard(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.CopyAll,
-                            contentDescription = stringResource(R.string.cd_copy_clipboard)
+                            contentDescription = stringResource(Res.string.cd_copy_clipboard)
                         )
                     }
 
@@ -220,7 +232,7 @@ fun ContentItemCard(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
-                            contentDescription = stringResource(R.string.card_cd_load_editor)
+                            contentDescription = stringResource(Res.string.card_cd_load_editor)
                         )
                     }
                 }
@@ -229,10 +241,10 @@ fun ContentItemCard(
                 MyPopupMenu(
                     action = action,
                     menuItems = listOf(
-                        MenuItem(R.string.context_menu_post_twitter, iconRes = R.drawable.x, actionPayload = ContentItemAction.PostOnTwitter(contentItem)),
-                        MenuItem(R.string.context_menu_post_facebook, iconRes = R.drawable.facebook, actionPayload = ContentItemAction.PostOnFacebook(contentItem)),
-                        MenuItem(R.string.context_menu_share, Icons.Filled.Share, ContentItemAction.ShareViaSheet(contentItem)),
-                        MenuItem(R.string.context_menu_delete, Icons.Filled.Delete, ContentItemAction.Delete(contentItem.id))
+                        MenuItem(Res.string.context_menu_post_twitter, iconRes = Res.drawable.x, actionPayload = ContentItemAction.PostOnTwitter(contentItem)),
+                        MenuItem(Res.string.context_menu_post_facebook, iconRes = Res.drawable.facebook, actionPayload = ContentItemAction.PostOnFacebook(contentItem)),
+                        MenuItem(Res.string.context_menu_share, Icons.Filled.Share, ContentItemAction.ShareViaSheet(contentItem)),
+                        MenuItem(Res.string.context_menu_delete, Icons.Filled.Delete, ContentItemAction.Delete(contentItem.id))
                     )
                 )
               }

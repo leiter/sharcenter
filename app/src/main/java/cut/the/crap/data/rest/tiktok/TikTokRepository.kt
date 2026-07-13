@@ -1,6 +1,5 @@
 package cut.the.crap.data.rest.tiktok
 
-import cut.the.crap.R
 import cut.the.crap.data.rest.Result
 import cut.the.crap.tools.parseTikTokUrl
 import io.ktor.client.HttpClient

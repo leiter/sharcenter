@@ -1,6 +1,5 @@
 package cut.the.crap.data.rest.reddit
 
-import cut.the.crap.R
 import cut.the.crap.data.rest.Result
 import cut.the.crap.tools.parseRedditUrl
 import io.ktor.client.HttpClient

@@ -23,8 +23,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import cut.the.crap.R
+import org.jetbrains.compose.resources.stringResource
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.search_cd_search
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -116,7 +117,7 @@ private fun ExpandedSearchBar(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Search,
-                    contentDescription = stringResource(R.string.search_cd_search),
+                    contentDescription = stringResource(Res.string.search_cd_search),
                     modifier = Modifier.clickable { onQueryChanged(query) }
                 )
             }

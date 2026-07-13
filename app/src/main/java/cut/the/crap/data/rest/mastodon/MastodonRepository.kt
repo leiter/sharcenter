@@ -1,6 +1,5 @@
 package cut.the.crap.data.rest.mastodon
 
-import cut.the.crap.R
 import cut.the.crap.data.rest.Result
 import cut.the.crap.tools.mastodonStatusApiUrl
 import io.ktor.client.HttpClient

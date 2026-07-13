@@ -51,8 +51,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import cut.the.crap.R
+import org.jetbrains.compose.resources.stringResource
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.dialog_delete
+import cut.the.crap.shared.resources.links_bulk_delete
+import cut.the.crap.shared.resources.links_cd_exit_selection
+import cut.the.crap.shared.resources.links_deselect_all
+import cut.the.crap.shared.resources.links_select_all_filtered
+import cut.the.crap.shared.resources.posts_cd_collapse_filters
+import cut.the.crap.shared.resources.posts_cd_create_item
+import cut.the.crap.shared.resources.posts_cd_expand_filters
+import cut.the.crap.shared.resources.posts_cd_load_stats
+import cut.the.crap.shared.resources.posts_selection_count
+import cut.the.crap.shared.resources.posts_snackbar_cleared
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -75,7 +86,7 @@ import cut.the.crap.ui.components.api.TextAction
 import cut.the.crap.ui.components.api.UiAction
 import cut.the.crap.ui.components.api.UploadAction
 import cut.the.crap.ui.components.api.ContentItemAction
-import cut.the.crap.ui.localized
+import cut.the.crap.ui.localizedText
 import cut.the.crap.ui.theme.PreviewAppThemeProvider
 import cut.the.crap.ui.theme.PreviewThemeWrapper
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -106,14 +117,14 @@ fun PostsScreen(
             when (event) {
                 EciUiEvent.NavigateToTable -> navController.navigate("eci_statistics")
                 is EciUiEvent.ShowError ->
-                    Toast.makeText(context, event.error.localized(context), Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, event.error.localizedText(), Toast.LENGTH_LONG).show()
             }
         }
     }
 
     // Snackbar strings resolved here since showSnackbar runs outside composable scope.
-    val postClearedMessage = stringResource(R.string.posts_snackbar_cleared)
-    val deleteActionLabel = stringResource(R.string.dialog_delete)
+    val postClearedMessage = stringResource(Res.string.posts_snackbar_cleared)
+    val deleteActionLabel = stringResource(Res.string.dialog_delete)
 
     // Show a snackbar (with a Delete action) when the editor is cleared,
     // letting the user also delete the post that was detached from the editor.
@@ -249,7 +260,7 @@ fun PostsScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = stringResource(R.string.posts_selection_count, selectedCount),
+                            text = stringResource(Res.string.posts_selection_count, selectedCount),
                             style = MaterialTheme.typography.titleMedium
                         )
                     },
@@ -259,7 +270,7 @@ fun PostsScreen(
                         }) {
                             Icon(
                                 imageVector = Icons.Filled.Close,
-                                contentDescription = stringResource(R.string.links_cd_exit_selection)
+                                contentDescription = stringResource(Res.string.links_cd_exit_selection)
                             )
                         }
                     },
@@ -274,8 +285,8 @@ fun PostsScreen(
                                 tint = if (allSelected) MaterialTheme.colorScheme.error
                                     else MaterialTheme.colorScheme.secondary,
                                 contentDescription = stringResource(
-                                    if (allSelected) R.string.links_deselect_all
-                                    else R.string.links_select_all_filtered
+                                    if (allSelected) Res.string.links_deselect_all
+                                    else Res.string.links_select_all_filtered
                                 )
                             )
                         }
@@ -283,7 +294,7 @@ fun PostsScreen(
                             IconButton(onClick = { action(ContentItemAction.DeleteSelected) }) {
                                 Icon(
                                     imageVector = Icons.Filled.Delete,
-                                    contentDescription = stringResource(R.string.links_bulk_delete)
+                                    contentDescription = stringResource(Res.string.links_bulk_delete)
                                 )
                             }
                         }
@@ -324,7 +335,7 @@ fun PostsScreen(
                                 else Icons.Filled.FilterList
                             ),
                             onClick = { action(UiAction.ExpandTextInput(!filterExpanded, cut.the.crap.ui.components.api.Screen.Posts)) },
-                            contentDescription = stringResource(if (filterExpanded) R.string.posts_cd_collapse_filters else R.string.posts_cd_expand_filters),
+                            contentDescription = stringResource(if (filterExpanded) Res.string.posts_cd_collapse_filters else Res.string.posts_cd_expand_filters),
                             showBadge = hasActiveFilters && !filterExpanded
                         )
 
@@ -344,7 +355,7 @@ fun PostsScreen(
                                     Icons.Filled.BarChart
                                 ),
                                 onClick = { onLoadEciStatistics() },
-                                contentDescription = stringResource(R.string.posts_cd_load_stats)
+                                contentDescription = stringResource(Res.string.posts_cd_load_stats)
                             )
                         }
                     },
@@ -401,7 +412,7 @@ fun PostsScreen(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Add,
-                    contentDescription = stringResource(R.string.posts_cd_create_item)
+                    contentDescription = stringResource(Res.string.posts_cd_create_item)
                 )
             }
             }

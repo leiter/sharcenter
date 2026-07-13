@@ -17,8 +17,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import cut.the.crap.R
+import org.jetbrains.compose.resources.stringResource
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.dialog_cancel
+import cut.the.crap.shared.resources.dialog_delete
+import cut.the.crap.shared.resources.dialog_save
+import cut.the.crap.shared.resources.edit_dialog_confirm_delete
+import cut.the.crap.shared.resources.edit_dialog_description_label
+import cut.the.crap.shared.resources.edit_dialog_hide
+import cut.the.crap.shared.resources.edit_dialog_link_label
+import cut.the.crap.shared.resources.edit_entity_title
 import androidx.compose.ui.unit.dp
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.ui.components.api.Action
@@ -75,8 +83,8 @@ fun MyEditDialog(
                 }
             ) {
                 val confirmRes = when (style) {
-                    is MyEditDialogStyle.OfferDelete -> R.string.dialog_delete
-                    else -> R.string.dialog_save
+                    is MyEditDialogStyle.OfferDelete -> Res.string.dialog_delete
+                    else -> Res.string.dialog_save
                 }
                 Text(stringResource(confirmRes))
             }
@@ -85,7 +93,7 @@ fun MyEditDialog(
             TextButton(
                 onClick = onDismissRequest
             ) {
-                Text(stringResource(R.string.dialog_cancel))
+                Text(stringResource(Res.string.dialog_cancel))
             }
         }
     )
@@ -95,7 +103,7 @@ fun MyEditDialog(
 private fun MyEditDialogStyle.renderTitle(): (@Composable () -> Unit)? {
     return when (this) {
         is MyEditDialogStyle.EditEntity -> {
-            { Text(text = stringResource(R.string.edit_entity_title)) }
+            { Text(text = stringResource(Res.string.edit_entity_title)) }
         }
         // Delete/Export styles show no dialog title.
         is MyEditDialogStyle.OfferDelete -> null
@@ -113,7 +121,7 @@ private fun MyEditDialogStyle.renderText(action: (Action) -> Unit): (@Composable
                     OutlinedTextField(
                         value = tweetItem.link,
                         onValueChange = { /* TODO: Add link edit action */ },
-                        label = { Text(stringResource(R.string.edit_dialog_link_label)) },
+                        label = { Text(stringResource(Res.string.edit_dialog_link_label)) },
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -122,7 +130,7 @@ private fun MyEditDialogStyle.renderText(action: (Action) -> Unit): (@Composable
                     OutlinedTextField(
                         value = tweetItem.description,
                         onValueChange = { /* TODO: Add description edit action */ },
-                        label = { Text(stringResource(R.string.edit_dialog_description_label)) },
+                        label = { Text(stringResource(Res.string.edit_dialog_description_label)) },
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -141,11 +149,11 @@ private fun MyEditDialogStyle.renderText(action: (Action) -> Unit): (@Composable
                             },
                             ) { Icon(imageVector = Icons.Outlined.Check, contentDescription = "")
                         }
-                        Text(text = stringResource(R.string.edit_dialog_hide))
+                        Text(text = stringResource(Res.string.edit_dialog_hide))
                     }
                 }
             }
-            is MyEditDialogStyle.OfferDelete -> { Text(text = stringResource(R.string.edit_dialog_confirm_delete)) }
+            is MyEditDialogStyle.OfferDelete -> { Text(text = stringResource(Res.string.edit_dialog_confirm_delete)) }
 
             is MyEditDialogStyle.ExportLinks -> TODO()
         }

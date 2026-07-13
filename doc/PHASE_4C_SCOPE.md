@@ -67,15 +67,47 @@ Multiplatform. The app keeps running on Android throughout — CMP targets Andro
   (`composeMultiplatform = "1.8.2"`, `composeIcons = "1.7.3"`).
   *The biggest WP1 unknown is now closed; no icon vendoring needed.*
 
-### WP2 — Resources → Compose Multiplatform Resources  *(L, low-risk, mostly scriptable)*
-**The single biggest line item (504 call sites), but far cheaper than it looks:**
-CMP Resources reads **the same `values/strings.xml` format**, so the catalogue moves nearly
-verbatim into `composeResources/values/strings.xml`. Only one locale, so no fan-out.
-- `stringResource(R.string.x)` → `stringResource(Res.string.x)` — scriptable regex.
-- 15 plurals → `pluralStringResource(Res.plurals.x, n)`.
-- 19 `painterResource(R.drawable.x)` → `Res.drawable.x` (+ move 9 drawables).
-- ⚠ **The hard 10%:** 8 `data/rest` repositories build user-facing messages from `R.string`
-  through `StringProvider.get(resId: Int)`. CMP has no `Int` resource ids — see **Decision A**.
+### WP2 — Resources → Compose Multiplatform Resources  ✅ **COMPLETE**
+The catalogue now lives in **`:shared/commonMain/composeResources/`** (not `:app`) — that is
+where it must end up for WP7 anyway, and `:shared` is a real KMP module so `Res` generation is
+guaranteed there. `compose.resources { publicResClass = true }` lets `:app` consume it across
+the module boundary. Generated and verified: **354 strings · 14 plurals · 9 drawables**, an
+exact match with the old catalogue.
+
+`app/src/main/res/values/strings.xml` survives with **exactly one entry, `app_name`** — it is
+the manifest's `android:label`, resolved by AAPT, so it cannot come from a Compose resource.
+
+**Four things that were *not* the mechanical find-and-replace the estimate assumed:**
+
+1. **Accessors are extension properties** (`val Res.string.foo`), so every single one needs its
+   own `import` — you cannot just swap `R.` for `Res.`.
+2. **Deferred `@StringRes Int` fields had to be retyped.** `Screen`, `SettingsModels` (7 enums),
+   `MyPopupMenu.MenuItem`, `StateIndicators` and the ECI enums all *stored* resource ids as
+   `Int`. Those became `StringResource` / `DrawableResource` — strictly better typing, and it is
+   what makes them movable.
+3. **`getString` is `suspend` outside composition.** 47 call sites in 8 files were not
+   composable. Two patterns, no `runBlocking` anywhere: **hoist** the string into composition and
+   capture the `String` in the callback (fixed text), or resolve it in a **coroutine** (when the
+   value — e.g. a plural quantity — only exists at click time). In `ShareActivity`, `finish()`
+   had to move *inside* the coroutine: finishing first cancels `lifecycleScope` before the
+   Toast is ever created.
+4. **⚠ CMP only substitutes *positional* placeholders.** Android's `getQuantityString` accepts
+   bare `%d`; **CMP does not** — it renders the literal text. All 28 plural items and 5 strings
+   used bare `%d`/`%s`, so **every plural in the app was silently broken**: it compiled, all 212
+   tests passed, and nothing was logged. Caught only by *looking at the running app* (the editor
+   header read `%d chars`). Fixed by converting 33 placeholders to `%1$d`/`%1$s`.
+   **Lesson: a green build proves nothing about resources — they resolve at runtime.**
+
+**Decision A2 got extended one layer up.** WP2 exposed that the *ViewModel* layer still built
+user-facing prose (`LinksActionHandlers` / `LinksImportExport`), which broke 4 JVM unit tests —
+CMP's `getPluralString` needs `android.content.res.Resources`, absent in plain JVM tests. Rather
+than paper over it with Robolectric, the same A2 split was applied: the ViewModel now emits a
+typed **`LinksSnackbar`** event and the UI phrases it (`LinksSnackbarMessages.kt`, mirroring
+`AppErrorMessages.kt`). The ViewModel layer is now **100 % resource-free**, the tests are pure
+JVM again with no Android stubs, and `LinksViewModel` is that much closer to `commonMain` (WP6).
+
+*Note: the old "hard 10%" (8 `data/rest` repos using `StringProvider`) was already dissolved by
+the A2 work in `63c9418`; `data/rest` never touched a resource in WP2.*
 
 ### WP3 — Platform seams (`expect`/`actual`)  *(M, low-risk)*
 Common interfaces + Android actuals; desktop actuals are mostly trivial or no-ops.
@@ -161,9 +193,14 @@ build. Mitigation: land WP1 first (it's the one that can genuinely block), keep 
 ending green on Android, and don't move UI until its couplings are gone.
 
 ## 5. Status / next step
+- ✅ **Decision A decided + done** (A2: typed errors; the UI localises). Extended to the
+  ViewModel layer in WP2 via `LinksSnackbar`.
 - ✅ **Decision B decided** (no iOS; Android + Desktop, seams kept iOS-ready).
-- ✅ **WP1 icons spike done** — CMP 1.8.2 + icons 1.7.3 verified on both targets.
-- ⏳ **Open: Decision A** (data-layer strings) — blocks WP2 + WP5.
+- ✅ **WP1 complete** — CMP toolchain, Coil 3, CMP navigation. (`@Preview` deferred to WP7.)
+- ✅ **WP2 complete** — resources in `:shared/commonMain/composeResources`; `:app` has no
+  `R.string`/`R.plurals`/`R.drawable` left (only 3 `R.mipmap` in an Android-only `@Preview`).
 - ⏳ **Open: Decision C** (desktop feature parity; recommend reduced v1 + capability flags).
 
-**Next step:** WP1 proper — swap `:app` from AndroidX Compose to CMP, keeping Android green.
+**Next step:** WP3 — platform seams (`expect`/`actual`): Logger, Notifier(Toast), Clipboard,
+Sharer, UrlOpener, FilePicker, InstalledApps, LoginFlow. WP2 already surfaced most of the Toast
+call sites, so the `Notifier` seam has a clear shape.

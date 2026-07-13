@@ -28,10 +28,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.app_name
+import cut.the.crap.shared.resources.speed_dial_cd
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.ListAction
 import kotlinx.coroutines.delay
@@ -45,12 +47,12 @@ fun MySpeedDialFab(
     action: (Action) -> Unit = {},
     actions: List<MenuItem> = listOf(
         MenuItem(
-            title = R.string.app_name,
+            title = Res.string.app_name,
             icon = Icons.Filled.SwapVert,
             actionPayload = ListAction.InvertList
         ),
         MenuItem(
-            title = R.string.app_name,
+            title = Res.string.app_name,
             icon = Icons.Filled.FolderOpen,
             actionPayload = ListAction.InvertList
         )
@@ -76,7 +78,7 @@ fun MySpeedDialFab(
                         exit = fadeOut()
                     ) {
                         SecondaryFab(
-                            text = stringResource(id = R.string.app_name),
+                            text = stringResource(Res.string.app_name),
                             //color = Color(0xFFBB86FC),
                             action = action,
                             item
@@ -99,7 +101,7 @@ fun MySpeedDialFab(
             ) {
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.Close else Icons.Default.Add,
-                    contentDescription = stringResource(R.string.speed_dial_cd)
+                    contentDescription = stringResource(Res.string.speed_dial_cd)
                 )
             }
         }
@@ -121,7 +123,7 @@ fun SecondaryFab(
     ) {
         when {
             item.iconRes != null -> Icon(
-                painter = painterResource(id = item.iconRes),
+                painter = painterResource(item.iconRes),
                 contentDescription = "",
                 tint = Color.Unspecified
             )
@@ -180,7 +182,7 @@ fun CircularSpeedDialFab() {
         ) {
             Icon(
                 imageVector = if (isExpanded) Icons.Default.Close else Icons.Default.Add,
-                contentDescription = stringResource(R.string.speed_dial_cd)
+                contentDescription = stringResource(Res.string.speed_dial_cd)
             )
         }
     }

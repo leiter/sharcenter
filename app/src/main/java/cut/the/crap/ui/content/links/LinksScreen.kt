@@ -45,7 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.app_name
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.data.storage.provideOutputStream
@@ -82,7 +83,7 @@ fun LinkScreen(
     totalCount: StateFlow<Int>,
     screenState: StateFlow<LinksScreenState>,
     navController: NavHostController,
-    snackBarMessages: SharedFlow<String>,
+    snackBarMessages: SharedFlow<LinksSnackbar>,
 ) {
     val context = LocalContext.current
     val snackBarHostState = remember { SnackbarHostState() }
@@ -104,9 +105,9 @@ fun LinkScreen(
 
     // Collect snackBar messages
     LaunchedEffect(Unit) {
-        snackBarMessages.collect { message ->
+        snackBarMessages.collect { event ->
             snackBarHostState.showSnackbar(
-                message = message,
+                message = event.localizedText(),
                 duration = androidx.compose.material3.SnackbarDuration.Long
             )
         }
@@ -353,22 +354,22 @@ fun LinkScreen(
                     action = actionHandler,
                     actions = listOf(
                         MenuItem(
-                            title = R.string.app_name,
+                            title = Res.string.app_name,
                             icon = Icons.Filled.ArrowUpward,
                             actionPayload = ListAction.ScrollToTop
                         ),
 //                        MenuItem(
-//                            title = R.string.app_name,
+//                            title = Res.string.app_name,
 //                            icon = Icons.Filled.FolderOpen,
 //                            actionPayload = FileAction.Import(Uri.EMPTY) // Will be intercepted
 //                        ),
 //                        MenuItem(
-//                            title = R.string.app_name,
+//                            title = Res.string.app_name,
 //                            icon = Icons.Filled.Download,
 //                            actionPayload = FileAction.Export(null) // Will be intercepted
 //                        ),
                         MenuItem(
-                            title = R.string.app_name,
+                            title = Res.string.app_name,
                             icon = Icons.Filled.SwapVert,
                             actionPayload = ListAction.InvertList
                         ),
@@ -531,7 +532,7 @@ private fun Preview(
 //        val itemListFlow = MutableStateFlow(emptyList())  //mockedLinkItems
         val totalCountFlow = MutableStateFlow(3)
         val screenStateFlow = MutableStateFlow(LinksScreenState())
-        val snackBarFlow = MutableSharedFlow<String>()
+        val snackBarFlow = MutableSharedFlow<LinksSnackbar>()
 
         LinkScreen(
             action = {},

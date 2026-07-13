@@ -1,6 +1,7 @@
 package cut.the.crap.ui.components
 
-import androidx.annotation.StringRes
+import org.jetbrains.compose.resources.StringResource
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
@@ -28,7 +29,7 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun LoadingIndicator(
-    @StringRes messageResId: Int,
+    messageResId: StringResource,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -58,8 +59,8 @@ fun LoadingIndicator(
  */
 @Composable
 fun EmptyStateIndicator(
-    @StringRes titleResId: Int,
-    @StringRes messageResId: Int,
+    titleResId: StringResource,
+    messageResId: StringResource,
     modifier: Modifier = Modifier,
     icon: ImageVector = Icons.Outlined.FolderOpen,
 ) {

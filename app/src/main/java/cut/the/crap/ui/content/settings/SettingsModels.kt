@@ -1,16 +1,41 @@
 package cut.the.crap.ui.content.settings
 
-import cut.the.crap.R
+import org.jetbrains.compose.resources.StringResource
+
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.backup_frequency_daily
+import cut.the.crap.shared.resources.backup_frequency_monthly
+import cut.the.crap.shared.resources.backup_frequency_off
+import cut.the.crap.shared.resources.backup_frequency_weekly
+import cut.the.crap.shared.resources.backup_retention_10
+import cut.the.crap.shared.resources.backup_retention_30
+import cut.the.crap.shared.resources.backup_retention_5
+import cut.the.crap.shared.resources.backup_retention_all
+import cut.the.crap.shared.resources.date_range_preset_30_days
+import cut.the.crap.shared.resources.date_range_preset_7_days
+import cut.the.crap.shared.resources.date_range_preset_90_days
+import cut.the.crap.shared.resources.date_range_preset_all_time
+import cut.the.crap.shared.resources.date_range_preset_custom
+import cut.the.crap.shared.resources.favorite_filter_preset_all
+import cut.the.crap.shared.resources.favorite_filter_preset_favorites_only
+import cut.the.crap.shared.resources.favorite_filter_preset_non_favorites_only
+import cut.the.crap.shared.resources.sort_order_preset_by_date
+import cut.the.crap.shared.resources.sort_order_preset_by_order
+import cut.the.crap.shared.resources.theme_preference_dark
+import cut.the.crap.shared.resources.theme_preference_light
+import cut.the.crap.shared.resources.theme_preference_system
+import cut.the.crap.shared.resources.timestamp_format_absolute
+import cut.the.crap.shared.resources.timestamp_format_relative
 
 /**
  * Date range presets for filtering content
  */
-enum class DateRangePreset(val displayNameResId: Int, val days: Int?) {
-    SEVEN_DAYS(R.string.date_range_preset_7_days, 7),
-    THIRTY_DAYS(R.string.date_range_preset_30_days, 30),
-    NINETY_DAYS(R.string.date_range_preset_90_days, 90),
-    ALL_TIME(R.string.date_range_preset_all_time, null),
-    CUSTOM(R.string.date_range_preset_custom, -1); // -1 indicates custom range
+enum class DateRangePreset(val displayNameResId: StringResource, val days: Int?) {
+    SEVEN_DAYS(Res.string.date_range_preset_7_days, 7),
+    THIRTY_DAYS(Res.string.date_range_preset_30_days, 30),
+    NINETY_DAYS(Res.string.date_range_preset_90_days, 90),
+    ALL_TIME(Res.string.date_range_preset_all_time, null),
+    CUSTOM(Res.string.date_range_preset_custom, -1); // -1 indicates custom range
 
     companion object {
         fun fromDays(days: Int?): DateRangePreset {
@@ -50,27 +75,27 @@ enum class DateRangePreset(val displayNameResId: Int, val days: Int?) {
 /**
  * Theme preferences
  */
-enum class ThemePreference(val displayNameResId: Int) {
-    SYSTEM(R.string.theme_preference_system),
-    LIGHT(R.string.theme_preference_light),
-    DARK(R.string.theme_preference_dark)
+enum class ThemePreference(val displayNameResId: StringResource) {
+    SYSTEM(Res.string.theme_preference_system),
+    LIGHT(Res.string.theme_preference_light),
+    DARK(Res.string.theme_preference_dark)
 }
 
 /**
  * Timestamp display format
  */
-enum class TimestampFormat(val displayNameResId: Int) {
-    RELATIVE(R.string.timestamp_format_relative),
-    ABSOLUTE(R.string.timestamp_format_absolute)
+enum class TimestampFormat(val displayNameResId: StringResource) {
+    RELATIVE(Res.string.timestamp_format_relative),
+    ABSOLUTE(Res.string.timestamp_format_absolute)
 }
 
 /**
  * Favorite filter preset
  */
-enum class FavoriteFilterPreset(val displayNameResId: Int) {
-    ALL(R.string.favorite_filter_preset_all),
-    FAVORITES_ONLY(R.string.favorite_filter_preset_favorites_only),
-    NON_FAVORITES_ONLY(R.string.favorite_filter_preset_non_favorites_only);
+enum class FavoriteFilterPreset(val displayNameResId: StringResource) {
+    ALL(Res.string.favorite_filter_preset_all),
+    FAVORITES_ONLY(Res.string.favorite_filter_preset_favorites_only),
+    NON_FAVORITES_ONLY(Res.string.favorite_filter_preset_non_favorites_only);
 
     /**
      * Convert to Boolean? for the filter
@@ -109,9 +134,9 @@ enum class FavoriteFilterPreset(val displayNameResId: Int) {
 /**
  * Sort order preset
  */
-enum class SortOrderPreset(val displayNameResId: Int) {
-    BY_ORDER(R.string.sort_order_preset_by_order),
-    BY_DATE(R.string.sort_order_preset_by_date);
+enum class SortOrderPreset(val displayNameResId: StringResource) {
+    BY_ORDER(Res.string.sort_order_preset_by_order),
+    BY_DATE(Res.string.sort_order_preset_by_date);
 
     /**
      * Returns true if sorting by date
@@ -133,22 +158,22 @@ enum class SortOrderPreset(val displayNameResId: Int) {
  * [intervalDays] is the minimum number of calendar days between automatic backups;
  * [OFF] disables automatic backups entirely.
  */
-enum class BackupFrequency(val displayNameResId: Int, val intervalDays: Int) {
-    OFF(R.string.backup_frequency_off, Int.MAX_VALUE),
-    DAILY(R.string.backup_frequency_daily, 1),
-    WEEKLY(R.string.backup_frequency_weekly, 7),
-    MONTHLY(R.string.backup_frequency_monthly, 30)
+enum class BackupFrequency(val displayNameResId: StringResource, val intervalDays: Int) {
+    OFF(Res.string.backup_frequency_off, Int.MAX_VALUE),
+    DAILY(Res.string.backup_frequency_daily, 1),
+    WEEKLY(Res.string.backup_frequency_weekly, 7),
+    MONTHLY(Res.string.backup_frequency_monthly, 30)
 }
 
 /**
  * Retention policy applied after each successful backup.
  * [keepCount] is the number of most-recent backups to keep (null = keep all).
  */
-enum class BackupRetention(val displayNameResId: Int, val keepCount: Int?) {
-    KEEP_ALL(R.string.backup_retention_all, null),
-    KEEP_5(R.string.backup_retention_5, 5),
-    KEEP_10(R.string.backup_retention_10, 10),
-    KEEP_30(R.string.backup_retention_30, 30)
+enum class BackupRetention(val displayNameResId: StringResource, val keepCount: Int?) {
+    KEEP_ALL(Res.string.backup_retention_all, null),
+    KEEP_5(Res.string.backup_retention_5, 5),
+    KEEP_10(Res.string.backup_retention_10, 10),
+    KEEP_30(Res.string.backup_retention_30, 30)
 }
 
 /**

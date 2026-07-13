@@ -118,6 +118,8 @@ dependencies {
     implementation(compose.material3)
     implementation(compose.ui)
     implementation(compose.uiTooling)
+    // String/drawable catalogue; the `Res` class itself is generated in :shared.
+    implementation(compose.components.resources)
     // Compose Multiplatform navigation — same androidx.navigation package names,
     // so the call sites are unchanged.
     implementation(libs.navigation.compose)

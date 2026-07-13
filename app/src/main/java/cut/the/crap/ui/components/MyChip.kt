@@ -21,8 +21,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import cut.the.crap.R
+import org.jetbrains.compose.resources.stringResource
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.chip_from_prefix
+import cut.the.crap.shared.resources.chip_to_prefix
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
@@ -227,8 +229,8 @@ private fun ChipContent(filterState: FilterState){
         is FilterState.DateState -> {
             val displayText = if (filterState.date != null) {
                 val prefix = when (filterState.dateType) {
-                    DateType.START -> stringResource(R.string.chip_from_prefix)
-                    DateType.END -> stringResource(R.string.chip_to_prefix)
+                    DateType.START -> stringResource(Res.string.chip_from_prefix)
+                    DateType.END -> stringResource(Res.string.chip_to_prefix)
                 }
                 prefix + filterState.formattedDate
             } else {

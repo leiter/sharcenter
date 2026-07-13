@@ -215,12 +215,12 @@ class LinksViewModel constructor(
         initialValue = internalScreenState.value
     )
 
-    private val _snackBarMessage = MutableSharedFlow<String>()
-    val snackBarMessage: SharedFlow<String> = _snackBarMessage.asSharedFlow()
+    private val _snackBarMessage = MutableSharedFlow<LinksSnackbar>()
+    val snackBarMessage: SharedFlow<LinksSnackbar> = _snackBarMessage.asSharedFlow()
 
-    // Helper function for action handlers to emit snackBar messages
-    internal suspend fun emitSnackBarMessage(message: String) {
-        _snackBarMessage.emit(message)
+    // Action handlers report *what happened*; the UI phrases it (see LinksSnackbarMessages).
+    internal suspend fun emitSnackBarMessage(event: LinksSnackbar) {
+        _snackBarMessage.emit(event)
     }
 
     val listState : StateFlow<List<ContentLink>> =

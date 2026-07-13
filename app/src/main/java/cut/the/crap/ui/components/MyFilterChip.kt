@@ -28,14 +28,15 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.app_name
 import cut.the.crap.ui.components.MyFilterChipTag.CONTAINER
 import cut.the.crap.ui.components.MyFilterChipTag.DEFAULT_SUFFIX
 import cut.the.crap.ui.components.MyFilterChipTag.ICON
@@ -273,7 +274,7 @@ object MyFilterDefaults {
 
     @Composable
     fun strings(
-        unselectDescriptionTemplate: String = stringResource(id = R.string.app_name),
+        unselectDescriptionTemplate: String = stringResource(Res.string.app_name),
     ): MyFilterStringProvider {
         return MyFilterStringProvider(
             unselectDescriptionTemplate = unselectDescriptionTemplate

@@ -61,8 +61,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
@@ -70,7 +70,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.bluesky
+import cut.the.crap.shared.resources.context_menu_clipboard
+import cut.the.crap.shared.resources.context_menu_comment_quote
+import cut.the.crap.shared.resources.context_menu_compose_post
+import cut.the.crap.shared.resources.context_menu_delete
+import cut.the.crap.shared.resources.context_menu_open
+import cut.the.crap.shared.resources.context_menu_show_channel
+import cut.the.crap.shared.resources.context_menu_show_profile
+import cut.the.crap.shared.resources.img_not_available
+import cut.the.crap.shared.resources.links_cd_add_accounts
+import cut.the.crap.shared.resources.links_cd_add_hashtags
+import cut.the.crap.shared.resources.links_cd_add_keywords
+import cut.the.crap.shared.resources.links_cd_remove_handle
+import cut.the.crap.shared.resources.links_cd_remove_hashtag
+import cut.the.crap.shared.resources.links_cd_remove_keyword
+import cut.the.crap.shared.resources.links_cd_video_thumbnail
+import cut.the.crap.shared.resources.mastodon
+import cut.the.crap.shared.resources.reddit
+import cut.the.crap.shared.resources.tiktok
+import cut.the.crap.shared.resources.youtube
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.data.rest.YouTubeUrlParser
 import cut.the.crap.tools.DescriptionParser
@@ -215,7 +235,7 @@ fun LinkListItem(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                             labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             enabled = !selectionState,
-                            removeContentDescription = stringResource(R.string.links_cd_remove_handle),
+                            removeContentDescription = stringResource(Res.string.links_cd_remove_handle),
                             onRemove = { handle ->
                                 val updated = LinkMetadata.removeTag(item, handle, ChipsType.Handle)
                                 action(ContentLinkAction.EditSearchHint(item, updated.description))
@@ -230,7 +250,7 @@ fun LinkListItem(
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
                             labelColor = MaterialTheme.colorScheme.onTertiaryContainer,
                             enabled = !selectionState,
-                            removeContentDescription = stringResource(R.string.links_cd_remove_hashtag),
+                            removeContentDescription = stringResource(Res.string.links_cd_remove_hashtag),
                             onRemove = { hashtag ->
                                 val updated = LinkMetadata.removeTag(item, hashtag, ChipsType.Tag)
                                 action(ContentLinkAction.EditSearchHint(item, updated.description))
@@ -245,7 +265,7 @@ fun LinkListItem(
                             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                             labelColor = MaterialTheme.colorScheme.onPrimaryContainer,
                             enabled = !selectionState,
-                            removeContentDescription = stringResource(R.string.links_cd_remove_keyword),
+                            removeContentDescription = stringResource(Res.string.links_cd_remove_keyword),
                             onRemove = { keyword ->
                                 val updated = LinkMetadata.removeTag(item, keyword, ChipsType.KeyWords)
                                 action(ContentLinkAction.EditSearchHint(item, updated.description))
@@ -279,7 +299,7 @@ fun LinkListItem(
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.AlternateEmail,
-                                contentDescription = stringResource(R.string.links_cd_add_accounts),
+                                contentDescription = stringResource(Res.string.links_cd_add_accounts),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -297,7 +317,7 @@ fun LinkListItem(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Tag,
-                                contentDescription = stringResource(R.string.links_cd_add_hashtags),
+                                contentDescription = stringResource(Res.string.links_cd_add_hashtags),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -315,7 +335,7 @@ fun LinkListItem(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Numbers,
-                                contentDescription = stringResource(R.string.links_cd_add_keywords),
+                                contentDescription = stringResource(Res.string.links_cd_add_keywords),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -340,21 +360,21 @@ fun LinkListItem(
             MyPopupMenu(
                 action = action,
                 menuItems = buildList {
-                    add(MenuItem(R.string.context_menu_open, Icons.Filled.Link, ContentLinkAction.Open(item)))
+                    add(MenuItem(Res.string.context_menu_open, Icons.Filled.Link, ContentLinkAction.Open(item)))
                     if (profileUrl != null) {
                         val isChannel = socialInfo.platform.equals("youtube", ignoreCase = true)
                         add(
                             MenuItem(
-                                if (isChannel) R.string.context_menu_show_channel else R.string.context_menu_show_profile,
+                                if (isChannel) Res.string.context_menu_show_channel else Res.string.context_menu_show_profile,
                                 Icons.Outlined.AccountCircle,
                                 ContentLinkAction.OpenProfile(item, profileUrl)
                             )
                         )
                     }
-                    add(MenuItem(R.string.context_menu_compose_post, Icons.AutoMirrored.Filled.Send, ContentLinkAction.ComposePost(item)))
-                    add(MenuItem(R.string.context_menu_clipboard, Icons.Filled.CopyAll, ContentLinkAction.CopyToClipboard(item)))
-                    add(MenuItem(R.string.context_menu_comment_quote, Icons.AutoMirrored.Filled.Comment, ContentLinkAction.ShowCommentQuoteDialog(item)))
-                    add(MenuItem(R.string.context_menu_delete, Icons.Filled.Delete, ContentLinkAction.OfferDelete(item)))
+                    add(MenuItem(Res.string.context_menu_compose_post, Icons.AutoMirrored.Filled.Send, ContentLinkAction.ComposePost(item)))
+                    add(MenuItem(Res.string.context_menu_clipboard, Icons.Filled.CopyAll, ContentLinkAction.CopyToClipboard(item)))
+                    add(MenuItem(Res.string.context_menu_comment_quote, Icons.AutoMirrored.Filled.Comment, ContentLinkAction.ShowCommentQuoteDialog(item)))
+                    add(MenuItem(Res.string.context_menu_delete, Icons.Filled.Delete, ContentLinkAction.OfferDelete(item)))
                 }
             )
         }
@@ -379,19 +399,18 @@ fun LinkListItem(
                     // Bluesky logo for Bluesky, Mastodon logo for Mastodon, TikTok logo for TikTok,
                     // Reddit logo for Reddit, a neutral image otherwise) so a card never shows the
                     // wrong platform badge.
-                    val thumbnailPlaceholder = painterResource(
-                        id = when {
-                            isYouTube -> R.drawable.youtube
-                            isBluesky -> R.drawable.bluesky
-                            isMastodon -> R.drawable.mastodon
-                            isTikTok -> R.drawable.tiktok
-                            isReddit -> R.drawable.reddit
-                            else -> R.drawable.img_not_available
+                    val thumbnailPlaceholder = painterResource(when {
+                            isYouTube -> Res.drawable.youtube
+                            isBluesky -> Res.drawable.bluesky
+                            isMastodon -> Res.drawable.mastodon
+                            isTikTok -> Res.drawable.tiktok
+                            isReddit -> Res.drawable.reddit
+                            else -> Res.drawable.img_not_available
                         }
                     )
                     AsyncImage(
                         model = thumbnailUrl,
-                        contentDescription = stringResource(R.string.links_cd_video_thumbnail),
+                        contentDescription = stringResource(Res.string.links_cd_video_thumbnail),
                         placeholder = thumbnailPlaceholder,
                         error = thumbnailPlaceholder,
                         fallback = thumbnailPlaceholder,

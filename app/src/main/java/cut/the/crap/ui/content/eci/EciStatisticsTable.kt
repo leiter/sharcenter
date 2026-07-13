@@ -18,14 +18,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.eci_after_submission_note
+import cut.the.crap.shared.resources.eci_col_country
+import cut.the.crap.shared.resources.eci_col_percentage
+import cut.the.crap.shared.resources.eci_col_signatures
+import cut.the.crap.shared.resources.eci_col_threshold
+import cut.the.crap.shared.resources.eci_not_available
+import cut.the.crap.shared.resources.eci_table_title
+import cut.the.crap.shared.resources.eci_table_updated
+import cut.the.crap.shared.resources.eci_total
 import cut.the.crap.data.rest.eci.EciCountrySignatures
 import cut.the.crap.data.rest.eci.EciStatistics
 import cut.the.crap.ui.theme.PreviewAppThemeProvider
@@ -79,13 +88,13 @@ fun EciStatisticsTable(
                 .padding(16.dp)
         ) {
             Text(
-                text = stringResource(R.string.eci_table_title),
+                text = stringResource(Res.string.eci_table_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
             )
 
             val updatedText = statistics.onlineUpdateDate
-                ?.let { stringResource(R.string.eci_table_updated, it) }
+                ?.let { stringResource(Res.string.eci_table_updated, it) }
             val subtitle = listOfNotNull(statistics.registrationNumber, updatedText)
                 .takeIf { it.isNotEmpty() }?.joinToString(" · ")
             if (subtitle != null) {
@@ -104,10 +113,10 @@ fun EciStatisticsTable(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                HeaderCell(stringResource(R.string.eci_col_country), WEIGHT_COUNTRY, TextAlign.Start)
-                HeaderCell(stringResource(R.string.eci_col_signatures), WEIGHT_SIGNATURES, TextAlign.End)
-                HeaderCell(stringResource(R.string.eci_col_threshold), WEIGHT_THRESHOLD, TextAlign.End)
-                HeaderCell(stringResource(R.string.eci_col_percentage), WEIGHT_PERCENTAGE, TextAlign.End)
+                HeaderCell(stringResource(Res.string.eci_col_country), WEIGHT_COUNTRY, TextAlign.Start)
+                HeaderCell(stringResource(Res.string.eci_col_signatures), WEIGHT_SIGNATURES, TextAlign.End)
+                HeaderCell(stringResource(Res.string.eci_col_threshold), WEIGHT_THRESHOLD, TextAlign.End)
+                HeaderCell(stringResource(Res.string.eci_col_percentage), WEIGHT_PERCENTAGE, TextAlign.End)
             }
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -126,7 +135,7 @@ fun EciStatisticsTable(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 BodyCell(
-                    text = stringResource(R.string.eci_total),
+                    text = stringResource(Res.string.eci_total),
                     weight = WEIGHT_COUNTRY,
                     align = TextAlign.Start,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -145,7 +154,7 @@ fun EciStatisticsTable(
             if (hasAfterSubmission) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = stringResource(R.string.eci_after_submission_note),
+                    text = stringResource(Res.string.eci_after_submission_note),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
@@ -187,13 +196,13 @@ private fun CountryRow(
             color = MaterialTheme.colorScheme.onSurface
         )
         BodyCell(
-            text = row.threshold?.let { integerFormat.format(it) } ?: stringResource(R.string.eci_not_available),
+            text = row.threshold?.let { integerFormat.format(it) } ?: stringResource(Res.string.eci_not_available),
             weight = WEIGHT_THRESHOLD,
             align = TextAlign.End,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         BodyCell(
-            text = fraction?.let { percentFormat.format(it) } ?: stringResource(R.string.eci_not_available),
+            text = fraction?.let { percentFormat.format(it) } ?: stringResource(Res.string.eci_not_available),
             weight = WEIGHT_PERCENTAGE,
             align = TextAlign.End,
             color = percentageColor,

@@ -34,6 +34,8 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
+            // The string/drawable catalogue. `api`, because :app resolves `Res.*` against it.
+            api(compose.components.resources)
             // JetBrains stopped publishing the icons artifact after 1.7.3; it resolves
             // cleanly against CMP 1.8.2 (verified). The app uses 87 distinct icons.
             api(libs.compose.icons.extended)
@@ -58,6 +60,14 @@ kotlin {
             }
         }
     }
+}
+
+// The generated `Res` class must be public (it defaults to internal) because :app consumes
+// the catalogue across the module boundary.
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "cut.the.crap.shared.resources"
+    generateResClass = always
 }
 
 android {

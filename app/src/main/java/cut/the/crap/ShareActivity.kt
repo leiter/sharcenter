@@ -1,5 +1,22 @@
 package cut.the.crap
 
+import org.jetbrains.compose.resources.getString
+
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.share_edit_dialog_cancel
+import cut.the.crap.shared.resources.share_edit_dialog_keywords_label
+import cut.the.crap.shared.resources.share_edit_dialog_link_label
+import cut.the.crap.shared.resources.share_edit_dialog_save
+import cut.the.crap.shared.resources.share_edit_dialog_title
+import cut.the.crap.shared.resources.share_toast_handle_exists
+import cut.the.crap.shared.resources.share_toast_handle_saved
+import cut.the.crap.shared.resources.share_toast_link_resolved_saved
+import cut.the.crap.shared.resources.share_toast_link_saved
+import cut.the.crap.shared.resources.share_toast_received_image
+import cut.the.crap.shared.resources.share_toast_unsupported_type
+import cut.the.crap.shared.resources.share_toast_x_login_prompt
+import cut.the.crap.shared.resources.share_toast_x_session_expired
+
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -22,7 +39,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import cut.the.crap.data.domain.ContentLink
@@ -106,14 +123,28 @@ class ShareReceiverActivity : ComponentActivity() {
                 "image/jpeg", "image/jpg" -> {
                     val imageUri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
                     Log.d(TAG, "Received image: $intent  $imageUri")
-                    imageUri?.let {
-                        Toast.makeText(this, getString(R.string.share_toast_received_image, intent.dataString.toString()), Toast.LENGTH_LONG).show()
+                    // finish() moved inside: reading the catalogue suspends, and finishing
+                    // first would cancel lifecycleScope before the Toast is ever shown.
+                    lifecycleScope.launch {
+                        imageUri?.let {
+                            Toast.makeText(
+                                this@ShareReceiverActivity,
+                                getString(Res.string.share_toast_received_image, intent.dataString.toString()),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        finish()
                     }
-                    finish()
                 }
                 else -> {
-                    Toast.makeText(this, getString(R.string.share_toast_unsupported_type, intent.type.toString()), Toast.LENGTH_SHORT).show()
-                    finish()
+                    lifecycleScope.launch {
+                        Toast.makeText(
+                            this@ShareReceiverActivity,
+                            getString(Res.string.share_toast_unsupported_type, intent.type.toString()),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        finish()
+                    }
                 }
             }
         } else {
@@ -153,14 +184,16 @@ class ShareReceiverActivity : ComponentActivity() {
     }
 
     private fun promptForLogin(reason: String) {
-        Toast.makeText(
-            this,
-            if (reason == XLoginActivity.REASON_AUTH_EXPIRED)
-                getString(R.string.share_toast_x_session_expired)
-            else
-                getString(R.string.share_toast_x_login_prompt),
-            Toast.LENGTH_SHORT
-        ).show()
+        lifecycleScope.launch {
+            Toast.makeText(
+                this@ShareReceiverActivity,
+                if (reason == XLoginActivity.REASON_AUTH_EXPIRED)
+                    getString(Res.string.share_toast_x_session_expired)
+                else
+                    getString(Res.string.share_toast_x_login_prompt),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
 
         val loginIntent = XLoginActivity.createIntent(this, reason)
         xLoginLauncher.launch(loginIntent)
@@ -221,9 +254,9 @@ class ShareReceiverActivity : ComponentActivity() {
         contentRepository.insert(contentLink)
 
         val message = if (wasResolved) {
-            getString(R.string.share_toast_link_resolved_saved)
+            getString(Res.string.share_toast_link_resolved_saved)
         } else {
-            getString(R.string.share_toast_link_saved)
+            getString(Res.string.share_toast_link_saved)
         }
         Toast.makeText(this@ShareReceiverActivity, message, Toast.LENGTH_SHORT).show()
 
@@ -256,11 +289,11 @@ class ShareReceiverActivity : ComponentActivity() {
         val existing = keywordRepository.getByType(KeywordType.ACCOUNT).first()
         if (existing.any { it.text.equals(handle, ignoreCase = true) }) {
             Log.d(TAG, "Handle already in pool, skipping: $handle")
-            Toast.makeText(this, getString(R.string.share_toast_handle_exists, handle), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(Res.string.share_toast_handle_exists, handle), Toast.LENGTH_SHORT).show()
         } else {
             keywordRepository.insert(KeyWord(text = handle, type = KeywordType.ACCOUNT))
             Log.d(TAG, "Added handle to pool: $handle")
-            Toast.makeText(this, getString(R.string.share_toast_handle_saved, handle), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(Res.string.share_toast_handle_saved, handle), Toast.LENGTH_SHORT).show()
         }
         finish()
     }
@@ -287,20 +320,20 @@ private fun ShareEditDialog(
 
     AlertDialog(
         onDismissRequest = onCancel,
-        title = { Text(stringResource(R.string.share_edit_dialog_title)) },
+        title = { Text(stringResource(Res.string.share_edit_dialog_title)) },
         text = {
             Column {
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
-                    label = { Text(stringResource(R.string.share_edit_dialog_link_label)) },
+                    label = { Text(stringResource(Res.string.share_edit_dialog_link_label)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = keywordsText,
                     onValueChange = { keywordsText = it },
-                    label = { Text(stringResource(R.string.share_edit_dialog_keywords_label)) },
+                    label = { Text(stringResource(Res.string.share_edit_dialog_keywords_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -314,12 +347,12 @@ private fun ShareEditDialog(
                 },
                 enabled = url.isNotBlank()
             ) {
-                Text(stringResource(R.string.share_edit_dialog_save))
+                Text(stringResource(Res.string.share_edit_dialog_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onCancel) {
-                Text(stringResource(R.string.share_edit_dialog_cancel))
+                Text(stringResource(Res.string.share_edit_dialog_cancel))
             }
         }
     )

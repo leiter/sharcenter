@@ -9,7 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -17,7 +17,12 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.action_back
+import cut.the.crap.shared.resources.import_export_coming_soon
+import cut.the.crap.shared.resources.import_export_export
+import cut.the.crap.shared.resources.import_export_import
+import cut.the.crap.shared.resources.settings_import_export
 import cut.the.crap.ui.components.BottomNavigationBar
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.theme.PreviewAppThemeProvider
@@ -32,12 +37,12 @@ fun ImportExportScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.settings_import_export)) },
+                title = { Text(stringResource(Res.string.settings_import_export)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
+                            contentDescription = stringResource(Res.string.action_back)
                         )
                     }
                 },
@@ -69,13 +74,13 @@ fun ImportExportScreen(
             )
 
             Text(
-                text = stringResource(R.string.settings_import_export),
+                text = stringResource(Res.string.settings_import_export),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
-                text = stringResource(R.string.import_export_coming_soon),
+                text = stringResource(Res.string.import_export_coming_soon),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -98,7 +103,7 @@ fun ImportExportScreen(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.import_export_export))
+                Text(stringResource(Res.string.import_export_export))
             }
 
             OutlinedButton(
@@ -114,7 +119,7 @@ fun ImportExportScreen(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.import_export_import))
+                Text(stringResource(Res.string.import_export_import))
             }
         }
     }

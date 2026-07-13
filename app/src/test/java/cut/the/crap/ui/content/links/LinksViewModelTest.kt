@@ -510,7 +510,7 @@ class LinksViewModelTest {
             advanceUntilIdle()
 
             val message = awaitItem()
-            assertThat(message).contains("Failed")
+            assertThat(message).isInstanceOf(LinksSnackbar.SubmitFailed::class.java)
             cancelAndIgnoreRemainingEvents()
         }
 

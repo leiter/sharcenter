@@ -1,6 +1,7 @@
 package cut.the.crap.ui.content
 
-import androidx.annotation.StringRes
+import org.jetbrains.compose.resources.StringResource
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Link
@@ -12,7 +13,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.screen_links
+import cut.the.crap.shared.resources.screen_posts
+import cut.the.crap.shared.resources.screen_profile
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.content.posts.PostsViewModel
 import cut.the.crap.ui.content.posts.PostsScreen
@@ -27,13 +31,13 @@ import cut.the.crap.ui.content.settings.SettingsScreen
 import cut.the.crap.ui.content.settings.SettingsViewModel
 
 @Immutable
-sealed class Screen(val route: String, val icon: ImageVector, @StringRes val title: Int) {
+sealed class Screen(val route: String, val icon: ImageVector, val title: StringResource) {
     @Immutable
-    data object Home : Screen("home", Icons.AutoMirrored.Default.Send, R.string.screen_posts)
+    data object Home : Screen("home", Icons.AutoMirrored.Default.Send, Res.string.screen_posts)
     @Immutable
-    data object Search : Screen("search", Icons.Default.Link, R.string.screen_links)
+    data object Search : Screen("search", Icons.Default.Link, Res.string.screen_links)
     @Immutable
-    data object Profile : Screen("profile", Icons.Default.Settings, R.string.screen_profile)
+    data object Profile : Screen("profile", Icons.Default.Settings, Res.string.screen_profile)
 }
 
 @Composable

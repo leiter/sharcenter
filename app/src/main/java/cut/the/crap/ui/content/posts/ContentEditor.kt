@@ -31,15 +31,31 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.cd_copy_clipboard
+import cut.the.crap.shared.resources.chars
+import cut.the.crap.shared.resources.context_menu_delete
+import cut.the.crap.shared.resources.context_menu_post_facebook
+import cut.the.crap.shared.resources.context_menu_post_twitter
+import cut.the.crap.shared.resources.context_menu_share
+import cut.the.crap.shared.resources.editor_cd_add_tag
+import cut.the.crap.shared.resources.editor_cd_attach
+import cut.the.crap.shared.resources.editor_cd_clear
+import cut.the.crap.shared.resources.editor_cd_paste
+import cut.the.crap.shared.resources.editor_cd_upload
+import cut.the.crap.shared.resources.editor_placeholder
+import cut.the.crap.shared.resources.editor_quick_actions
+import cut.the.crap.shared.resources.editor_title
+import cut.the.crap.shared.resources.facebook
+import cut.the.crap.shared.resources.x
 import cut.the.crap.tools.TextValueWrapper
 import cut.the.crap.ui.components.MenuItem
 import cut.the.crap.ui.components.MyPopupMenu
@@ -102,13 +118,13 @@ fun ContentEditor(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Clear,
-                            contentDescription = stringResource(R.string.editor_cd_clear),
+                            contentDescription = stringResource(Res.string.editor_cd_clear),
                             modifier = Modifier.size(20.dp)
                         )
                     }
 
                     Text(
-                        text = stringResource(R.string.editor_title),
+                        text = stringResource(Res.string.editor_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -119,7 +135,7 @@ fun ContentEditor(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = pluralStringResource(R.plurals.chars, charCount, charCount),
+                        text = pluralStringResource(Res.plurals.chars, charCount, charCount),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
@@ -128,10 +144,10 @@ fun ContentEditor(
                     MyPopupMenu(
                         action = onValueChange,
                         menuItems = listOf(
-                            MenuItem(R.string.context_menu_post_twitter, iconRes = R.drawable.x, actionPayload = TextAction.PostContentOnTwitter),
-                            MenuItem(R.string.context_menu_post_facebook, iconRes = R.drawable.facebook, actionPayload = TextAction.PostContentOnFacebook),
-                            MenuItem(R.string.context_menu_share, Icons.Filled.Share, TextAction.ShareContentViaSheet),
-                            MenuItem(R.string.context_menu_delete, Icons.Filled.Delete, TextAction.ClearContentText)
+                            MenuItem(Res.string.context_menu_post_twitter, iconRes = Res.drawable.x, actionPayload = TextAction.PostContentOnTwitter),
+                            MenuItem(Res.string.context_menu_post_facebook, iconRes = Res.drawable.facebook, actionPayload = TextAction.PostContentOnFacebook),
+                            MenuItem(Res.string.context_menu_share, Icons.Filled.Share, TextAction.ShareContentViaSheet),
+                            MenuItem(Res.string.context_menu_delete, Icons.Filled.Delete, TextAction.ClearContentText)
                         )
                     )
                 }
@@ -155,7 +171,7 @@ fun ContentEditor(
                         )
                     )
                 },
-                placeholder = stringResource(R.string.editor_placeholder),
+                placeholder = stringResource(Res.string.editor_placeholder),
                 textStyle = MaterialTheme.typography.bodyLarge
             )
 
@@ -168,7 +184,7 @@ fun ContentEditor(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(R.string.editor_quick_actions),
+                    text = stringResource(Res.string.editor_quick_actions),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp)
@@ -208,7 +224,7 @@ fun ContentEditor(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Tag,
-                        contentDescription = stringResource(R.string.editor_cd_add_tag),
+                        contentDescription = stringResource(Res.string.editor_cd_add_tag),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -224,7 +240,7 @@ fun ContentEditor(
 //                ) {
 //                    Icon(
 //                        imageVector = Icons.Filled.AttachFile,
-//                        contentDescription = stringResource(R.string.editor_cd_attach),
+//                        contentDescription = stringResource(Res.string.editor_cd_attach),
 //                        modifier = Modifier.size(20.dp)
 //                    )
 //                }
@@ -243,7 +259,7 @@ fun ContentEditor(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.CloudUpload,
-                                contentDescription = stringResource(R.string.editor_cd_upload),
+                                contentDescription = stringResource(Res.string.editor_cd_upload),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -277,7 +293,7 @@ fun ContentEditor(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.ContentPasteGo,
-                        contentDescription = stringResource(R.string.editor_cd_paste),
+                        contentDescription = stringResource(Res.string.editor_cd_paste),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -295,7 +311,7 @@ fun ContentEditor(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.ContentCopy,
-                        contentDescription = stringResource(R.string.cd_copy_clipboard),
+                        contentDescription = stringResource(Res.string.cd_copy_clipboard),
                         modifier = Modifier.size(20.dp)
                     )
                 }

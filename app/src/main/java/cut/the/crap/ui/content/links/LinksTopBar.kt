@@ -28,9 +28,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.links_active_filters
+import cut.the.crap.shared.resources.links_bulk_delete
+import cut.the.crap.shared.resources.links_bulk_deselect
+import cut.the.crap.shared.resources.links_bulk_export
+import cut.the.crap.shared.resources.links_bulk_favorite
+import cut.the.crap.shared.resources.links_bulk_tag_accounts
+import cut.the.crap.shared.resources.links_bulk_tag_hashtags
+import cut.the.crap.shared.resources.links_bulk_tag_keywords
+import cut.the.crap.shared.resources.links_cd_exit_selection
+import cut.the.crap.shared.resources.links_cd_remove_filter
+import cut.the.crap.shared.resources.links_clear_all
+import cut.the.crap.shared.resources.links_deselect_all
+import cut.the.crap.shared.resources.links_select_all_filtered
+import cut.the.crap.shared.resources.menu_fire_job
+import cut.the.crap.shared.resources.posts_cd_collapse_filters
+import cut.the.crap.shared.resources.posts_cd_expand_filters
 import cut.the.crap.ui.components.ActiveState
 import cut.the.crap.ui.components.FilterState
 import cut.the.crap.ui.components.MyChip
@@ -99,7 +115,7 @@ private fun FilterSection(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.links_active_filters),
+                    text = stringResource(Res.string.links_active_filters),
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(top = 8.dp)
                 )
@@ -131,7 +147,7 @@ private fun FilterSection(
                         trailingIcon = {
                             Icon(
                                 imageVector = Icons.Filled.Close,
-                                contentDescription = stringResource(R.string.links_cd_remove_filter),
+                                contentDescription = stringResource(Res.string.links_cd_remove_filter),
                                 modifier = Modifier.padding(0.dp)
                             )
                         },
@@ -145,7 +161,7 @@ private fun FilterSection(
                 if (screenState.hiddenFilters.size > 1) {
                     AssistChip(
                         onClick = { action(TextAction.ClearHiddenFilters) },
-                        label = { Text(stringResource(R.string.links_clear_all)) },
+                        label = { Text(stringResource(Res.string.links_clear_all)) },
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer
                         )
@@ -200,7 +216,7 @@ private fun SelectionModeTopBar(
                 IconButton(onClick = onExitSelectionMode) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = stringResource(R.string.links_cd_exit_selection)
+                        contentDescription = stringResource(Res.string.links_cd_exit_selection)
                     )
                 }
             },
@@ -220,9 +236,9 @@ private fun SelectionModeTopBar(
                             Icons.Filled.CheckCircle
                         },
                         contentDescription = if (allVisibleSelected) {
-                            stringResource(R.string.links_deselect_all)
+                            stringResource(Res.string.links_deselect_all)
                         } else {
-                            stringResource(R.string.links_select_all_filtered)
+                            stringResource(Res.string.links_select_all_filtered)
                         },
                         tint = if (allVisibleSelected) {
                             MaterialTheme.colorScheme.error
@@ -239,42 +255,42 @@ private fun SelectionModeTopBar(
                         action = action,
                         menuItems = listOf(
                             MenuItem(
-                                title = R.string.links_bulk_favorite,
+                                title = Res.string.links_bulk_favorite,
                                 icon = Icons.Filled.Favorite,
                                 actionPayload = ListAction.ToggleFavoritesForSelected
                             ),
                             MenuItem(
-                                title = R.string.links_bulk_tag_accounts,
+                                title = Res.string.links_bulk_tag_accounts,
                                 icon = Icons.Outlined.AlternateEmail,
                                 actionPayload = UiAction.ShowBulkTagDialog(ChipsType.Handle, Screen.Links)
                             ),
                             MenuItem(
-                                title = R.string.links_bulk_tag_hashtags,
+                                title = Res.string.links_bulk_tag_hashtags,
                                 icon = Icons.Filled.Tag,
                                 actionPayload = UiAction.ShowBulkTagDialog(ChipsType.Tag, Screen.Links)
                             ),
                             MenuItem(
-                                title = R.string.links_bulk_tag_keywords,
+                                title = Res.string.links_bulk_tag_keywords,
                                 icon = Icons.Filled.Numbers,
                                 actionPayload = UiAction.ShowBulkTagDialog(ChipsType.KeyWords, Screen.Links)
                             ),
                             MenuItem(
-                                title = R.string.links_bulk_export,
+                                title = Res.string.links_bulk_export,
                                 icon = Icons.Filled.Download,
                                 actionPayload = FileAction.Export(null) // Will be intercepted
                             ),
 //                            MenuItem(
-//                                title = R.string.menu_fire_job,
+//                                title = Res.string.menu_fire_job,
 //                                icon = Icons.Filled.Send,
 //                                actionPayload = ListAction.FireJob
 //                            ),
                             MenuItem(
-                                title = R.string.links_bulk_delete,
+                                title = Res.string.links_bulk_delete,
                                 icon = Icons.Filled.Delete,
                                 actionPayload = ListAction.DeleteSelected
                             ),
                             MenuItem(
-                                title = R.string.links_bulk_deselect,
+                                title = Res.string.links_bulk_deselect,
                                 icon = Icons.Filled.RemoveCircle,
                                 actionPayload = ListAction.DeselectAll
                             )
@@ -363,7 +379,7 @@ fun linksTopBar(
                                 Icons.Filled.FilterList
                         ),
                         onClick = { action(UiAction.ExpandTextInput(!screenState.textInputExpanded, cut.the.crap.ui.components.api.Screen.Links)) },
-                        contentDescription = stringResource(if (screenState.textInputExpanded) R.string.posts_cd_collapse_filters else R.string.posts_cd_expand_filters),
+                        contentDescription = stringResource(if (screenState.textInputExpanded) Res.string.posts_cd_collapse_filters else Res.string.posts_cd_expand_filters),
                         showBadge = hasActiveFilters && !screenState.textInputExpanded
                     )
                 },

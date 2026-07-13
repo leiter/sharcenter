@@ -24,9 +24,15 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import cut.the.crap.R
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.date_filter_end_date
+import cut.the.crap.shared.resources.date_filter_error_end_before_start
+import cut.the.crap.shared.resources.date_filter_start_date
+import cut.the.crap.shared.resources.date_filter_title
+import cut.the.crap.shared.resources.dialog_cancel
+import cut.the.crap.shared.resources.dialog_ok
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +72,7 @@ fun DateFilterBottomSheet(
         ) {
             // Title
             Text(
-                text = stringResource(R.string.date_filter_title),
+                text = stringResource(Res.string.date_filter_title),
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
@@ -76,12 +82,12 @@ fun DateFilterBottomSheet(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text(stringResource(R.string.date_filter_start_date)) }
+                    text = { Text(stringResource(Res.string.date_filter_start_date)) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text(stringResource(R.string.date_filter_end_date)) }
+                    text = { Text(stringResource(Res.string.date_filter_end_date)) }
                 )
             }
 
@@ -111,7 +117,7 @@ fun DateFilterBottomSheet(
 
             if (currentStart != null && currentEnd != null && currentEnd < currentStart) {
                 Text(
-                    text = stringResource(R.string.date_filter_error_end_before_start),
+                    text = stringResource(Res.string.date_filter_error_end_before_start),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -126,7 +132,7 @@ fun DateFilterBottomSheet(
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(stringResource(R.string.dialog_cancel))
+                    Text(stringResource(Res.string.dialog_cancel))
                 }
 
                 Button(
@@ -138,7 +144,7 @@ fun DateFilterBottomSheet(
                     enabled = !(currentStart != null && currentEnd != null && currentEnd < currentStart),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(stringResource(R.string.dialog_ok))
+                    Text(stringResource(Res.string.dialog_ok))
                 }
             }
 

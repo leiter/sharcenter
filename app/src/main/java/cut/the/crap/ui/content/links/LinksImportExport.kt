@@ -2,7 +2,6 @@ package cut.the.crap.ui.content.links
 
 import android.content.Context
 import android.net.Uri
-import cut.the.crap.R
 import androidx.lifecycle.viewModelScope
 import cut.the.crap.data.domain.DELIMITER
 import cut.the.crap.data.domain.ContentLink
@@ -23,19 +22,19 @@ import java.io.OutputStream
  * Extension functions for handling import/export operations in LinksViewModel
  */
 
-internal fun LinksViewModel.exportSelectedItems(outputStream: OutputStream?): Result<String> {
+internal fun LinksViewModel.exportSelectedItems(outputStream: OutputStream?): LinksSnackbar {
     return try {
         // Get selected items
         val selectedIds = internalScreenState.value.selectedItems
         val itemsToExport = listState.value.filter { selectedIds.contains(it.id) }
 
         if (itemsToExport.isEmpty()) {
-            return Result.failure(IllegalStateException(context.getString(R.string.links_export_no_items_selected)))
+            return LinksSnackbar.ExportNoItemsSelected
         }
 
         // Validate delimiter
         if (!itemsToExport.validateDelimiter()) {
-            return Result.failure(IllegalStateException(context.getString(R.string.links_export_delimiter_conflict, DELIMITER)))
+            return LinksSnackbar.ExportDelimiterConflict(DELIMITER)
         }
 
         // Build export content
@@ -48,16 +47,14 @@ internal fun LinksViewModel.exportSelectedItems(outputStream: OutputStream?): Re
         val result = saveFileToDownloads(outputStream, exportContent)
 
         if (result.isSuccess) {
-            Result.success(
-                context.resources.getQuantityString(
-                    R.plurals.links_export_success, itemsToExport.size, itemsToExport.size
-                )
-            )
+            LinksSnackbar.ExportSucceeded(itemsToExport.size)
         } else {
-            Result.failure(result.exceptionOrNull() ?: Exception(context.getString(R.string.links_export_unknown_error)))
+            result.exceptionOrNull()?.message
+                ?.let { LinksSnackbar.ExportFailed(it) }
+                ?: LinksSnackbar.ExportUnknownError
         }
     } catch (e: Exception) {
-        Result.failure(e)
+        LinksSnackbar.ExportFailed(e.message ?: "")
     }
 }
 
@@ -94,16 +91,16 @@ internal fun buildExportContent(
     return lines.joinToString("\n")
 }
 
-internal fun LinksViewModel.importFromFile(uri: Uri, context: Context): Result<String> {
+internal fun LinksViewModel.importFromFile(uri: Uri, context: Context): LinksSnackbar {
     return try {
         val inputStream = context.contentResolver.openInputStream(uri)
-            ?: return Result.failure(IllegalStateException(context.getString(R.string.links_import_cannot_open)))
+            ?: return LinksSnackbar.ImportCannotOpen
 
         val content = inputStream.bufferedReader().use { it.readText() }
         val lines = content.lines().filter { it.isNotBlank() && !it.startsWith("#") }
 
         if (lines.isEmpty()) {
-            return Result.failure(IllegalStateException(context.getString(R.string.links_import_empty_file)))
+            return LinksSnackbar.ImportEmptyFile
         }
 
         // Get existing items to check for duplicates
@@ -170,29 +167,16 @@ internal fun LinksViewModel.importFromFile(uri: Uri, context: Context): Result<S
         }
 
         if (importedCount > 0 || skippedCount > 0) {
-            val message = buildString {
-                append(
-                    context.resources.getQuantityString(
-                        R.plurals.links_import_imported, importedCount, importedCount
-                    )
-                )
-                if (skippedCount > 0) append(
-                    context.resources.getQuantityString(
-                        R.plurals.links_import_skipped, skippedCount, skippedCount
-                    )
-                )
-                if (errorCount > 0) append(
-                    context.resources.getQuantityString(
-                        R.plurals.links_import_failed_count, errorCount, errorCount
-                    )
-                )
-            }
-            Result.success(message)
+            LinksSnackbar.ImportSucceeded(
+                imported = importedCount,
+                skipped = skippedCount,
+                failed = errorCount,
+            )
         } else {
-            Result.failure(IllegalStateException(context.getString(R.string.links_import_no_valid_items)))
+            LinksSnackbar.ImportNoValidItems
         }
     } catch (e: Exception) {
-        Result.failure(e)
+        LinksSnackbar.ImportFailed(e.message ?: "")
     }
 }
 

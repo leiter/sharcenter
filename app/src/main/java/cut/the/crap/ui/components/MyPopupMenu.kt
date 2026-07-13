@@ -1,5 +1,8 @@
 package cut.the.crap.ui.components
 
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.DrawableResource
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -18,19 +21,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import cut.the.crap.ui.components.api.Action
 import java.nio.file.WatchEvent
 
 data class MenuItem(
-    val title: Int,
+    val title: StringResource,
     val icon: ImageVector? = null,
     val actionPayload: Action,
     val containerColor: Color? = null,  // Optional custom color
     val iconTint: Color? = null,        // Optional icon tint
-    val iconRes: Int? = null            // Optional drawable (e.g. multi-color brand logo); takes precedence over [icon]
+    val iconRes: DrawableResource? = null            // Optional drawable (e.g. multi-color brand logo); takes precedence over [icon]
 )
 
 @Composable
@@ -59,7 +62,7 @@ fun MyPopupMenu(
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
-                                    painter = painterResource(id = it.iconRes),
+                                    painter = painterResource(it.iconRes),
                                     contentDescription = null,
                                     modifier = Modifier.size(24.dp),
                                     tint = Color.Unspecified
@@ -69,7 +72,7 @@ fun MyPopupMenu(
                             it.icon != null -> Icon(it.icon, contentDescription = null)
                         }
                     },
-                    text = { Text(stringResource(id = it.title)) },
+                    text = { Text(stringResource(it.title)) },
                     onClick = {
                         expanded = false
                         action(it.actionPayload)

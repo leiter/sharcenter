@@ -1,5 +1,14 @@
 package cut.the.crap
 
+import org.jetbrains.compose.resources.getString
+
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.backup_toast_failed
+import cut.the.crap.shared.resources.backup_toast_success
+import cut.the.crap.shared.resources.restore_toast_failed
+import cut.the.crap.shared.resources.restore_toast_success
+import cut.the.crap.shared.resources.share_chooser_title
+
 import android.app.Application
 import android.content.Intent
 import android.os.Bundle
@@ -219,14 +228,14 @@ private fun handleAction(
                     result.onSuccess { fileName ->
                         Toast.makeText(
                             activity,
-                            activity.getString(R.string.backup_toast_success, fileName),
+                            getString(Res.string.backup_toast_success, fileName),
                             Toast.LENGTH_LONG
                         ).show()
                     }
                     result.onFailure { error ->
                         Toast.makeText(
                             activity,
-                            activity.getString(R.string.backup_toast_failed, error.message ?: ""),
+                            getString(Res.string.backup_toast_failed, error.message ?: ""),
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -242,7 +251,7 @@ private fun handleAction(
                     result.onSuccess { name ->
                         Toast.makeText(
                             activity,
-                            activity.getString(R.string.restore_toast_success, name),
+                            getString(Res.string.restore_toast_success, name),
                             Toast.LENGTH_LONG
                         ).show()
                         // Room must reopen the replaced file, so restart the process.
@@ -251,7 +260,7 @@ private fun handleAction(
                     result.onFailure { error ->
                         Toast.makeText(
                             activity,
-                            activity.getString(R.string.restore_toast_failed, error.message ?: ""),
+                            getString(Res.string.restore_toast_failed, error.message ?: ""),
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -315,9 +324,11 @@ private fun handleAction(
                     type = "text/plain"
                     putExtra(Intent.EXTRA_TEXT, currentText)
                 }
-                activity.startActivity(
-                    Intent.createChooser(sendIntent, activity.getString(R.string.share_chooser_title))
-                )
+                activity.lifecycleScope.launch {
+                    activity.startActivity(
+                        Intent.createChooser(sendIntent, getString(Res.string.share_chooser_title))
+                    )
+                }
             }
         }
 
@@ -359,9 +370,11 @@ private fun handleAction(
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, action.contentItem.text)
             }
-            activity.startActivity(
-                Intent.createChooser(sendIntent, activity.getString(R.string.share_chooser_title))
-            )
+            activity.lifecycleScope.launch {
+                activity.startActivity(
+                    Intent.createChooser(sendIntent, getString(Res.string.share_chooser_title))
+                )
+            }
         }
 
         is ContentLinkAction.CreateComment -> {
