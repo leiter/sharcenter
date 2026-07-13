@@ -1,5 +1,11 @@
 package cut.the.crap.ui.content.posts
 
+import cut.the.crap.platform.NotificationDuration
+
+import cut.the.crap.platform.Notifier
+
+import org.koin.compose.koinInject
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -33,7 +39,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -108,6 +113,7 @@ fun PostsScreen(
     onLoadEciStatistics: () -> Unit = {},
     ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val notifier: Notifier = koinInject()
     val context = LocalContext.current
     val isEciLoading by eciLoading.collectAsState()
 
@@ -117,7 +123,7 @@ fun PostsScreen(
             when (event) {
                 EciUiEvent.NavigateToTable -> navController.navigate("eci_statistics")
                 is EciUiEvent.ShowError ->
-                    Toast.makeText(context, event.error.localizedText(), Toast.LENGTH_LONG).show()
+                    notifier.show(event.error.localizedText(), NotificationDuration.Long)
             }
         }
     }

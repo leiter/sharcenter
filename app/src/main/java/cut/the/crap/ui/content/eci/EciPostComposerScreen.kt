@@ -1,12 +1,15 @@
 package cut.the.crap.ui.content.eci
 
+import cut.the.crap.platform.Notifier
+
+import org.koin.compose.koinInject
+
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getPluralString
 
 import org.jetbrains.compose.resources.StringResource
 
-import android.widget.Toast
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,7 +50,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -117,7 +119,7 @@ fun EciPostComposerScreen(
     statistics: EciStatistics?,
     onCreateDrafts: (List<String>) -> Unit
 ) {
-    val context = LocalContext.current
+    val notifier: Notifier = koinInject()
     val scope = rememberCoroutineScope()
 
     var filter by remember { mutableStateOf(CountryFilter.BELOW) }
@@ -168,13 +170,11 @@ fun EciPostComposerScreen(
                         // The quantity is only known at click time, so the plural can't be
                         // hoisted into composition; resolve it in a coroutine instead.
                         scope.launch {
-                            Toast.makeText(
-                                context,
+                            notifier.show(
                                 getPluralString(
                                     Res.plurals.eci_drafts_created, texts.size, texts.size
-                                ),
-                                Toast.LENGTH_SHORT
-                            ).show()
+                                )
+                            )
                         }
                         // Land on the Posts screen and drop the ECI screens from the back stack.
                         navController.navigate(Screen.Home.route) {
@@ -350,13 +350,13 @@ private fun CountryRow(
         EciBand.UNKNOWN -> stringResource(Res.string.eci_band_unknown)
     }
 
-    val context = LocalContext.current
+    val notifier: Notifier = koinInject()
     val clipboard = LocalClipboardManager.current
     // Resolved in composition so the (non-composable) callback can just use the String.
     val postCopiedMessage = stringResource(Res.string.eci_post_copied)
     val copyPost: (String) -> Unit = { text ->
         clipboard.setText(AnnotatedString(text))
-        Toast.makeText(context, postCopiedMessage, Toast.LENGTH_SHORT).show()
+        notifier.show(postCopiedMessage)
     }
 
     // One generated post per official language of the country.

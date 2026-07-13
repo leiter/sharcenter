@@ -28,6 +28,7 @@ class KoinGraphTest {
     fun koinGraphResolves() {
         module {
             includes(
+                platformModule,
                 databaseModule,
                 networkModule,
                 repositoryModule,

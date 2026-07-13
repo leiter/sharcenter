@@ -58,6 +58,7 @@ import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.settings.SettingsViewModel
 import cut.the.crap.data.rest.networkModule
 import cut.the.crap.data.rest.repositoryModule
+import cut.the.crap.di.platformModule
 import cut.the.crap.di.databaseModule
 import cut.the.crap.di.viewModelModule
 import cut.the.crap.share.shareModule
@@ -74,6 +75,7 @@ class MyApplication : Application(), SingletonImageLoader.Factory {
         startKoin {
             androidContext(this@MyApplication)
             modules(
+                platformModule,
                 databaseModule,
                 networkModule,
                 repositoryModule,

@@ -31,7 +31,7 @@ import cut.the.crap.ui.components.api.KeywordAction
 import cut.the.crap.ui.components.api.ListAction
 import cut.the.crap.ui.components.api.TextAction
 import cut.the.crap.ui.components.api.UiAction
-import android.util.Log
+import cut.the.crap.platform.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow

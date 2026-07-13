@@ -1,5 +1,9 @@
 package cut.the.crap.ui.content.settings
 
+import cut.the.crap.platform.Notifier
+
+import org.koin.compose.koinInject
+
 import org.jetbrains.compose.resources.getString
 
 import androidx.compose.foundation.clickable
@@ -11,7 +15,6 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -108,6 +111,7 @@ fun SettingsScreen(
 ) {
     val currentSettings by settings.collectAsState()
     val context = LocalContext.current
+    val notifier: Notifier = koinInject()
     // Resolved in composition; the launcher callback below is not composable.
     val xLoginSuccessMessage = stringResource(Res.string.settings_toast_x_login_success)
     var showPostsDateRangeDialog by remember { mutableStateOf(false) }
@@ -137,7 +141,7 @@ fun SettingsScreen(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == XLoginActivity.RESULT_LOGIN_SUCCESS) {
-            Toast.makeText(context, xLoginSuccessMessage, Toast.LENGTH_SHORT).show()
+            notifier.show(xLoginSuccessMessage)
         }
     }
 
@@ -945,7 +949,8 @@ private fun XCredentialsDialog(
     var authToken by remember { mutableStateOf(currentAuthToken) }
     var ct0Token by remember { mutableStateOf(currentCt0Token) }
     val context = LocalContext.current
-    // Resolved in composition; the Toasts below run in non-composable callbacks.
+    val notifier: Notifier = koinInject()
+    // Resolved in composition; the notifications below run in non-composable callbacks.
     val credentialsSavedMessage = stringResource(Res.string.settings_toast_x_credentials_saved)
     val credentialsClearedMessage = stringResource(Res.string.settings_toast_x_credentials_cleared)
 
@@ -987,7 +992,7 @@ private fun XCredentialsDialog(
             TextButton(
                 onClick = {
                     onConfirm(authToken, ct0Token)
-                    Toast.makeText(context, credentialsSavedMessage, Toast.LENGTH_SHORT).show()
+                    notifier.show(credentialsSavedMessage)
                 }
             ) {
                 Text(stringResource(Res.string.dialog_ok))
@@ -999,7 +1004,7 @@ private fun XCredentialsDialog(
                     TextButton(
                         onClick = {
                             onConfirm("", "")
-                            Toast.makeText(context, credentialsClearedMessage, Toast.LENGTH_SHORT).show()
+                            notifier.show(credentialsClearedMessage)
                         }
                     ) {
                         Text(stringResource(Res.string.settings_clear), color = MaterialTheme.colorScheme.error)

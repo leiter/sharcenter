@@ -1,11 +1,14 @@
 package cut.the.crap.ui.content.settings
 
+import cut.the.crap.platform.Notifier
+
+import org.koin.compose.koinInject
+
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getPluralString
 
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,7 +21,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -49,7 +51,7 @@ fun BackupManagementScreen(
     navController: NavHostController,
     viewModel: BackupViewModel = koinViewModel()
 ) {
-    val context = LocalContext.current
+    val notifier: Notifier = koinInject()
     val scope = rememberCoroutineScope()
     val backups by viewModel.backups.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -85,11 +87,7 @@ fun BackupManagementScreen(
                         // The count is only known when the delete completes, so the plural
                         // can't be hoisted into composition; resolve it in a coroutine.
                         scope.launch {
-                            Toast.makeText(
-                                context,
-                                getPluralString(Res.plurals.backup_deleted, deleted, deleted),
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            notifier.show(getPluralString(Res.plurals.backup_deleted, deleted, deleted))
                         }
                     }
                     selectedUris = emptySet()

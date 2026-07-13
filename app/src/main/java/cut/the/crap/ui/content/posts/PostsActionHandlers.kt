@@ -3,7 +3,7 @@ package cut.the.crap.ui.content.posts
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.OpenableColumns
-import android.util.Log
+import cut.the.crap.platform.Log
 import androidx.lifecycle.viewModelScope
 import cut.the.crap.data.rest.Result
 import cut.the.crap.data.rest.task.FileUploadData

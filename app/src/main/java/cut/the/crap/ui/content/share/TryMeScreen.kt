@@ -2,7 +2,7 @@ package cut.the.crap.ui.content.share
 
 import android.app.Activity
 import android.content.Intent
-import android.util.Log
+import cut.the.crap.platform.Log
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

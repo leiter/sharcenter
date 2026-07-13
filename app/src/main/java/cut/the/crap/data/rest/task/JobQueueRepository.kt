@@ -1,6 +1,6 @@
 package cut.the.crap.data.rest.task
 
-import android.util.Log
+import cut.the.crap.platform.Log
 import cut.the.crap.data.rest.Result
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
