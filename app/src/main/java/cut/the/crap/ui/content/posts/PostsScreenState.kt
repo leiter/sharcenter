@@ -1,6 +1,7 @@
 package cut.the.crap.ui.content.posts
 
-import android.net.Uri
+import cut.the.crap.platform.PlatformUri
+
 import androidx.compose.runtime.Immutable
 import cut.the.crap.data.domain.KeyWord
 import cut.the.crap.tools.TextValueWrapper
@@ -40,7 +41,7 @@ data class PostsScreenState(
     val selectedHandleChips: List<KeyWord> = emptyList(),  // Active handle filter chips
     val selectedTagChips: List<KeyWord> = emptyList(),  // Active tag filter chips
     val dialogSource: DialogSource = DialogSource.FILTER,  // Track where dialog was opened from
-    val selectedFileUris: List<Uri> = emptyList(),  // Files selected for upload
+    val selectedFileUris: List<PlatformUri> = emptyList(),  // Files selected for upload
     val isUploading: Boolean = false,  // Upload in progress
     val selectionMode: Boolean = false,  // Batch selection mode active
     val selectedItems: List<Int> = emptyList()  // IDs of items selected in batch mode

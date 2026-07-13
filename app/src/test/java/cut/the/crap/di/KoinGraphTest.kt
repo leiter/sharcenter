@@ -1,5 +1,7 @@
 package cut.the.crap.di
 
+import kotlinx.coroutines.CoroutineDispatcher
+
 import android.app.Application
 import android.content.Context
 import cut.the.crap.data.rest.networkModule
@@ -43,6 +45,9 @@ class KoinGraphTest {
                 // verify() reflects the constructor, so declare them as external.
                 HttpClientEngine::class,
                 HttpClientConfig::class,
+                // LinksViewModel's dispatchers have Kotlin default values, which verify()
+                // also cannot see for the same reason.
+                CoroutineDispatcher::class,
             ),
         )
     }

@@ -1,6 +1,7 @@
 package cut.the.crap.ui.content.links
 
-import android.content.Context
+import cut.the.crap.fake.FakeFileAccess
+
 import cut.the.crap.data.preferences.SettingsRepository
 import cut.the.crap.fake.FakeContentLinkRepository
 import cut.the.crap.fake.FakeJobQueueRepository
@@ -49,7 +50,7 @@ class LinksViewModelBulkActionsTest {
     private lateinit var keywordRepository: FakeKeywordRepository
     private lateinit var jobQueueRepository: FakeJobQueueRepository
     private lateinit var youTubeRepository: FakeYouTubeRepository
-    private lateinit var context: Context
+    private lateinit var fileAccess: FakeFileAccess
     private lateinit var viewModel: LinksViewModel
 
     // ALL_TIME so init does not apply a date-range filter that would drop test items.
@@ -68,16 +69,18 @@ class LinksViewModelBulkActionsTest {
         settingsRepository = mockk(relaxed = true)
         coEvery { settingsRepository.settingsFlow } returns settingsFlow
 
-        context = mockk(relaxed = true)
+        fileAccess = FakeFileAccess()
 
         viewModel = LinksViewModel(
             contentRepository = contentLinkRepository,
             repository = messageRepository,
-            context = context,
+            fileAccess = fileAccess,
             settingsRepository = settingsRepository,
             keywordRepository = keywordRepository,
             jobQueueRepository = jobQueueRepository,
-            youTubeRepository = youTubeRepository
+            youTubeRepository = youTubeRepository,
+            defaultDispatcher = mainDispatcherRule.testDispatcher,
+            ioDispatcher = mainDispatcherRule.testDispatcher
         )
     }
 

@@ -1,7 +1,8 @@
 package cut.the.crap.ui.content.links
 
-import android.content.Context
-import android.net.Uri
+import cut.the.crap.platform.FileAccess
+import cut.the.crap.platform.PlatformUri
+
 import androidx.lifecycle.viewModelScope
 import cut.the.crap.data.domain.DELIMITER
 import cut.the.crap.data.domain.ContentLink
@@ -91,12 +92,13 @@ internal fun buildExportContent(
     return lines.joinToString("\n")
 }
 
-internal fun LinksViewModel.importFromFile(uri: Uri, context: Context): LinksSnackbar {
+internal suspend fun LinksViewModel.importFromFile(
+    uri: PlatformUri,
+    fileAccess: FileAccess,
+): LinksSnackbar {
     return try {
-        val inputStream = context.contentResolver.openInputStream(uri)
-            ?: return LinksSnackbar.ImportCannotOpen
+        val content = fileAccess.readText(uri) ?: return LinksSnackbar.ImportCannotOpen
 
-        val content = inputStream.bufferedReader().use { it.readText() }
         val lines = content.lines().filter { it.isNotBlank() && !it.startsWith("#") }
 
         if (lines.isEmpty()) {

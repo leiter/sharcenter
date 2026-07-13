@@ -1,6 +1,7 @@
 package cut.the.crap.ui.content.posts
 
-import android.content.ContentResolver
+import cut.the.crap.platform.FileAccess
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cut.the.crap.data.db.ContentItemManager
@@ -63,7 +64,8 @@ class PostsViewModel constructor(
     internal val contentItemRepository: ContentItemRepository,
     private val settingsRepository: cut.the.crap.data.preferences.SettingsRepository,
     internal val jobQueueRepository: JobQueueRepository,
-    private val eciStatisticsRepository: EciStatisticsRepository
+    private val eciStatisticsRepository: EciStatisticsRepository,
+    internal val fileAccess: FileAccess
 ) : ViewModel() {
 
     companion object {
@@ -245,15 +247,9 @@ class PostsViewModel constructor(
             is UiAction -> handleUiAction(action)
             is KeywordAction -> handleKeywordAction(action)
             is ContentItemAction -> handleContentItemAction(action)
+            is UploadAction -> handleUploadAction(action, fileAccess)
             // Actions not handled by this ViewModel
             else -> Unit
-        }
-    }
-
-    fun consumeActionWithResolver(action: Action, contentResolver: ContentResolver) {
-        when (action) {
-            is UploadAction -> handleUploadAction(action, contentResolver)
-            else -> consumeAction(action)
         }
     }
 

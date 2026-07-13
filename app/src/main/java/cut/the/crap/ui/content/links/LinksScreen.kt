@@ -1,6 +1,7 @@
 package cut.the.crap.ui.content.links
 
-import android.net.Uri
+import cut.the.crap.platform.toPlatformUri
+
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -99,7 +100,7 @@ fun LinkScreen(
         contract = ActivityResultContracts.GetContent()
     ) {
         uri -> uri?.let {
-            action(FileAction.Import(uri))
+            action(FileAction.Import(uri.toPlatformUri()))
         }
     }
 

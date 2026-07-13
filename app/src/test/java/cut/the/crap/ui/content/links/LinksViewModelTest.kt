@@ -1,6 +1,7 @@
 package cut.the.crap.ui.content.links
 
-import android.content.Context
+import cut.the.crap.fake.FakeFileAccess
+
 import app.cash.turbine.test
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.data.preferences.SettingsRepository
@@ -47,7 +48,7 @@ class LinksViewModelTest {
     private lateinit var keywordRepository: FakeKeywordRepository
     private lateinit var jobQueueRepository: FakeJobQueueRepository
     private lateinit var youTubeRepository: FakeYouTubeRepository
-    private lateinit var context: Context
+    private lateinit var fileAccess: FakeFileAccess
     private lateinit var viewModel: LinksViewModel
 
     private val settingsFlow = MutableStateFlow(AppSettings())
@@ -63,16 +64,18 @@ class LinksViewModelTest {
         settingsRepository = mockk(relaxed = true)
         coEvery { settingsRepository.settingsFlow } returns settingsFlow
 
-        context = mockk(relaxed = true)
+        fileAccess = FakeFileAccess()
 
         viewModel = LinksViewModel(
             contentRepository = contentLinkRepository,
             repository = messageRepository,
-            context = context,
+            fileAccess = fileAccess,
             settingsRepository = settingsRepository,
             keywordRepository = keywordRepository,
             jobQueueRepository = jobQueueRepository,
-            youTubeRepository = youTubeRepository
+            youTubeRepository = youTubeRepository,
+            defaultDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher
         )
     }
 
@@ -296,11 +299,13 @@ class LinksViewModelTest {
         val freshViewModel = LinksViewModel(
             contentRepository = contentLinkRepository,
             repository = messageRepository,
-            context = context,
+            fileAccess = fileAccess,
             settingsRepository = settingsRepository,
             keywordRepository = keywordRepository,
             jobQueueRepository = jobQueueRepository,
-            youTubeRepository = youTubeRepository
+            youTubeRepository = youTubeRepository,
+            defaultDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher
         )
 
         // Keep listState subscription active
@@ -360,11 +365,13 @@ class LinksViewModelTest {
         val freshViewModel = LinksViewModel(
             contentRepository = contentLinkRepository,
             repository = messageRepository,
-            context = context,
+            fileAccess = fileAccess,
             settingsRepository = settingsRepository,
             keywordRepository = keywordRepository,
             jobQueueRepository = jobQueueRepository,
-            youTubeRepository = youTubeRepository
+            youTubeRepository = youTubeRepository,
+            defaultDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher
         )
 
         // Verify items exist in repository
@@ -431,11 +438,13 @@ class LinksViewModelTest {
         val freshViewModel = LinksViewModel(
             contentRepository = contentLinkRepository,
             repository = messageRepository,
-            context = context,
+            fileAccess = fileAccess,
             settingsRepository = settingsRepository,
             keywordRepository = keywordRepository,
             jobQueueRepository = jobQueueRepository,
-            youTubeRepository = youTubeRepository
+            youTubeRepository = youTubeRepository,
+            defaultDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher
         )
 
         // Keep listState and screenState subscriptions active
@@ -484,11 +493,13 @@ class LinksViewModelTest {
         val freshViewModel = LinksViewModel(
             contentRepository = contentLinkRepository,
             repository = messageRepository,
-            context = context,
+            fileAccess = fileAccess,
             settingsRepository = settingsRepository,
             keywordRepository = keywordRepository,
             jobQueueRepository = jobQueueRepository,
-            youTubeRepository = youTubeRepository
+            youTubeRepository = youTubeRepository,
+            defaultDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher
         )
 
         // Keep listState and screenState subscriptions active

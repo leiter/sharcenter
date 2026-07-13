@@ -1,6 +1,8 @@
 package cut.the.crap.di
 
+import cut.the.crap.platform.AndroidFileAccess
 import cut.the.crap.platform.AndroidNotifier
+import cut.the.crap.platform.FileAccess
 import cut.the.crap.platform.Notifier
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -16,4 +18,5 @@ import org.koin.dsl.module
  */
 val platformModule = module {
     single<Notifier> { AndroidNotifier(androidContext()) }
+    single<FileAccess> { AndroidFileAccess(androidContext()) }
 }

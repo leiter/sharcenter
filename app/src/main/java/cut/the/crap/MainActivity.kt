@@ -1,5 +1,6 @@
 package cut.the.crap
 
+
 import org.jetbrains.compose.resources.getString
 
 import cut.the.crap.shared.resources.Res
@@ -33,7 +34,7 @@ import coil3.memory.MemoryCache
 import coil3.network.ktor2.KtorNetworkFetcherFactory
 import coil3.request.crossfade
 import okio.Path.Companion.toOkioPath
-import cut.the.crap.data.backup.DatabaseBackupManager
+import cut.the.crap.data.backup.BackupManager
 import cut.the.crap.data.rest.YouTubeMetadataBackfiller
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.ShareLinksTask
@@ -126,7 +127,7 @@ class MainActivity : ComponentActivity() {
 
     private val settingsViewModel: SettingsViewModel by viewModel()
 
-    val databaseBackupManager: DatabaseBackupManager by inject()
+    val databaseBackupManager: BackupManager by inject()
 
     val jobQueueRepository: JobQueueRepository by inject()
 
@@ -431,11 +432,6 @@ private fun handleAction(
             activity.startActivity(
                 Intent(Intent.ACTION_VIEW, twitterIntent.url.toUri())
             )
-        }
-
-        // Handle UploadAction with ContentResolver
-        is UploadAction -> {
-            postsViewModel.consumeActionWithResolver(action, activity.contentResolver)
         }
 
         // Route to appropriate ViewModel

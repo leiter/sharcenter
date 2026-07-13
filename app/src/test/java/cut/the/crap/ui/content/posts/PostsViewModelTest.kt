@@ -1,5 +1,7 @@
 package cut.the.crap.ui.content.posts
 
+import cut.the.crap.fake.FakeFileAccess
+
 import app.cash.turbine.test
 import cut.the.crap.data.domain.ContentItem
 import cut.the.crap.data.domain.KeywordType
@@ -60,7 +62,8 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            eciStatisticsRepository = eciStatisticsRepository
+            eciStatisticsRepository = eciStatisticsRepository,
+            fileAccess = FakeFileAccess()
         )
     }
 
@@ -89,7 +92,8 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            eciStatisticsRepository = eciStatisticsRepository
+            eciStatisticsRepository = eciStatisticsRepository,
+            fileAccess = FakeFileAccess()
         )
         advanceUntilIdle()
 
@@ -110,8 +114,8 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            eciStatisticsRepository = eciStatisticsRepository
-
+            eciStatisticsRepository = eciStatisticsRepository,
+            fileAccess = FakeFileAccess()
         )
         advanceUntilIdle()
 
@@ -157,7 +161,8 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            eciStatisticsRepository = eciStatisticsRepository
+            eciStatisticsRepository = eciStatisticsRepository,
+            fileAccess = FakeFileAccess()
         )
         advanceUntilIdle()
 
@@ -180,7 +185,8 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            eciStatisticsRepository = eciStatisticsRepository
+            eciStatisticsRepository = eciStatisticsRepository,
+            fileAccess = FakeFileAccess()
         )
         advanceUntilIdle()
 
@@ -221,7 +227,8 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            eciStatisticsRepository = eciStatisticsRepository
+            eciStatisticsRepository = eciStatisticsRepository,
+            fileAccess = FakeFileAccess()
         )
         advanceUntilIdle()
 
@@ -285,7 +292,8 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            eciStatisticsRepository = eciStatisticsRepository
+            eciStatisticsRepository = eciStatisticsRepository,
+            fileAccess = FakeFileAccess()
         )
         advanceUntilIdle()
 

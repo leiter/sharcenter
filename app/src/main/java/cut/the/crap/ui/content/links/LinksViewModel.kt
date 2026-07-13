@@ -1,6 +1,7 @@
 package cut.the.crap.ui.content.links
 
-import android.content.Context
+import cut.the.crap.platform.FileAccess
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cut.the.crap.data.db.ItemManager
@@ -32,6 +33,7 @@ import cut.the.crap.ui.components.api.ListAction
 import cut.the.crap.ui.components.api.TextAction
 import cut.the.crap.ui.components.api.UiAction
 import cut.the.crap.platform.Log
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -51,11 +53,16 @@ import kotlinx.coroutines.withContext
 class LinksViewModel constructor(
     internal val contentRepository: ContentLinkRepository,
     private val repository: MessageRepository,
-    internal val context: Context,
+    internal val fileAccess: FileAccess,
     private val settingsRepository: SettingsRepository,
     internal val keywordRepository: cut.the.crap.data.domain.KeywordRepository,
     internal val jobQueueRepository: JobQueueRepository,
-    internal val youTubeRepository: YouTubeRepository
+    internal val youTubeRepository: YouTubeRepository,
+    // Injected rather than hardcoded, for two reasons: `Dispatchers.IO` does not exist in
+    // commonMain (WP6 moves this class there), and hardcoding `Dispatchers.Default` races
+    // `advanceUntilIdle` in tests, which made the suite intermittently flaky.
+    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
 
     internal val itemManager = ItemManager(contentRepository)
@@ -120,7 +127,7 @@ class LinksViewModel constructor(
         ) { links, savedHandles -> links to savedHandles }
             .map { (links, savedHandles) ->
                 // Process URLs in background thread to avoid blocking UI
-                withContext(Dispatchers.Default) {
+                withContext(defaultDispatcher) {
                     // Extract usernames from all links
                     // For YouTube: prefer channel name from description metadata
                     // For others: extract from URL path
@@ -302,7 +309,7 @@ class LinksViewModel constructor(
             // Fetch YouTube metadata in background
             if (YouTubeUrlParser.isYouTubeUrl(contentLink.link)) {
                 Log.d("YT_META", "Detected YouTube URL: ${contentLink.link}")
-                launch(Dispatchers.IO) {
+                launch(ioDispatcher) {
                     val result = youTubeRepository.getVideoMetadata(contentLink.link)
                     Log.d("YT_META", "oEmbed result: $result")
                     if (result is Result.Success) {

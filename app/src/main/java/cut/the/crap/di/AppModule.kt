@@ -1,6 +1,7 @@
 package cut.the.crap.di
 
 import app.cash.sqldelight.db.SqlDriver
+import cut.the.crap.data.backup.BackupManager
 import cut.the.crap.data.backup.DatabaseBackupManager
 import cut.the.crap.data.db.ContentItemDao
 import cut.the.crap.data.db.ContentLinkDao
@@ -52,5 +53,5 @@ val databaseModule = module {
     singleOf(::ContentItemRepositoryImpl) bind ContentItemRepository::class
     singleOf(::SubjectRepositoryImpl) bind SubjectRepository::class
 
-    singleOf(::DatabaseBackupManager)
+    singleOf(::DatabaseBackupManager) bind BackupManager::class
 }

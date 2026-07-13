@@ -1,5 +1,7 @@
 package cut.the.crap.ui.content.posts
 
+import cut.the.crap.platform.toPlatformUri
+
 import cut.the.crap.platform.NotificationDuration
 
 import cut.the.crap.platform.Notifier
@@ -178,7 +180,7 @@ fun PostsScreen(
         contract = ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
         if (uris.isNotEmpty()) {
-            action(UploadAction.SelectFiles(uris))
+            action(UploadAction.SelectFiles(uris.map { it.toPlatformUri() }))
         }
     }
 

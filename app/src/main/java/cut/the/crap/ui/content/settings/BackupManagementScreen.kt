@@ -1,5 +1,7 @@
 package cut.the.crap.ui.content.settings
 
+import cut.the.crap.platform.PlatformUri
+
 import cut.the.crap.platform.Notifier
 
 import org.koin.compose.koinInject
@@ -8,7 +10,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getPluralString
 
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -57,7 +58,7 @@ fun BackupManagementScreen(
     val isLoading by viewModel.isLoading.collectAsState()
 
     // Selected backup Uris. Cleared whenever the underlying list changes.
-    var selectedUris by remember { mutableStateOf<Set<Uri>>(emptySet()) }
+    var selectedUris by remember { mutableStateOf<Set<PlatformUri>>(emptySet()) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     // Drop selections that no longer exist after a refresh/delete.

@@ -1,6 +1,7 @@
 package cut.the.crap.ui.components.api
 
-import android.net.Uri
+import cut.the.crap.platform.PlatformUri
+
 import cut.the.crap.data.domain.ContentItem
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.tools.TextValueWrapper
@@ -145,16 +146,16 @@ sealed interface ListAction : Action {
 // ========== File Actions ==========
 // Actions related to file operations
 sealed interface FileAction : Action {
-    data class Import(val uri: Uri) : FileAction
+    data class Import(val uri: PlatformUri) : FileAction
     data class Export(val outputStream: java.io.OutputStream?) : FileAction
     data object BackupDatabase : FileAction
-    data class RestoreDatabase(val uri: Uri) : FileAction
+    data class RestoreDatabase(val uri: PlatformUri) : FileAction
 }
 
 // ========== Upload Actions ==========
 // Actions related to file upload operations
 sealed interface UploadAction : Action {
-    data class SelectFiles(val uris: List<Uri>) : UploadAction
+    data class SelectFiles(val uris: List<PlatformUri>) : UploadAction
     data object ClearSelectedFiles : UploadAction
     data object StartUpload : UploadAction
 }

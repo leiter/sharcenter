@@ -1,5 +1,7 @@
 package cut.the.crap.ui.content.settings
 
+import cut.the.crap.platform.toPlatformUri
+
 import cut.the.crap.platform.Notifier
 
 import org.koin.compose.koinInject
@@ -162,7 +164,7 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    action(FileAction.RestoreDatabase(uri))
+                    action(FileAction.RestoreDatabase(uri.toPlatformUri()))
                     pendingRestoreUri = null
                 }) { Text(stringResource(Res.string.settings_restore_confirm)) }
             },

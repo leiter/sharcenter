@@ -515,7 +515,7 @@ internal fun LinksViewModel.handleFileAction(action: FileAction) {
 
         is FileAction.Import -> {
             viewModelScope.launch(Dispatchers.IO) {
-                emitSnackBarMessage(importFromFile(action.uri, context))
+                emitSnackBarMessage(importFromFile(action.uri, fileAccess))
             }
         }
 

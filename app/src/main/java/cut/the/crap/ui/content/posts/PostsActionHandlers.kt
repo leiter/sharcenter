@@ -1,8 +1,9 @@
 package cut.the.crap.ui.content.posts
 
-import android.content.ContentResolver
-import android.net.Uri
-import android.provider.OpenableColumns
+import cut.the.crap.platform.FileContents
+
+import cut.the.crap.platform.FileAccess
+
 import cut.the.crap.platform.Log
 import androidx.lifecycle.viewModelScope
 import cut.the.crap.data.rest.Result
@@ -409,7 +410,7 @@ private fun PostsViewModel.deleteSelectedContentItems() {
 /**
  * Extension function for handling UploadActions in PostsViewModel
  */
-internal fun PostsViewModel.handleUploadAction(action: UploadAction, contentResolver: ContentResolver) {
+internal fun PostsViewModel.handleUploadAction(action: UploadAction, fileAccess: FileAccess) {
     when (action) {
         is UploadAction.SelectFiles -> {
             // Accumulate files from multiple selections (avoid duplicates by URI)
@@ -436,7 +437,7 @@ internal fun PostsViewModel.handleUploadAction(action: UploadAction, contentReso
                 try {
                     // Read all files first
                     val files = uris.mapNotNull { uri ->
-                        readFileFromUri(contentResolver, uri)
+                        fileAccess.read(uri)?.toUploadData()
                     }
 
                     if (files.isNotEmpty()) {
@@ -489,41 +490,12 @@ internal fun PostsViewModel.handleUploadAction(action: UploadAction, contentReso
     }
 }
 
-/**
- * Helper function to read file data from a content URI
- */
-private fun readFileFromUri(contentResolver: ContentResolver, uri: Uri): FileUploadData? {
-    return try {
-        val fileName = getFileName(contentResolver, uri) ?: "unknown_file"
-        val mimeType = contentResolver.getType(uri) ?: "application/octet-stream"
-        val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: return null
-
-        FileUploadData(
-            fileName = fileName,
-            mimeType = mimeType,
-            bytes = bytes
-        )
-    } catch (e: Exception) {
-        Log.e("PostsViewModel", "Error reading file: ${uri}", e)
-        null
-    }
-}
-
-/**
- * Helper function to get the file name from a content URI
- */
-private fun getFileName(contentResolver: ContentResolver, uri: Uri): String? {
-    var fileName: String? = null
-    contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-        if (cursor.moveToFirst()) {
-            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (nameIndex >= 0) {
-                fileName = cursor.getString(nameIndex)
-            }
-        }
-    }
-    return fileName
-}
+/** The seam speaks [FileContents]; the upload API speaks [FileUploadData]. */
+private fun FileContents.toUploadData() = FileUploadData(
+    fileName = fileName,
+    mimeType = mimeType,
+    bytes = bytes,
+)
 
 // Helper extension functions for keyword confirmation logic
 private fun PostsViewModel.confirmHandleSelection() {
