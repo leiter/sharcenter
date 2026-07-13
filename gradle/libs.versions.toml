@@ -46,6 +46,8 @@ koin-test-junit4 = { group = "io.insert-koin", name = "koin-test-junit4", versio
 lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
 lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 compose-icons-extended = { group = "org.jetbrains.compose.material", name = "material-icons-extended", version.ref = "composeIcons" }
+# CMP ships BackHandler as its own artifact, available on every target (incl. Android).
+compose-ui-backhandler = { group = "org.jetbrains.compose.ui", name = "ui-backhandler", version.ref = "composeMultiplatform" }
 sqldelight-runtime = { group = "app.cash.sqldelight", name = "runtime", version.ref = "sqldelight" }
 sqldelight-android-driver = { group = "app.cash.sqldelight", name = "android-driver", version.ref = "sqldelight" }
 sqldelight-primitive-adapters = { group = "app.cash.sqldelight", name = "primitive-adapters", version.ref = "sqldelight" }

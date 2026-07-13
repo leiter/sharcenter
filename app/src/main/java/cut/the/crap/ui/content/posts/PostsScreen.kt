@@ -1,5 +1,6 @@
 package cut.the.crap.ui.content.posts
 
+import cut.the.crap.platform.rememberFilePicker
 import cut.the.crap.platform.toPlatformUri
 
 import cut.the.crap.platform.NotificationDuration
@@ -41,9 +42,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
@@ -101,7 +101,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun PostsScreen(
     action: (Action) -> Unit,
@@ -175,12 +175,13 @@ fun PostsScreen(
     val selectedTags = screenState.collectAsState().value.selectedTags
     val selectedKeyWords = screenState.collectAsState().value.selectedKeyWords
 
-    // File picker launcher for selecting multiple documents
-    val multipleFilesLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenMultipleDocuments()
+    // File picker for selecting multiple documents to upload
+    val multipleFilesPicker = rememberFilePicker(
+        mimeTypes = listOf("*/*"),
+        allowMultiple = true,
     ) { uris ->
         if (uris.isNotEmpty()) {
-            action(UploadAction.SelectFiles(uris.map { it.toPlatformUri() }))
+            action(UploadAction.SelectFiles(uris))
         }
     }
 
@@ -441,7 +442,7 @@ fun PostsScreen(
                 selectedFileCount = screenStateValue.selectedFileUris.size,
                 isUploading = screenStateValue.isUploading,
                 onPickFiles = {
-                    multipleFilesLauncher.launch(arrayOf("*/*"))
+                    multipleFilesPicker.launch()
                 },
                 onUploadFiles = {
                     action(UploadAction.StartUpload)

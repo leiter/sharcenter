@@ -1,5 +1,6 @@
 package cut.the.crap.ui.content.settings
 
+import cut.the.crap.platform.rememberFilePicker
 import cut.the.crap.platform.toPlatformUri
 
 import cut.the.crap.platform.LoginFlow
@@ -28,8 +29,6 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import cut.the.crap.shared.resources.Res
@@ -140,11 +139,9 @@ fun SettingsScreen(
 
     // Database restore file picker (.db backup). Downloads exposes these as
     // octet-stream, so we accept any type and validate the contents on restore.
-    val restoreFilePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        // Converted at the boundary so the Android Uri never enters screen state.
-        pendingRestoreUri = uri?.toPlatformUri() // null if cancelled; triggers confirm dialog
+    val restoreFilePicker = rememberFilePicker(mimeTypes = listOf("*/*")) { uris ->
+        // Empty if the user cancelled; a pick triggers the confirm dialog.
+        pendingRestoreUri = uris.firstOrNull()
     }
 
     pendingRestoreUri?.let { uri ->
@@ -468,7 +465,7 @@ fun SettingsScreen(
                     title = stringResource(Res.string.settings_restore_database),
                     subtitle = stringResource(Res.string.settings_restore_database_desc),
                     onClick = {
-                        restoreFilePickerLauncher.launch(arrayOf("*/*"))
+                        restoreFilePicker.launch()
                     }
                 )
             }

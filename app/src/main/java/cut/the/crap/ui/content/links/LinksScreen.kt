@@ -1,9 +1,8 @@
 package cut.the.crap.ui.content.links
 
+import cut.the.crap.platform.rememberFilePicker
 import cut.the.crap.platform.toPlatformUri
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
@@ -95,13 +94,9 @@ fun LinkScreen(
     val currentScreenState = screenState.collectAsState().value
     val selectedItems = currentScreenState.selectedItems
 
-    // File picker launcher
-    val filePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) {
-        uri -> uri?.let {
-            action(FileAction.Import(uri.toPlatformUri()))
-        }
+    // File picker for CSV/text import.
+    val filePicker = rememberFilePicker(mimeTypes = listOf("text/plain")) { uris ->
+        uris.firstOrNull()?.let { action(FileAction.Import(it)) }
     }
 
     // Collect snackBar messages
@@ -132,7 +127,7 @@ fun LinkScreen(
 
             is FileAction.Import -> {
                 // Trigger file picker
-                filePickerLauncher.launch("text/plain")
+                filePicker.launch()
             }
 
             is ListAction.ScrollToTop -> {

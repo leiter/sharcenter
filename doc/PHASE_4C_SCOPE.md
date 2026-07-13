@@ -126,7 +126,7 @@ because every other seam needs a `Context` on Android and an `expect object` can
 | `Sharer` | `ACTION_SEND` chooser | `isSupported = false` | ✅ WP3d |
 | ~~`InstalledApps`~~ | — | — | ✅ **dissolved** (see below) |
 | `LoginFlow` (WebView) | `XLoginActivity` | `isSupported = false` | ✅ WP3e |
-| `FilePicker` | `rememberLauncherForActivityResult` | AWT `FileDialog` | ⏳ **WP3f — still needed** |
+| `FilePicker` | SAF `OpenDocument` | AWT `FileDialog` | ✅ WP3f |
 
 **`InstalledApps` did not need to exist.** Its only live caller asked "is X installed?" purely to
 decide whether to pin an `ACTION_VIEW` intent to the X package. That is not a question shared code
@@ -145,7 +145,27 @@ lines) turned out to be **dead code** and was deleted rather than ported.
 > grep can see.*
 >
 > `BackHandler` (`PostsScreen`, `MySearchBar`) is **not** a seam — CMP ships
-> `org.jetbrains.compose.ui:ui-backhandler` for every target, so it is a one-line import swap.
+> `org.jetbrains.compose.ui:ui-backhandler` for every target, so it is a one-line import swap
+> (plus `@OptIn(ExperimentalComposeUiApi::class)`; it is still experimental). Verified on device:
+> Back still exits selection mode rather than the app.
+
+**`FilePicker` is the one seam that had to be a composable (WP3f).** Every other seam is an
+injected interface, but registering an activity-result contract *must* happen during composition,
+before anything is launched — an injected object cannot do it. So the seam takes the shape of the
+thing it hides: `@Composable expect fun rememberFilePicker(...): FilePickerLauncher`. Both Android
+contracts (single + multiple) are registered unconditionally, because
+`rememberLauncherForActivityResult` cannot be called behind an `if`; which one launches is decided
+at click time. Cancelling yields an empty list.
+
+*Behaviour change, deliberate:* `LinksScreen` used `GetContent` (`ACTION_GET_CONTENT`) while the
+other two used `OpenDocument` (`ACTION_OPEN_DOCUMENT`). The seam unifies on `OpenDocument` — the
+SAF picker, which also grants persistable permission. **Not exercised on device**, because the
+Links import entry point is commented out (see below); the Settings restore path, which uses the
+same code, was.
+
+*Dead UI found:* `LinksScreen`'s import/export speed-dial items are commented out, so
+`FileAction.Import` is unreachable from the Links UI. The commented code still passes `Uri.EMPTY`
+and would not compile today. Left alone — pre-existing, and not this migration's call to make.
 
 **`LoginFlow` is the one seam that stays unsupported (WP3e).** Sign-in scrapes session cookies out
 of a WebView; a desktop JVM has none, and a fake login is worse than no login. So the capability is
@@ -256,9 +276,25 @@ couplings are gone.
 apart from `XLoginActivity` itself, which is a WebView and Android-only by design — it is now
 behind the `LoginFlow` seam, so no other screen names it.
 
-**Remaining, and the reason WP3f exists:** 4 UI files still use `androidx.activity.*`, which is
-Android-only and was invisible to the `android.*` metric.
+**`androidx.activity.*` in the UI layer: 4 files → 0.** `XLoginActivity` still uses it, but it *is*
+an Activity, and nothing else names it.
 
-**Next step:** WP3f — the `FilePicker` seam (`rememberLauncherForActivityResult` in `LinksScreen`,
-`PostsScreen`, `SettingsScreen`) plus the `BackHandler` import swap. That closes WP3 for real.
-Then WP4.
+**WP3 is closed.** Every platform seam exists, has an Android and a desktop implementation, and is
+verified on a real device.
+
+**Next step: the compile gate — and it should have come sooner.** Everything above was verified by
+an *Android* build, which by construction cannot tell you whether the code would compile in
+`commonMain`; `:app` resolves `android.*` and `androidx.activity.*` perfectly well. That left a
+grep as the only check, and the grep was wrong twice (WP3c's fully-qualified `Uri`, WP3d's
+`FilePicker` claim). WP3f then produced the proof: the desktop target caught a compile error in
+`FilePicker.desktop.kt` that the green Android build had said nothing about.
+
+So before WP4/WP5, move the code that is *already* clean — `ColorPicker`, the pure `tools/`
+helpers, the leaf components — into `shared/commonMain`, so the **compiler** enforces the boundary
+from here on instead of me. `:shared` already has the Compose dependencies and a desktop target, so
+this is mostly file moves.
+
+After that: **spike WP5's two real unknowns early** — does `datastore-preferences-core` work
+multiplatform with a per-platform path factory, and can `UrlResolver` (which drives redirects
+manually) be rewritten off raw `okhttp3` onto Ktor? Those can invalidate the plan; WP4 cannot.
+Do the risky unknowns first and keep WP4 as filler.

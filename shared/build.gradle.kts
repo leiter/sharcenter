@@ -39,6 +39,10 @@ kotlin {
             // JetBrains stopped publishing the icons artifact after 1.7.3; it resolves
             // cleanly against CMP 1.8.2 (verified). The app uses 87 distinct icons.
             api(libs.compose.icons.extended)
+            // BackHandler. CMP ships it as its own artifact for every target, so it replaces
+            // androidx.activity.compose.BackHandler outright — no seam needed. `api`, because
+            // :app's screens use it directly until WP7 moves them here.
+            api(libs.compose.ui.backhandler)
             implementation(libs.kotlinx.coroutines.core)
             // `api` so :app can still reference SqlDriver / the generated database types.
             api(libs.sqldelight.runtime)
@@ -47,6 +51,9 @@ kotlin {
         }
         androidMain.dependencies {
             api(libs.sqldelight.android.driver)
+            // The FilePicker actual registers an activity-result contract; that lives here,
+            // not in Compose itself.
+            implementation(libs.androidx.activity.compose)
         }
         val desktopMain by getting {
             dependencies {
