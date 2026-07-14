@@ -44,6 +44,12 @@ kotlin {
             // :app's screens use it directly until WP7 moves them here.
             api(libs.compose.ui.backhandler)
             implementation(libs.kotlinx.coroutines.core)
+            // WP5 spike: the multiplatform DataStore core. Same Preferences API as the Android
+            // artifact, minus the Context-bound delegate — the file path is supplied by the caller.
+            api(libs.datastore.preferences.core)
+            api(libs.okio)
+            // WP5 spike: does Ktor expose what UrlResolver needs from OkHttp?
+            api(libs.ktor.client.core)
             // `api` so :app can still reference SqlDriver / the generated database types.
             api(libs.sqldelight.runtime)
             api(libs.sqldelight.coroutines)
@@ -64,6 +70,8 @@ kotlin {
             dependencies {
                 implementation(libs.junit)
                 implementation(libs.sqldelight.sqlite.driver)
+                implementation(libs.ktor.client.mock)
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
     }

@@ -186,12 +186,48 @@ changing every tweet containing "don't"). `tools/urlEncode` reproduces it exactl
 formatter seam; `java.io.File`/streams → **kotlinx-io/Okio**; `UUID` → Kotlin `Uuid`.
 Unblocks `ContentItemManager`/`ItemManager` (the `tools` date helpers) as a side-effect.
 
-### WP5 — Move `data/rest` + `data/preferences` into `:shared`  *(M)*
+### WP5 — Move `data/rest` + `data/preferences` into `:shared`  *(M)* — **SPIKED: GO**
 - Ktor engine → `expect fun httpEngine()` (OkHttp on Android, Java/OkHttp on desktop).
 - **Rewrite `UrlResolver` off raw `okhttp3`** onto the Ktor client (1 file, but fiddly:
   it drives redirects manually).
 - DataStore: `datastore-preferences-core` is multiplatform; needs a per-platform path factory.
 - Depends on WP2's Decision A (the 8 repos referencing `R.string`).
+
+#### Spike results — both unknowns clear, no plan change
+
+The two questions that could have invalidated the plan are answered, each by a test that runs on
+the **JVM**, i.e. off Android (11 new tests, all green).
+
+**1. DataStore multiplatform — ✅ works.** `preferencesDataStore(name = …)` is a Context-bound
+delegate and Android-only, but `datastore-preferences-core` exposes the *same* Preferences API and
+just asks the caller for an `okio.Path`. All the keys (`stringPreferencesKey` and friends) are
+already multiplatform, so **the repositories on top need almost no change** — only
+`java.io.IOException` → `okio.IOException`. `createPreferencesStore(name)` + an `expect fun
+preferencesPath(name)` is the whole seam. Proven by writing to a real file and reading it back
+through a *second* store instance.
+
+- *Constraint found:* DataStore **throws if two live instances share one file**. It must be a DI
+  singleton — which it already is. Pinned by a test so nobody "helpfully" makes it a factory.
+- *There are three stores, not one:* `app_settings`, `backup_preferences`,
+  `youtube_backfill_preferences`.
+- The Android path reproduces the delegate's own layout (`filesDir/datastore/<name>
+  .preferences_pb`), so the existing store is opened rather than orphaned. Back-compat is not
+  actually required (the app is unreleased) — but matching it costs nothing and keeps the dev
+  device's real X credentials.
+
+**2. Ktor for `UrlResolver` — ✅ has both capabilities.** The risk was that an engine abstraction
+would hide what `UrlResolver` needs from its two OkHttp clients. It does not:
+
+| Needed | OkHttp today | Ktor | Test |
+|---|---|---|---|
+| Final URL after redirects | `response.request.url` | `response.request.url` (identical) | ✅ incl. multi-hop chains |
+| `Location` header *without* following | second client, `followRedirects(false)` | `HttpClient { followRedirects = false }` | ✅ 3xx handed back intact |
+
+**3. Unknown the plan missed: `UrlResolver` also uses `org.json.JSONObject`** — an *Android* class,
+not JVM — to navigate the X GraphQL response, plus `java.net.URLEncoder`. Neither is a risk
+(`kotlinx-serialization-json` is already a dependency and does the same optional-navigation, and
+`tools/urlEncode` from WP3d replaces `URLEncoder`), but it is **~150 lines of real rewriting** that
+was not costed. `UrlResolver` is 558 lines. Budget WP5 nearer the high end.
 
 ### WP6 — ViewModels + Koin modules → `commonMain`  *(S)*
 `androidx.lifecycle` ViewModel is already multiplatform, and Koin is pure Kotlin — this is
@@ -310,8 +346,18 @@ Three real problems surfaced the moment it ran — none of which a single-module
 Every one of these is a fact about crossing a module boundary that WP6/WP7 would have hit *en
 masse*. They now arrive one file at a time.
 
-**Next: spike WP5's two real unknowns before doing WP4.** Does `datastore-preferences-core` work
-multiplatform with a per-platform path factory, and can `UrlResolver` — which drives redirects
-manually — be rewritten off raw `okhttp3` onto Ktor? Either can invalidate the plan. WP4
-(`java.time` → kotlinx-datetime) cannot; it is grunt work with no unknowns, so it makes better
-filler than prologue.
+### WP5 spike — ✅ DONE. Both unknowns clear; the plan stands.
+
+DataStore works multiplatform, and Ktor exposes both things `UrlResolver` needs from OkHttp. See
+the WP5 section above for detail. One cost the plan had missed: `UrlResolver` also uses
+`org.json.JSONObject` (Android-only), so budget ~150 lines more rewriting than estimated.
+
+**Nothing left can invalidate the plan.** The remaining work is laborious but known:
+
+- **WP5** — move `data/rest` + `data/preferences` into `:shared`; `expect fun httpEngine()`;
+  rewrite `UrlResolver` (okhttp3 + org.json → Ktor + kotlinx-serialization).
+- **WP4** — `java.time` → kotlinx-datetime, `java.io` → okio. Grunt work, no unknowns; good filler.
+- **WP6** — ViewModels + Koin modules → `commonMain`.
+- **WP7** — the 57 UI files → `commonMain`; decide `@Preview` per file (WP1d lands here).
+- **WP8** — the desktop app module. Decision C (feature parity) must be settled by then;
+  `LoginFlow` and `Sharer` already show the capability-flag shape it should take.
