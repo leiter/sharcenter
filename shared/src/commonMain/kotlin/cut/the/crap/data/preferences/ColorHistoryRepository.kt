@@ -1,18 +1,16 @@
 package cut.the.crap.data.preferences
 
-import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.io.IOException
+import okio.IOException
 
 /**
  * Persists the colours the user has recently picked in the [cut.the.crap.ui.components.ColorPicker],
@@ -22,14 +20,17 @@ import java.io.IOException
  * Colours are stored as six-digit uppercase RRGGBB strings (matching `Color.toHexString()`), so this
  * layer stays free of Compose/Android colour types for the planned KMP migration.
  */
+/** The name of the store this repository owns. Used by DI to build the singleton. */
+const val COLOR_HISTORY_STORE = "color_history"
+
 class ColorHistoryRepository constructor(
-    private val context: Context
+    private val dataStore: DataStore<Preferences>
 ) {
     @Serializable
     private data class StoredColor(val hex: String, val pickedAt: Long)
 
     /** Recently picked colours as RRGGBB hex strings, most recent first. */
-    val recentColors: Flow<List<String>> = context.colorHistoryStore.data
+    val recentColors: Flow<List<String>> = dataStore.data
         .catch { exception ->
             if (exception is IOException) emit(emptyPreferences()) else throw exception
         }
@@ -42,7 +43,7 @@ class ColorHistoryRepository constructor(
      */
     suspend fun recordColor(hex: String) {
         val normalized = normalizeHex(hex) ?: return
-        context.colorHistoryStore.edit { prefs ->
+        dataStore.edit { prefs ->
             val current = prefs.decodeStoredColors()
             val updated = buildList {
                 add(StoredColor(normalized, System.currentTimeMillis()))
@@ -73,4 +74,3 @@ class ColorHistoryRepository constructor(
     }
 }
 
-private val Context.colorHistoryStore: DataStore<Preferences> by preferencesDataStore(name = "color_history")

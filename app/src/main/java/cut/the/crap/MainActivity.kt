@@ -34,6 +34,7 @@ import coil3.network.ktor2.KtorNetworkFetcherFactory
 import coil3.request.crossfade
 import okio.Path.Companion.toOkioPath
 import cut.the.crap.data.backup.BackupManager
+import cut.the.crap.data.preferences.initPreferencesPath
 import cut.the.crap.data.rest.YouTubeMetadataBackfiller
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.ShareLinksTask
@@ -74,6 +75,9 @@ class MyApplication : Application(), SingletonImageLoader.Factory {
 
     override fun onCreate() {
         super.onCreate()
+        // Must precede startKoin: the preferences stores are built by the Koin graph, and they
+        // need to know where filesDir is. The desktop app resolves its own path and skips this.
+        initPreferencesPath(this)
         startKoin {
             androidContext(this@MyApplication)
             modules(

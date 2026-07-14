@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 /**
@@ -50,6 +51,7 @@ kotlin {
             api(libs.okio)
             // WP5 spike: does Ktor expose what UrlResolver needs from OkHttp?
             api(libs.ktor.client.core)
+            api(libs.kotlinx.serialization.json)
             // `api` so :app can still reference SqlDriver / the generated database types.
             api(libs.sqldelight.runtime)
             api(libs.sqldelight.coroutines)

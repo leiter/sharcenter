@@ -1,20 +1,24 @@
 package cut.the.crap.data.preferences
 
-import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
-import androidx.datastore.preferences.preferencesDataStore
 import cut.the.crap.ui.content.settings.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import java.io.IOException
+import okio.IOException
 
-// Extension property to create DataStore
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "app_settings")
+/** The name of the store this repository owns. Used by DI to build the singleton. */
+const val SETTINGS_STORE = "app_settings"
 
+/**
+ * The DataStore is injected rather than derived from a Context: `preferencesDataStore(name = …)`
+ * is an Android-only delegate, and it was also the thing that quietly made the store a singleton.
+ * Injecting it makes that requirement explicit — DataStore throws if two live instances share a
+ * file, so the store must be a Koin `single` even though this repository is a `factory`.
+ */
 class SettingsRepository constructor(
-    private val context: Context
+    private val dataStore: DataStore<Preferences>
 ) {
     // Preference keys
     private object PreferencesKeys {
@@ -42,7 +46,7 @@ class SettingsRepository constructor(
     }
 
     // Flow to read settings
-    val settingsFlow: Flow<AppSettings> = context.dataStore.data
+    val settingsFlow: Flow<AppSettings> = dataStore.data
         .catch { exception ->
             if (exception is IOException) {
                 emit(emptyPreferences())
@@ -110,7 +114,7 @@ class SettingsRepository constructor(
 
     // Save settings
     suspend fun updateSettings(settings: AppSettings) {
-        context.dataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             preferences[PreferencesKeys.POSTS_DATE_RANGE_PRESET] = settings.postsDateRangePreset.name
             preferences[PreferencesKeys.LINKS_DATE_RANGE_PRESET] = settings.linksDateRangePreset.name
             preferences[PreferencesKeys.POSTS_FAVORITE_FILTER_PRESET] = settings.postsFavoriteFilterPreset.name
@@ -143,46 +147,46 @@ class SettingsRepository constructor(
     // Individual update methods for convenience
     suspend fun updateDateRangePreset(preset: DateRangePreset) {
         // Deprecated - update both for backward compatibility
-        context.dataStore.edit {
+        dataStore.edit {
             it[PreferencesKeys.POSTS_DATE_RANGE_PRESET] = preset.name
             it[PreferencesKeys.LINKS_DATE_RANGE_PRESET] = preset.name
         }
     }
 
     suspend fun updatePostsDateRangePreset(preset: DateRangePreset) {
-        context.dataStore.edit { it[PreferencesKeys.POSTS_DATE_RANGE_PRESET] = preset.name }
+        dataStore.edit { it[PreferencesKeys.POSTS_DATE_RANGE_PRESET] = preset.name }
     }
 
     suspend fun updateLinksDateRangePreset(preset: DateRangePreset) {
-        context.dataStore.edit { it[PreferencesKeys.LINKS_DATE_RANGE_PRESET] = preset.name }
+        dataStore.edit { it[PreferencesKeys.LINKS_DATE_RANGE_PRESET] = preset.name }
     }
 
     suspend fun updatePostsFavoriteFilterPreset(preset: FavoriteFilterPreset) {
-        context.dataStore.edit { it[PreferencesKeys.POSTS_FAVORITE_FILTER_PRESET] = preset.name }
+        dataStore.edit { it[PreferencesKeys.POSTS_FAVORITE_FILTER_PRESET] = preset.name }
     }
 
     suspend fun updateLinksFavoriteFilterPreset(preset: FavoriteFilterPreset) {
-        context.dataStore.edit { it[PreferencesKeys.LINKS_FAVORITE_FILTER_PRESET] = preset.name }
+        dataStore.edit { it[PreferencesKeys.LINKS_FAVORITE_FILTER_PRESET] = preset.name }
     }
 
     suspend fun updatePostsSortOrderPreset(preset: SortOrderPreset) {
-        context.dataStore.edit { it[PreferencesKeys.POSTS_SORT_ORDER_PRESET] = preset.name }
+        dataStore.edit { it[PreferencesKeys.POSTS_SORT_ORDER_PRESET] = preset.name }
     }
 
     suspend fun updateLinksSortOrderPreset(preset: SortOrderPreset) {
-        context.dataStore.edit { it[PreferencesKeys.LINKS_SORT_ORDER_PRESET] = preset.name }
+        dataStore.edit { it[PreferencesKeys.LINKS_SORT_ORDER_PRESET] = preset.name }
     }
 
     suspend fun updateThemePreference(theme: ThemePreference) {
-        context.dataStore.edit { it[PreferencesKeys.THEME_PREFERENCE] = theme.name }
+        dataStore.edit { it[PreferencesKeys.THEME_PREFERENCE] = theme.name }
     }
 
     suspend fun updateDeveloperMode(enabled: Boolean) {
-        context.dataStore.edit { it[PreferencesKeys.DEVELOPER_MODE] = enabled }
+        dataStore.edit { it[PreferencesKeys.DEVELOPER_MODE] = enabled }
     }
 
     suspend fun updateXCredentials(authToken: String?, ct0Token: String?) {
-        context.dataStore.edit {
+        dataStore.edit {
             if (authToken != null) {
                 it[PreferencesKeys.X_AUTH_TOKEN] = authToken
             } else {

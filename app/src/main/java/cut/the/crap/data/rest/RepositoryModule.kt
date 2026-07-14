@@ -1,7 +1,10 @@
 package cut.the.crap.data.rest
 
+import cut.the.crap.data.preferences.COLOR_HISTORY_STORE
 import cut.the.crap.data.preferences.ColorHistoryRepository
+import cut.the.crap.data.preferences.SETTINGS_STORE
 import cut.the.crap.data.preferences.SettingsRepository
+import cut.the.crap.data.preferences.createPreferencesStore
 import cut.the.crap.data.rest.bluesky.BlueskyRepository
 import cut.the.crap.data.rest.bluesky.BlueskyRepositoryImpl
 import cut.the.crap.data.rest.eci.EciStatisticsRepository
@@ -15,6 +18,7 @@ import cut.the.crap.data.rest.task.JobQueueRepositoryImpl
 import cut.the.crap.data.rest.tiktok.TikTokRepository
 import cut.the.crap.data.rest.tiktok.TikTokRepositoryImpl
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -33,8 +37,14 @@ val repositoryModule = module {
     factoryOf(::JobQueueRepositoryImpl) bind JobQueueRepository::class
     factoryOf(::EciStatisticsRepositoryImpl) bind EciStatisticsRepository::class
 
+    // The preferences stores. These MUST be singles: DataStore throws if two live instances share
+    // a file, and the repositories above are factories. Previously the Android
+    // `preferencesDataStore` delegate hid this by caching the store on the Context.
+    single(named(SETTINGS_STORE)) { createPreferencesStore(SETTINGS_STORE) }
+    single(named(COLOR_HISTORY_STORE)) { createPreferencesStore(COLOR_HISTORY_STORE) }
+
     // Previously provided implicitly by Hilt via constructors (unscoped).
-    factoryOf(::SettingsRepository)
-    factoryOf(::ColorHistoryRepository)
+    factory { SettingsRepository(get(named(SETTINGS_STORE))) }
+    factory { ColorHistoryRepository(get(named(COLOR_HISTORY_STORE))) }
     factoryOf(::YouTubeMetadataBackfiller)
 }
