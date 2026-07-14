@@ -181,10 +181,38 @@ encoding still yields a valid URL, just with mangled text in it. `Uri.encode`'s 
 changing every tweet containing "don't"). `tools/urlEncode` reproduces it exactly and is pinned by
 22 JVM tests — which also prove the share URLs are correct *off* Android, where `Uri` does not exist.
 
-### WP4 — JVM stdlib → multiplatform  *(M, low-risk)*
-`java.time`/`SimpleDateFormat`/`Locale`/`NumberFormat` → **kotlinx-datetime** + a small
-formatter seam; `java.io.File`/streams → **kotlinx-io/Okio**; `UUID` → Kotlin `Uuid`.
-Unblocks `ContentItemManager`/`ItemManager` (the `tools` date helpers) as a side-effect.
+### WP4 — JVM stdlib → multiplatform  *(M)* — **a/b DONE**
+
+**The hard part was never `java.time`. It was that locale-aware formatting has no multiplatform
+equivalent at all** — and getting it wrong is invisible: it compiles, passes every test, and is
+only wrong on screen.
+
+So the work split by *whether locale actually matters*:
+
+- **Locale-independent** — all-numeric patterns (`dd.MM.yy`, `yyyy-MM-dd_HHmmss`, …) → kotlinx-datetime
+  in `commonMain`. These render identically everywhere, which means the `Locale` argument they used
+  to take was doing nothing at all.
+- **Locale-sensitive** — thousands separators, percentages, file sizes, month names → an
+  `expect`/`actual` `LocaleFormat` seam. Both actuals are JVM and identical, but they stay separate
+  actuals rather than sharing an intermediate JVM source set, because that is what keeps iOS
+  addable (it would use `NSNumberFormatter`).
+- **Locale-sensitive *for a named language*, not the device** — the ECI post templates compose text
+  *in* a language, so `formatIntegerForLanguage(value, "lt")` is a different question from "how does
+  this phone format numbers". Verified on device: a Lithuanian post renders 6476 as `6 476` (space
+  separator), while the German UI renders the same magnitude as `5.155`.
+
+**Hidden JVM dependencies an import scan cannot see** — worth knowing for WP6/WP7:
+- `Character.toChars` (used for flag emoji) is `java.lang`, so it is **auto-imported and invisible
+  to `grep '^import java.'`**. Replaced with an explicit surrogate-pair encoder.
+- `String.format` is JVM-only and locale-sensitive (`1,5 MB` vs `1.5 MB`).
+- `normalizeToStartOfDay` and `toStartOfDay` were the same function by two routes (`Calendar` vs
+  `java.time`).
+
+`UUID` → Kotlin's multiplatform `Uuid`; no seam needed, just an opt-in.
+
+**Still in `:app` (file IO, deliberately deferred):** `FileHelper`, `DatabaseBackupManager` (both
+Android-only anyway — MediaStore/SAF), `LinksImportExport` (`OutputStream`), and
+`StringExtension`'s `java.net.URL` (→ Ktor `Url`).
 
 ### WP5 — Move `data/rest` + `data/preferences` into `:shared`  *(M)* — **a/b/c DONE**
 

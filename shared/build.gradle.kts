@@ -52,6 +52,8 @@ kotlin {
             api(libs.kotlinx.datetime)
             // WP5 spike: does Ktor expose what UrlResolver needs from OkHttp?
             api(libs.ktor.client.core)
+            api(libs.ktor.client.content.negotiation)
+            api(libs.ktor.serialization.kotlinx.json)
             api(libs.kotlinx.serialization.json)
             // `api` so :app can still reference SqlDriver / the generated database types.
             api(libs.sqldelight.runtime)

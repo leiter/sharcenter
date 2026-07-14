@@ -1,7 +1,10 @@
 package cut.the.crap.tools
 
+import kotlinx.datetime.LocalDate
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Date
 import java.util.Locale
 
@@ -30,3 +33,12 @@ actual fun formatOneDecimal(value: Double): String =
 
 actual fun formatMediumDateTime(timestamp: Long): String =
     SimpleDateFormat("MMM d, yyyy HH:mm", Locale.getDefault()).format(Date(timestamp))
+
+actual fun formatIntegerForLanguage(value: Long, languageTag: String): String =
+    NumberFormat.getIntegerInstance(Locale.forLanguageTag(languageTag)).format(value)
+
+actual fun formatMediumDateForLanguage(date: LocalDate, languageTag: String): String =
+    java.time.LocalDate.of(date.year, date.monthNumber, date.dayOfMonth).format(
+        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+            .withLocale(Locale.forLanguageTag(languageTag))
+    )

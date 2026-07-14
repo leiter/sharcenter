@@ -9,7 +9,7 @@ import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.get
 import io.ktor.serialization.ContentConvertException
 import kotlinx.serialization.SerializationException
-import java.io.IOException
+import okio.IOException
 import cut.the.crap.data.rest.AppError
 import cut.the.crap.data.rest.Source
 

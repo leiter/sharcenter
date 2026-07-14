@@ -1,7 +1,10 @@
 package cut.the.crap.data.rest.eci
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDate.Companion.parse
+import kotlinx.datetime.format
+import kotlinx.datetime.format.Padding
+import kotlinx.datetime.format.char
 
 /**
  * Static reference data used to reconstruct the ECI "signatures per country" table.
@@ -11,10 +14,16 @@ import java.time.format.DateTimeFormatter
  * Values ported from register.eci.ec.europa.eu (front-end `Ao` threshold function and
  * `go` country-name map).
  */
-internal object EciReferenceData {
+object EciReferenceData {
 
     /** Registration dates arrive as "dd/MM/yyyy". */
-    val REGISTRATION_DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+    val REGISTRATION_DATE_FORMAT = LocalDate.Format {
+        dayOfMonth(Padding.ZERO)
+        char('/')
+        monthNumber(Padding.ZERO)
+        char('/')
+        year()
+    }
 
     /**
      * Minimum statements of support per member state, keyed by lower-case ISO alpha-2 code.
@@ -64,10 +73,10 @@ internal object EciReferenceData {
      */
     fun thresholdsForRegistration(registrationDate: LocalDate?): Map<String, Int> = when {
         registrationDate == null -> emptyMap()
-        registrationDate.isAfter(LocalDate.of(2020, 2, 1)) -> THRESHOLDS_FROM_2020_02_01
-        registrationDate.isAfter(LocalDate.of(2020, 1, 1)) -> THRESHOLDS_FROM_2020_01_01
-        registrationDate.isAfter(LocalDate.of(2014, 7, 1)) -> THRESHOLDS_FROM_2014_07_01
-        registrationDate.isAfter(LocalDate.of(2012, 4, 1)) -> THRESHOLDS_FROM_2012_04_01
+        registrationDate > LocalDate(2020, 2, 1) -> THRESHOLDS_FROM_2020_02_01
+        registrationDate > LocalDate(2020, 1, 1) -> THRESHOLDS_FROM_2020_01_01
+        registrationDate > LocalDate(2014, 7, 1) -> THRESHOLDS_FROM_2014_07_01
+        registrationDate > LocalDate(2012, 4, 1) -> THRESHOLDS_FROM_2012_04_01
         else -> emptyMap()
     }
 
@@ -139,7 +148,19 @@ internal object EciReferenceData {
         val base = 0x1F1E6 // regional indicator symbol letter A
         val first = base + (code[0] - 'A')
         val second = base + (code[1] - 'A')
-        return String(Character.toChars(first)) + String(Character.toChars(second))
+        return codePointToString(first) + codePointToString(second)
+    }
+
+    /**
+     * `Character.toChars` is `java.lang` — invisible to an import scan, and JVM-only. These code
+     * points are above the BMP, so they need an explicit surrogate pair.
+     */
+    private fun codePointToString(codePoint: Int): String {
+        if (codePoint < 0x10000) return codePoint.toChar().toString()
+        val offset = codePoint - 0x10000
+        val high = (0xD800 + (offset shr 10)).toChar()
+        val low = (0xDC00 + (offset and 0x3FF)).toChar()
+        return charArrayOf(high, low).concatToString()
     }
 
     /** Parses a "dd/MM/yyyy" date, or returns null if it is missing/malformed. */

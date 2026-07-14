@@ -1,9 +1,7 @@
 package cut.the.crap.data.rest.eci
 
-import java.text.NumberFormat
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.Locale
+import cut.the.crap.tools.formatIntegerForLanguage
+import cut.the.crap.tools.formatMediumDateForLanguage
 
 /**
  * Localised call-to-action templates for motivating signatures, one set per EU official
@@ -350,8 +348,7 @@ object EciPostGenerator {
             else -> templates.belowThreshold to 0
         }
 
-        val locale = Locale.forLanguageTag(language)
-        val deadlineText = formatDeadline(statistics.deadline, locale)
+        val deadlineText = formatDeadline(statistics.deadline, language)
 
         // Variant 0 references the deadline; if we don't have one, fall back to variant 1.
         var index = variantIndex.coerceIn(0, variants.size - 1)
@@ -360,7 +357,7 @@ object EciPostGenerator {
         }
 
         val remaining = row.remainingToAim ?: 0L
-        val remainingText = NumberFormat.getIntegerInstance(locale).format(remaining)
+        val remainingText = formatIntegerForLanguage(remaining, language)
 
         val sentence = variants[index]
             .replace("{remaining}", remainingText)
@@ -379,11 +376,9 @@ object EciPostGenerator {
         }
     }
 
-    /** Formats a "dd/MM/yyyy" deadline into [locale]'s medium date style, or "" if absent. */
-    private fun formatDeadline(deadline: String?, locale: Locale): String {
+    /** Formats a "dd/MM/yyyy" deadline into [language]'s medium date style, or "" if absent. */
+    private fun formatDeadline(deadline: String?, language: String): String {
         val date = EciReferenceData.parseDate(deadline) ?: return ""
-        return date.format(
-            DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
-        )
+        return formatMediumDateForLanguage(date, language)
     }
 }

@@ -1,5 +1,7 @@
 package cut.the.crap.tools
 
+import kotlinx.datetime.LocalDate
+
 /**
  * Formatting that depends on the user's locale, and therefore cannot be done in common code.
  *
@@ -24,3 +26,14 @@ expect fun formatOneDecimal(value: Double): String
 
 /** A medium date with a localised month name plus time, e.g. `Jul 14, 2026 13:45`. */
 expect fun formatMediumDateTime(timestamp: Long): String
+
+/**
+ * As [formatInteger], but for an explicitly named language rather than the system locale.
+ *
+ * The ECI post templates compose text *in* a language (a Slovenian post gets Slovenian number
+ * grouping), which is not the same question as "how does this device format numbers".
+ */
+expect fun formatIntegerForLanguage(value: Long, languageTag: String): String
+
+/** A medium-style date rendered in [languageTag]'s conventions, e.g. `14. jul. 2026` (sl). */
+expect fun formatMediumDateForLanguage(date: LocalDate, languageTag: String): String
