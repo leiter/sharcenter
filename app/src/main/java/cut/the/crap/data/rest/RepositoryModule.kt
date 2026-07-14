@@ -17,6 +17,7 @@ import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.JobQueueRepositoryImpl
 import cut.the.crap.data.rest.tiktok.TikTokRepository
 import cut.the.crap.data.rest.tiktok.TikTokRepositoryImpl
+import cut.the.crap.tools.UrlResolver
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
@@ -42,6 +43,9 @@ val repositoryModule = module {
     // `preferencesDataStore` delegate hid this by caching the store on the Context.
     single(named(SETTINGS_STORE)) { createPreferencesStore(SETTINGS_STORE) }
     single(named(COLOR_HISTORY_STORE)) { createPreferencesStore(COLOR_HISTORY_STORE) }
+
+    // Resolves /i/status/ and short links; holds a Ktor client. Was a static object.
+    factoryOf(::UrlResolver)
 
     // Previously provided implicitly by Hilt via constructors (unscoped).
     factory { SettingsRepository(get(named(SETTINGS_STORE))) }

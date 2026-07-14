@@ -5,13 +5,15 @@ import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.data.rest.tiktok.TikTokPostMetadata
 import cut.the.crap.fake.FakeTikTokRepository
 import cut.the.crap.tools.LinkMetadata
+import cut.the.crap.tools.UrlResolver
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class TikTokSharedLinkHandlerTest {
 
     private val repository = FakeTikTokRepository()
-    private val handler = TikTokSharedLinkHandler(repository)
+    private val handler = TikTokSharedLinkHandler(repository, mockk<UrlResolver>())
 
     @Test
     fun `recognizes tiktok urls and rejects others`() {

@@ -19,7 +19,8 @@ import cut.the.crap.tools.parseRedditUrl
  *   public oEmbed endpoint via [RedditRepository] (Reddit's oEmbed returns no thumbnail).
  */
 class RedditSharedLinkHandler constructor(
-    private val redditRepository: RedditRepository
+    private val redditRepository: RedditRepository,
+    private val urlResolver: UrlResolver,
 ) : SharedLinkHandler {
 
     override fun recognizes(url: String): Boolean = isRedditUrl(url)
@@ -27,7 +28,7 @@ class RedditSharedLinkHandler constructor(
     override suspend fun resolve(url: String): UrlResolution {
         // Canonical URLs are already enrichable; only short/redirect links need expanding.
         if (!isRedditShortLink(url)) return UrlResolution.Resolved(url, changed = false)
-        val resolved = UrlResolver.resolveRedirect(url)
+        val resolved = urlResolver.resolveRedirect(url)
         return UrlResolution.Resolved(resolved, changed = resolved != url)
     }
 

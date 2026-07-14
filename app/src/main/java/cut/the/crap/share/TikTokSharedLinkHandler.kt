@@ -18,7 +18,8 @@ import cut.the.crap.tools.parseTikTokUrl
  *   fetched from the public oEmbed endpoint via [TikTokRepository].
  */
 class TikTokSharedLinkHandler constructor(
-    private val tikTokRepository: TikTokRepository
+    private val tikTokRepository: TikTokRepository,
+    private val urlResolver: UrlResolver,
 ) : SharedLinkHandler {
 
     override fun recognizes(url: String): Boolean = isTikTokUrl(url)
@@ -26,7 +27,7 @@ class TikTokSharedLinkHandler constructor(
     override suspend fun resolve(url: String): UrlResolution {
         // Canonical URLs are already enrichable; only short/redirect links need expanding.
         if (!isTikTokShortLink(url)) return UrlResolution.Resolved(url, changed = false)
-        val resolved = UrlResolver.resolveRedirect(url)
+        val resolved = urlResolver.resolveRedirect(url)
         return UrlResolution.Resolved(resolved, changed = resolved != url)
     }
 

@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.first
  * - stores a shared *profile* link as an `@handle` in the keyword pool instead of as a link.
  */
 class XSharedLinkHandler constructor(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val urlResolver: UrlResolver,
 ) : SharedLinkHandler {
 
     override fun recognizes(url: String): Boolean =
@@ -33,7 +34,7 @@ class XSharedLinkHandler constructor(
             null
         }
 
-        return when (val result = UrlResolver.resolveXUrlWithStatus(url, credentials)) {
+        return when (val result = urlResolver.resolveXUrlWithStatus(url, credentials)) {
             is UrlResolver.ResolveResult.Success ->
                 UrlResolution.Resolved(result.url, changed = result.url != url)
             is UrlResolver.ResolveResult.AuthRequired ->

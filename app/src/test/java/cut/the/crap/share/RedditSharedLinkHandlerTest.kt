@@ -5,13 +5,15 @@ import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.data.rest.reddit.RedditPostMetadata
 import cut.the.crap.fake.FakeRedditRepository
 import cut.the.crap.tools.LinkMetadata
+import cut.the.crap.tools.UrlResolver
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class RedditSharedLinkHandlerTest {
 
     private val repository = FakeRedditRepository()
-    private val handler = RedditSharedLinkHandler(repository)
+    private val handler = RedditSharedLinkHandler(repository, mockk<UrlResolver>())
 
     @Test
     fun `recognizes reddit urls and rejects others`() {
