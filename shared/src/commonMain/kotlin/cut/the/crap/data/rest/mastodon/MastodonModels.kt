@@ -71,7 +71,7 @@ data class MastodonPostMetadata(
  * `<br>` becomes a newline, remaining tags are stripped, and the common HTML entities are decoded.
  * Kept dependency-free (no android.text.Html) so it is unit-testable on the JVM.
  */
-internal fun htmlToPlainText(html: String): String {
+fun htmlToPlainText(html: String): String {
     if (html.isBlank()) return ""
     var text = html
         .replace(Regex("(?i)</p>\\s*<p>"), "\n\n")

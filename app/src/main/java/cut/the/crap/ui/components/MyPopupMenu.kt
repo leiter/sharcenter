@@ -25,7 +25,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import cut.the.crap.ui.components.api.Action
-import java.nio.file.WatchEvent
 
 data class MenuItem(
     val title: StringResource,

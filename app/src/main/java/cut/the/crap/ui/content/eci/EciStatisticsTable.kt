@@ -1,5 +1,7 @@
 package cut.the.crap.ui.content.eci
 
+import cut.the.crap.tools.formatInteger
+import cut.the.crap.tools.formatPercent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,7 +41,6 @@ import cut.the.crap.data.rest.eci.EciCountrySignatures
 import cut.the.crap.data.rest.eci.EciStatistics
 import cut.the.crap.ui.theme.PreviewAppThemeProvider
 import cut.the.crap.ui.theme.PreviewThemeWrapper
-import java.text.NumberFormat
 
 // Column weights shared by the header and every data row so they stay aligned.
 private const val WEIGHT_COUNTRY = 2.2f
@@ -63,14 +64,6 @@ fun EciStatisticsTable(
     // Total to show in the footer, matching [rows]. Defaults to the initiative-wide total.
     totalSignatures: Long = statistics.totalSignatures
 ) {
-    // NumberFormat instances are relatively expensive; keep them across recompositions.
-    val integerFormat = remember { NumberFormat.getIntegerInstance() }
-    val percentFormat = remember {
-        NumberFormat.getPercentInstance().apply {
-            minimumFractionDigits = 2
-            maximumFractionDigits = 2
-        }
-    }
     val hasAfterSubmission = rows.any { it.afterSubmission }
 
     Card(
@@ -123,7 +116,7 @@ fun EciStatisticsTable(
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
 
             rows.forEach { row ->
-                CountryRow(row, integerFormat, percentFormat)
+                CountryRow(row)
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
             }
 
@@ -142,7 +135,7 @@ fun EciStatisticsTable(
                     emphasised = true
                 )
                 BodyCell(
-                    text = integerFormat.format(totalSignatures),
+                    text = formatInteger(totalSignatures),
                     weight = WEIGHT_SIGNATURES,
                     align = TextAlign.End,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -166,8 +159,6 @@ fun EciStatisticsTable(
 @Composable
 private fun CountryRow(
     row: EciCountrySignatures,
-    integerFormat: NumberFormat,
-    percentFormat: NumberFormat
 ) {
     val fraction = row.thresholdFraction
     val thresholdReached = fraction != null && fraction >= 1.0
@@ -175,7 +166,7 @@ private fun CountryRow(
         thresholdReached -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
-    val signaturesText = integerFormat.format(row.signatures) + if (row.afterSubmission) "*" else ""
+    val signaturesText = formatInteger(row.signatures) + if (row.afterSubmission) "*" else ""
 
     Row(
         modifier = Modifier
@@ -196,13 +187,13 @@ private fun CountryRow(
             color = MaterialTheme.colorScheme.onSurface
         )
         BodyCell(
-            text = row.threshold?.let { integerFormat.format(it) } ?: stringResource(Res.string.eci_not_available),
+            text = row.threshold?.let { formatInteger(it.toLong()) } ?: stringResource(Res.string.eci_not_available),
             weight = WEIGHT_THRESHOLD,
             align = TextAlign.End,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         BodyCell(
-            text = fraction?.let { percentFormat.format(it) } ?: stringResource(Res.string.eci_not_available),
+            text = fraction?.let { formatPercent(it) } ?: stringResource(Res.string.eci_not_available),
             weight = WEIGHT_PERCENTAGE,
             align = TextAlign.End,
             color = percentageColor,

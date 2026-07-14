@@ -3,6 +3,7 @@ package cut.the.crap.data.rest.task
 import cut.the.crap.platform.Log
 import cut.the.crap.data.rest.Result
 import cut.the.crap.data.rest.httpClientEngine
+import cut.the.crap.tools.randomUuid
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.network.sockets.SocketTimeoutException
@@ -22,8 +23,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import java.io.IOException
-import java.util.UUID
+import okio.IOException
 import cut.the.crap.data.rest.AppError
 
 /**
@@ -102,7 +102,7 @@ class JobQueueRepositoryImpl constructor(
 
             val request = JobQueueRequest(
                 job_type = "BackgroundJob",
-                job_id = UUID.randomUUID().toString(),
+                job_id = randomUuid(),
                 data = JobData(task_data = taskJson)
             )
 
@@ -150,7 +150,7 @@ class JobQueueRepositoryImpl constructor(
 
     override suspend fun uploadFiles(files: List<FileUploadData>): Result<String> {
         return try {
-            val jobId = UUID.randomUUID().toString()
+            val jobId = randomUuid()
             val taskData = UploadFilesTask(
                 fileNames = files.map { it.fileName },
                 mimeTypes = files.map { it.mimeType },

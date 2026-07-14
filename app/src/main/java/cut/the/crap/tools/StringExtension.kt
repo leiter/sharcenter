@@ -2,11 +2,6 @@ package cut.the.crap.tools
 
 import java.net.MalformedURLException
 import java.net.URL
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 fun String.ensureTrailingSpace(): String {
     return if (this.isEmpty() || this.endsWith(" ")) {
@@ -79,35 +74,5 @@ private fun idSequence(url: String) : String{
     return "n/a"
 }
 
-fun formatTimestampWithLocalizedFormatter(
-    timestamp: Long,
-    locale: Locale = Locale.getDefault()
-): String {
 
-    val localDateTime = LocalDateTime.ofInstant(
-        Instant.ofEpochMilli(timestamp),
-        ZoneId.systemDefault()
-    )
-    val formatter = DateTimeFormatter
-        .ofPattern("dd.MM.yy, HH:mm" )//ofLocalizedDateTime(FormatStyle.SHORT)
-        .withLocale(locale)
-
-    return localDateTime.format(formatter)
-}
-
-fun formatDateOnly(
-    timestamp: Long,
-    locale: Locale = Locale.getDefault()
-): String {
-
-    val localDateTime = LocalDateTime.ofInstant(
-        Instant.ofEpochMilli(timestamp),
-        ZoneId.systemDefault()
-    )
-    val formatter = DateTimeFormatter
-        .ofPattern("dd.MM.yy")
-        .withLocale(locale)
-
-    return localDateTime.format(formatter)
-}
 

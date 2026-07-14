@@ -1,6 +1,8 @@
 package cut.the.crap.ui.content.links
 
 import cut.the.crap.platform.rememberFilePicker
+import cut.the.crap.tools.currentTimeMillis
+import cut.the.crap.tools.formatTimestampForFileName
 import cut.the.crap.platform.toPlatformUri
 
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -71,9 +73,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,8 +113,7 @@ fun LinkScreen(
         when (actionPayload) {
             is FileAction.Export -> {
                 // Generate filename with timestamp
-                val timestamp = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.getDefault())
-                    .format(Date())
+                val timestamp = formatTimestampForFileName(currentTimeMillis())
                 val filename = "links_export_$timestamp.txt"
 
                 // Create outputStream

@@ -24,12 +24,11 @@ import app.cash.sqldelight.db.SqlDriver
 import cut.the.crap.data.preferences.SettingsRepository
 import cut.the.crap.ui.content.settings.BackupFrequency
 import kotlinx.coroutines.flow.first
+import cut.the.crap.tools.formatTimestampForFileName
+import cut.the.crap.tools.formatTimestampIsoLike
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 private val Context.backupDataStore: DataStore<Preferences> by preferencesDataStore(name = "backup_preferences")
 
@@ -138,8 +137,7 @@ class DatabaseBackupManager constructor(
             }
 
             // Generate filename with timestamp
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.getDefault())
-            val formattedDate = dateFormat.format(Date(timestamp))
+            val formattedDate = formatTimestampForFileName(timestamp)
             val backupFileName = "${BACKUP_PREFIX}_${formattedDate}.db"
 
             val backupResult = copyDatabaseToDownloads(dbFile, backupFileName)
@@ -460,7 +458,7 @@ class DatabaseBackupManager constructor(
         return if (timestamp == 0L) {
             "Never"
         } else {
-            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(timestamp))
+            formatTimestampIsoLike(timestamp)
         }
     }
 }

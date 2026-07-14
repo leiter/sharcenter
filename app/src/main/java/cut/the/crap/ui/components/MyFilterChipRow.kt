@@ -1,5 +1,6 @@
 package cut.the.crap.ui.components
 
+import cut.the.crap.tools.randomUuid
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -21,7 +22,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cut.the.crap.ui.components.FilterChipRowTag.DEFAULT_SUFFIX
-import java.util.UUID
 
 @Composable
 fun MyFilterChipRow(
@@ -106,7 +106,7 @@ private fun Boolean.toSelectedState(): MyFilterChipState {
 class MyFilterChipItem(
     val text: String,
     state: MyFilterChipState,
-    val id: UUID = UUID.randomUUID(),
+    val id: String = randomUuid(),
 ) {
     var state by mutableStateOf(state)
 

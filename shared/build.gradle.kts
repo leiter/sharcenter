@@ -49,6 +49,7 @@ kotlin {
             // artifact, minus the Context-bound delegate — the file path is supplied by the caller.
             api(libs.datastore.preferences.core)
             api(libs.okio)
+            api(libs.kotlinx.datetime)
             // WP5 spike: does Ktor expose what UrlResolver needs from OkHttp?
             api(libs.ktor.client.core)
             api(libs.kotlinx.serialization.json)

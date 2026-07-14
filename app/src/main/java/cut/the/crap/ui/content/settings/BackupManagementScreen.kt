@@ -1,6 +1,8 @@
 package cut.the.crap.ui.content.settings
 
 import cut.the.crap.platform.PlatformUri
+import cut.the.crap.tools.formatMediumDateTime
+import cut.the.crap.tools.formatOneDecimal
 
 import cut.the.crap.platform.Notifier
 
@@ -42,9 +44,6 @@ import org.koin.androidx.compose.koinViewModel
 import androidx.navigation.NavHostController
 import cut.the.crap.data.backup.BackupInfo
 import cut.the.crap.ui.components.BottomNavigationBar
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -239,12 +238,12 @@ private fun EmptyBackups(modifier: Modifier = Modifier) {
 }
 
 private fun formatDate(epochMillis: Long): String =
-    SimpleDateFormat("MMM d, yyyy HH:mm", Locale.getDefault()).format(Date(epochMillis))
+    formatMediumDateTime(epochMillis)
 
 private fun formatSize(bytes: Long): String {
     if (bytes < 1024) return "$bytes B"
     val kb = bytes / 1024.0
-    if (kb < 1024) return String.format(Locale.getDefault(), "%.1f KB", kb)
+    if (kb < 1024) return "${formatOneDecimal(kb)} KB"
     val mb = kb / 1024.0
-    return String.format(Locale.getDefault(), "%.1f MB", mb)
+    return "${formatOneDecimal(mb)} MB"
 }
