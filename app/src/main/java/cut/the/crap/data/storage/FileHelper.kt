@@ -116,45 +116,7 @@ class FileHelper(private val context: Context) {
 
 }
 
-fun saveFileToDownloads(outputStream: OutputStream?, fileContent: String): Result<Boolean> {
 
-    try {
-        val r = outputStream?.use {
-            it.write(fileContent.toByteArray())
-            it.flush()
-        }
-        return if (r != null) {
-            Result.success(true)
-        } else Result.failure(NullPointerException("OutputStream is null"))
-
-        // Notify user
-        //showToast(context, "File saved successfully!")
-    } catch (e: Exception) {
-        e.printStackTrace()
-        if (e is CancellationException) throw e
-        else return Result.failure(e)
-        //showToast(context, "Failed to save file: ${e.localizedMessage}")
-    }
-}
-
-fun provideOutputStream(fileName: String, context: Context): OutputStream? {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        // For Android 10 and above, use MediaStore
-        val values = ContentValues().apply {
-            put(MediaStore.Downloads.DISPLAY_NAME, fileName)
-            put(MediaStore.Downloads.MIME_TYPE, "text/plain")
-            put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-        }
-
-        val uri = context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
-        uri?.let { context.contentResolver.openOutputStream(it) }
-    } else {
-        // For older Android versions
-        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val file = File(downloadsDir, fileName)
-        FileOutputStream(file)
-    }
-}
 
 fun showToast(context: Context, message: String) {
     // Display a toast message on the UI thread

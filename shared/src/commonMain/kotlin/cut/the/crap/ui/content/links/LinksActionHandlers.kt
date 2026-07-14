@@ -508,8 +508,7 @@ internal fun LinksViewModel.handleFileAction(action: FileAction) {
     when (action) {
         is FileAction.Export -> {
             viewModelScope.launch(Dispatchers.IO) {
-                val result = exportSelectedItems(action.outputStream)
-                emitSnackBarMessage(result)
+                emitSnackBarMessage(exportSelectedItems(fileAccess))
             }
         }
 

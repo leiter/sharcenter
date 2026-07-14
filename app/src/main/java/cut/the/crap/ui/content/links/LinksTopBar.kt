@@ -277,7 +277,7 @@ private fun SelectionModeTopBar(
                             MenuItem(
                                 title = Res.string.links_bulk_export,
                                 icon = Icons.Filled.Download,
-                                actionPayload = FileAction.Export(null) // Will be intercepted
+                                actionPayload = FileAction.Export
                             ),
 //                            MenuItem(
 //                                title = Res.string.menu_fire_job,

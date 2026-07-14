@@ -23,8 +23,20 @@ class FakeFileAccess(
         )
     }
 
+    /** Everything [saveToDownloads] was asked to write, by file name, most recent last. */
+    val saved = mutableListOf<Pair<String, String>>()
+
+    /** When set, [saveToDownloads] fails with this instead of recording the write. */
+    var saveFailure: Throwable? = null
+
     override suspend fun read(uri: PlatformUri): FileContents? = files[uri]
 
     override suspend fun readText(uri: PlatformUri): String? =
         files[uri]?.bytes?.decodeToString()
+
+    override suspend fun saveToDownloads(fileName: String, text: String): Result<Unit> {
+        saveFailure?.let { return Result.failure(it) }
+        saved += fileName to text
+        return Result.success(Unit)
+    }
 }

@@ -32,36 +32,8 @@ import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.MiscAction
 
-sealed interface MyEditDialogStyle {
-
-    val title: String?
-    val confirm: String?
-    val dismiss: String?
-
-    @Immutable
-    data class OfferDelete(
-        override val title: String? = "",
-        override val confirm: String? = "Delete",
-        override val dismiss: String? = "Cancel",
-        val actionPayload: Action,
-    ) : MyEditDialogStyle
-
-    @Immutable
-    data class ExportLinks(
-        override val title: String? = "",
-        override val confirm: String? = "Save",
-        override val dismiss: String? = "Cancel",
-        val actionPayload: Action,
-    ) : MyEditDialogStyle
-
-    @Immutable
-    data class EditEntity(
-        override val title: String? = "Edit entity",
-        val tweetItem: ContentLink = ContentLink(),
-        override val confirm: String? = null,
-        override val dismiss: String? = null,
-    ) : MyEditDialogStyle
-}
+// MyEditDialogStyle moved to MyEditDialogStyle.kt in :shared/commonMain (same package) — it is a
+// model, and api.Action refers to it, so it had to leave this Compose file for either to move.
 
 
 @Composable

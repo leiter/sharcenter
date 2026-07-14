@@ -58,7 +58,9 @@ internal fun PostsViewModel.loadContentItem(item: ContentItem) {
  * and shows it in the editor. Mirrors [loadContentItem] but for a brand-new item, so the
  * user lands on the Posts screen with the draft ready to edit and send.
  */
-internal fun PostsViewModel.composePostFromLink(link: ContentLink) {
+// Public, not internal: MainActivity (in :app) calls this to seed a post from a shared link, and
+// `internal` is module-scoped — it stopped reaching across the boundary the moment this file moved.
+fun PostsViewModel.composePostFromLink(link: ContentLink) {
     val text = link.toComposedPostText()
     viewModelScope.launch {
         // Detach from any currently active item, then make the new draft the active one.

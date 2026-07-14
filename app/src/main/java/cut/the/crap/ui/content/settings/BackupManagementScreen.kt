@@ -40,7 +40,7 @@ import cut.the.crap.shared.resources.dialog_cancel
 import cut.the.crap.shared.resources.dialog_delete
 import cut.the.crap.shared.resources.settings_manage_backups
 import cut.the.crap.shared.resources.tag_dialog_selected_count
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.navigation.NavHostController
 import cut.the.crap.data.backup.BackupInfo
 import cut.the.crap.ui.components.BottomNavigationBar

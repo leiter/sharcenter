@@ -10,20 +10,20 @@ import cut.the.crap.data.domain.toContentLink
 import cut.the.crap.data.domain.toLine
 import cut.the.crap.data.domain.validateDelimiter
 import cut.the.crap.data.rest.YouTubeUrlParser
-import cut.the.crap.data.storage.saveFileToDownloads
 import cut.the.crap.tools.LinkMetadata
+import cut.the.crap.tools.currentTimeMillis
+import cut.the.crap.tools.formatTimestampForFileName
 import cut.the.crap.tools.parseSocialMediaUrl
 import cut.the.crap.ui.components.ActiveState
 import cut.the.crap.ui.components.FilterState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.OutputStream
 
 /**
  * Extension functions for handling import/export operations in LinksViewModel
  */
 
-internal fun LinksViewModel.exportSelectedItems(outputStream: OutputStream?): LinksSnackbar {
+internal suspend fun LinksViewModel.exportSelectedItems(fileAccess: FileAccess): LinksSnackbar {
     return try {
         // Get selected items
         val selectedIds = internalScreenState.value.selectedItems
@@ -44,8 +44,9 @@ internal fun LinksViewModel.exportSelectedItems(outputStream: OutputStream?): Li
             filterState = internalScreenState.value
         )
 
-        // Write to file
-        val result = saveFileToDownloads(outputStream, exportContent)
+        // Naming the file is the ViewModel's job now; finding Downloads is the platform's.
+        val fileName = "links_export_${formatTimestampForFileName(currentTimeMillis())}.txt"
+        val result = fileAccess.saveToDownloads(fileName, exportContent)
 
         if (result.isSuccess) {
             LinksSnackbar.ExportSucceeded(itemsToExport.size)

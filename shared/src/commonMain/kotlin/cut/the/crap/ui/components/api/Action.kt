@@ -147,7 +147,14 @@ sealed interface ListAction : Action {
 // Actions related to file operations
 sealed interface FileAction : Action {
     data class Import(val uri: PlatformUri) : FileAction
-    data class Export(val outputStream: java.io.OutputStream?) : FileAction
+
+    /**
+     * Export the selected links. Carries no payload: it used to hold a `java.io.OutputStream`,
+     * which meant the screen had to intercept this action, open a stream and re-dispatch it — and
+     * it put a JVM type in the middle of the action contract. The ViewModel now names the file and
+     * hands the text to [cut.the.crap.platform.FileAccess], which knows where Downloads is.
+     */
+    data object Export : FileAction
     data object BackupDatabase : FileAction
     data class RestoreDatabase(val uri: PlatformUri) : FileAction
 }

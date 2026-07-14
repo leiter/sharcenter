@@ -47,4 +47,17 @@ interface FileAccess {
 
     /** The file decoded as UTF-8 text. Null if it cannot be read. */
     suspend fun readText(uri: PlatformUri): String?
+
+    /**
+     * Writes [text] as UTF-8 to [fileName] in the user's Downloads, replacing any existing file.
+     *
+     * The caller says *what* to save and under what name; where "Downloads" is, and whether that
+     * means a MediaStore insert or an ordinary file write, is the platform's business.
+     *
+     * This deliberately takes a name and a string rather than an `OutputStream`. The export action
+     * used to carry a `java.io.OutputStream` all the way from the screen into the ViewModel, which
+     * is both untestable and un-shareable — and it forced the screen to intercept its own action,
+     * open a stream, and re-dispatch it.
+     */
+    suspend fun saveToDownloads(fileName: String, text: String): Result<Unit>
 }

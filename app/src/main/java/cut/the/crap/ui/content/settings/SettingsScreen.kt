@@ -91,7 +91,7 @@ import cut.the.crap.shared.resources.settings_x_manual_credentials
 import cut.the.crap.shared.resources.settings_x_not_logged_in
 import androidx.compose.ui.graphics.Color
 import cut.the.crap.ui.components.BottomNavigationBar
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import cut.the.crap.ui.components.ColorHistoryViewModel
 import cut.the.crap.ui.components.ColorPickerDialog
 import cut.the.crap.ui.components.colorFromHex

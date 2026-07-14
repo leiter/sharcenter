@@ -51,7 +51,6 @@ import cut.the.crap.shared.resources.Res
 import cut.the.crap.shared.resources.app_name
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.tools.LinkMetadata
-import cut.the.crap.data.storage.provideOutputStream
 //import cut.the.crap.mockedLinkItems
 import cut.the.crap.ui.components.BottomNavigationBar
 import cut.the.crap.ui.components.DateFilterBottomSheet
@@ -111,17 +110,9 @@ fun LinkScreen(
     // Wrapper action handler that intercepts File and List actions
     val actionHandler: (Action) -> Unit = { actionPayload ->
         when (actionPayload) {
-            is FileAction.Export -> {
-                // Generate filename with timestamp
-                val timestamp = formatTimestampForFileName(currentTimeMillis())
-                val filename = "links_export_$timestamp.txt"
-
-                // Create outputStream
-                val outputStream = provideOutputStream(filename, context)
-
-                // Call action with the outputStream
-                action(FileAction.Export(outputStream))
-            }
+            // FileAction.Export is no longer intercepted here: the screen used to open a
+            // MediaStore OutputStream and re-dispatch the action carrying it. The ViewModel now
+            // goes straight to the FileAccess seam.
 
             is FileAction.Import -> {
                 // Trigger file picker

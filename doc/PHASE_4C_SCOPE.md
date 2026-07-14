@@ -277,9 +277,55 @@ not JVM — to navigate the X GraphQL response, plus `java.net.URLEncoder`. Neit
 `tools/urlEncode` from WP3d replaces `URLEncoder`), but it is **~150 lines of real rewriting** that
 was not costed. `UrlResolver` is 558 lines. Budget WP5 nearer the high end.
 
-### WP6 — ViewModels + Koin modules → `commonMain`  *(S)*
-`androidx.lifecycle` ViewModel is already multiplatform, and Koin is pure Kotlin — this is
-small once WP3–WP5 land. `LinksViewModel` needs its `Context` dependency replaced by seams.
+### WP6 — ViewModels + Koin modules → `commonMain`  ✅ **DONE**
+Estimated (S); came in nearer (M). The ViewModels themselves were exactly as clean as predicted —
+their only platform import was `androidx.lifecycle`, which the JetBrains fork
+(`org.jetbrains.androidx.lifecycle:lifecycle-viewmodel`) publishes for every target under the same
+package, so **not one import changed**. Koin's `org.koin.androidx.viewmodel.dsl.{viewModel,
+viewModelOf}` swapped to `org.koin.core.module.dsl.*` — same functions, multiplatform.
+
+What made it bigger than (S) was everything the ViewModels were *tangled with*:
+
+**A new blind spot in the import scan: same-package files need no import.** `LinksViewModel`
+depends on `LinksScreenState`, `LinksSnackbar`, `LinksActionHandlers` and `DateFilterChipsBuilder`
+purely by co-location. No grep of imports can see that. The compile gate found all of it. All ten
+such companion files (2 400 lines of action handlers, screen state, chip builders) turned out to
+have **zero composables** — they are ViewModel-layer code, not UI, and belong in WP6 rather than
+WP7.
+
+**Models stranded inside Compose files.** `FilterState` + `DateType` lived in `MyChip.kt`;
+`MyEditDialogStyle` lived in `MyEditDialog.kt` — and `api.Action` refers to the latter, so the
+whole action contract was pinned to `:app` by a model that merely cohabited with a composable.
+Both extracted into their own files in the same package (no call site changed). The rendering
+stays behind for WP7.
+
+**`java.io.OutputStream` in the action contract.** `FileAction.Export(val outputStream:
+java.io.OutputStream?)` — *fully qualified*, hence invisible to `grep '^import java\.'` (the fifth
+such miss; see the ⚠ block below). The screen was intercepting its own `Export` action, opening a
+MediaStore stream and re-dispatching the action carrying it. Replaced with `data object Export`:
+the ViewModel names the file and hands the text to a new `FileAccess.saveToDownloads(fileName,
+text)`. This deleted the re-dispatch hack, absorbed `FileHelper.saveFileToDownloads` /
+`provideOutputStream`, and made the export path **unit-testable for the first time** — it
+previously required a real `ContentResolver`, so it had zero coverage. Three tests now cover it.
+
+**`prepareUrlInformation` off `java.net.URL`.** The obvious substitute — Ktor's `Url` — is the
+wrong one: it is *lenient* where `java.net.URL` throws, and the fallback branch exists precisely
+*because* it throws. Swapping it in would have silently stopped the fallback ever firing. Golden
+outputs were captured from the **old** implementation first, then asserted against a hand-rolled
+regex, preserving every quirk (`example.co.uk` → `"co"`, `192.168.0.1` → `"0"`,
+`localhost:8080` → `"n/a"`). These three tokens feed keyword derivation, so a "better" parser
+would still be a regression.
+
+**The `share/` package came too** — all nine files, zero platform imports, including `ShareModule`
+(a Koin module, so squarely in scope).
+
+**Tests had to move with the code**: the ViewModel tests reach `internal` members, and `internal`
+is module-scoped. Moving them (plus the fakes and `testutils`) meant the share-handler tests came
+along too, since they share the fakes — with `share/` in `:shared`, that lands with **no fixture
+duplication**. The desktop suite went 54 → **198**: the ViewModel and share-handler tests now
+execute **off Android**, which is the real proof of the migration.
+
+`internal` broke across the module boundary for the **fourth** time (`composePostFromLink`).
 
 ### WP7 — Move the 57 UI files → `commonMain`  *(M, mechanical once WP1–WP6 land)*
 The payoff. Mostly relocation; the couplings were already removed upstream.
@@ -370,17 +416,29 @@ verified on a real device.
 
 Everything up to WP3f was verified by an *Android* build, which by construction **cannot tell you
 whether code would compile in `commonMain`**: `:app` resolves `android.*` and `androidx.activity.*`
-perfectly well. That left a grep as the only check, and the grep was wrong three times:
+perfectly well. That left a grep as the only check, and the grep has now been wrong **six** times:
 
 1. WP3c: a fully-qualified `android.net.Uri` in `SettingsScreen` (invisible to `^import android.`)
 2. WP3d: the "`FilePicker` is not needed" claim (invisible to a metric that ignored `androidx.*`)
 3. The gate's own first run: `SettingsModels` referencing a **fully-qualified**
    `cut.the.crap.ui.components.ActiveState` — same blind spot, third time.
+4. WP4b: `Character.toChars` — `java.lang`, therefore **auto-imported**, so no import line exists
+   to grep for at all.
+5. WP6: `FileAction.Export(val outputStream: java.io.OutputStream?)` — fully qualified, sitting in
+   the middle of the *action contract*.
+6. WP6: `LinksViewModel`'s dependence on `LinksScreenState`, `LinksActionHandlers` and friends —
+   **same package, so no import is needed and none exists**. A wholly different blind spot from
+   1–5, and the one most likely to recur in WP7.
+
+Four distinct ways a dependency hides from an import scan: fully-qualified use, auto-imported
+`java.lang`, a package I forgot to match, and same-package co-location. **Stop trusting greps.
+Compile.**
 
 So a canary set of already-clean UI now lives in `shared/commonMain` and is compiled for desktop on
 every build: the four `theme/` files, `ColorPicker`, `StateIndicators`, `SettingsModels`,
 `CharCountUtils`, and `ActiveState` (extracted from `MyChip`, whose `@Preview`s keep it in `:app`).
-**The compiler now enforces the boundary instead of me.**
+**The compiler now enforces the boundary instead of me.** It has since caught a real bug on every
+work package it has run against.
 
 Three real problems surfaced the moment it ran — none of which a single-module build can produce:
 
@@ -402,10 +460,25 @@ the WP5 section above for detail. One cost the plan had missed: `UrlResolver` al
 
 **Nothing left can invalidate the plan.** The remaining work is laborious but known:
 
-- **WP5** — move `data/rest` + `data/preferences` into `:shared`; `expect fun httpEngine()`;
-  rewrite `UrlResolver` (okhttp3 + org.json → Ktor + kotlinx-serialization).
-- **WP4** — `java.time` → kotlinx-datetime, `java.io` → okio. Grunt work, no unknowns; good filler.
-- **WP6** — ViewModels + Koin modules → `commonMain`.
-- **WP7** — the 57 UI files → `commonMain`; decide `@Preview` per file (WP1d lands here).
+- ✅ **WP5** — `data/rest` + `data/preferences` in `:shared`; `httpClientEngine()` seam;
+  `UrlResolver` rewritten (okhttp3 + org.json → Ktor + kotlinx-serialization).
+- ✅ **WP4** — `java.time` → kotlinx-datetime, plus the `LocaleFormat` seam.
+- ✅ **WP6** — ViewModels, their action-handler/screen-state companions, `share/`, and the Koin
+  ViewModel module → `commonMain`.
+- **WP7** — the remaining UI files → `commonMain`; decide `@Preview` per file (WP1d lands here).
 - **WP8** — the desktop app module. Decision C (feature parity) must be settled by then;
   `LoginFlow` and `Sharer` already show the capability-flag shape it should take.
+
+### Still in `:app` after WP6
+
+| File | Why |
+|---|---|
+| `FileHelper`, `DatabaseBackupManager` | MediaStore/SAF — Android-only by nature. |
+| `NetworkModule`, `RepositoryModule`, `AppModule`, `PlatformModule` | DI wiring: `androidContext()`, the SQL driver, `BuildConfig`. The *ViewModel* module moved; these bind the platform, so they stay until WP8 gives desktop its own. |
+| `YouTubeMetadataBackfiller` | Still on the Context-bound DataStore delegate. Same fix as WP5a. |
+| `AndroidLoginFlow`, `XLoginActivity` | Activity + WebView. |
+| The Compose UI files | WP7. |
+
+⚠ **`AndroidFileAccess.saveToDownloads` is not covered by tests** — it is the MediaStore actual, a
+near-verbatim lift of the previously working `provideOutputStream`. The *logic* around it is
+unit-tested; the write itself still wants one on-device export to confirm.

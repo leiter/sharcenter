@@ -6,13 +6,17 @@ import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.posts.PostsViewModel
 import cut.the.crap.ui.content.settings.BackupViewModel
 import cut.the.crap.ui.content.settings.SettingsViewModel
-import org.koin.androidx.viewmodel.dsl.viewModel
-import org.koin.androidx.viewmodel.dsl.viewModelOf
+import org.koin.core.module.dsl.viewModel
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
  * ViewModel bindings (formerly `@HiltViewModel`). Constructor params are resolved
  * from the other Koin modules by type.
+ *
+ * The DSL is `org.koin.core.module.dsl`, not `org.koin.androidx.viewmodel.dsl` — same functions,
+ * but the multiplatform ones, so this module compiles in `commonMain` and the desktop app (WP8)
+ * can install it unchanged.
  */
 val viewModelModule = module {
     // Explicit factory rather than viewModelOf: LinksViewModel's dispatchers have Kotlin

@@ -59,6 +59,12 @@ kotlin {
             api(libs.sqldelight.runtime)
             api(libs.sqldelight.coroutines)
             implementation(libs.sqldelight.primitive.adapters)
+            // WP6. `api` throughout: :app's screens still resolve the ViewModels, the Koin
+            // module and koinViewModel() against these until WP7 moves the UI here too.
+            api(libs.lifecycle.viewmodel)
+            api(libs.koin.core)
+            api(libs.koin.core.viewmodel)
+            api(libs.koin.compose.viewmodel)
         }
         androidMain.dependencies {
             api(libs.sqldelight.android.driver)
@@ -81,6 +87,11 @@ kotlin {
                 implementation(libs.sqldelight.sqlite.driver)
                 implementation(libs.ktor.client.mock)
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(kotlin("test"))
+                // WP6: the ViewModel and share-handler tests came over from :app with these.
+                implementation(libs.truth)
+                implementation(libs.turbine)
+                implementation(libs.mockk)
             }
         }
     }

@@ -40,57 +40,8 @@ import cut.the.crap.ui.theme.customClick
 import cut.the.crap.ui.theme.textDependentHeight
 import cut.the.crap.ui.theme.textDependentSize
 
-enum class DateType {
-    START, END
-}
-
-sealed interface FilterState {
-
-    val defaultLabel: String
-
-    fun isDisabled(): Boolean {
-        return when (val that = this) {
-            is TripleState -> that.activeState == ActiveState.Disabled
-            else -> false
-        }
-    }
-
-    fun isApplied(): Boolean {
-        return when (val that = this) {
-            is TripleState -> that.activeState.ordinal > 1
-            is DateState -> that.date != null
-            is SingleActionState -> that.chosen
-        }
-    }
-
-    data class TripleState(
-        override val defaultLabel: String,
-        val activeState: ActiveState,
-        val iconPainterInclude: ImageVector,
-        val iconPainterExclude: ImageVector,
-    ) : FilterState {
-        val painter: ImageVector
-            get() = if (activeState == ActiveState.Include) iconPainterInclude
-            else iconPainterExclude
-    }
-
-    data class SingleActionState(
-        override val defaultLabel: String,
-        val chosen: Boolean,
-    ) : FilterState
-
-    data class DateState(
-        override val defaultLabel: String,
-        val date: Long? = null,
-        val dateType: DateType,
-        val imageVector: ImageVector = Icons.Filled.Close,
-    ) : FilterState {
-        val formattedDate: String
-            get() = date?.let {
-                formatDateOnly(it)
-            } ?: ""
-    }
-}
+// DateType and FilterState moved to FilterState.kt in :shared/commonMain (same package) so the
+// ViewModels that reference them could move too. Only the rendering below stays Android-side.
 
 @Composable
 fun <T : FilterState> MyChip(

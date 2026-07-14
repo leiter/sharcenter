@@ -1,5 +1,6 @@
 package cut.the.crap.platform
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -34,6 +35,24 @@ class DesktopFileAccess : FileAccess {
         } catch (e: Exception) {
             Log.e(TAG, "Error reading text: $uri", e)
             null
+        }
+    }
+
+    override suspend fun saveToDownloads(
+        fileName: String,
+        text: String,
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            // No MediaStore here — "Downloads" is just a directory, and it may not exist.
+            val downloads = File(System.getProperty("user.home"), "Downloads")
+            if (!downloads.exists()) downloads.mkdirs()
+            File(downloads, fileName).writeText(text)
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving $fileName", e)
+            Result.failure(e)
         }
     }
 
