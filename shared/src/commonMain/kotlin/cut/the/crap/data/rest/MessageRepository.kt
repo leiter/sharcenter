@@ -10,7 +10,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
-import java.io.IOException
+import okio.IOException
 
 @Serializable
 data class Message(val text: String)

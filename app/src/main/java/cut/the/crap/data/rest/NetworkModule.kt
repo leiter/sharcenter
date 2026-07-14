@@ -2,7 +2,6 @@ package cut.the.crap.data.rest
 
 import cut.the.crap.BuildConfig
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -20,7 +19,7 @@ import org.koin.dsl.module
  */
 val networkModule = module {
     single {
-        HttpClient(OkHttp) {
+        HttpClient(httpClientEngine()) {
             // Default request configuration with base URL
             defaultRequest {
                 url(BuildConfig.API_BASE_URL)

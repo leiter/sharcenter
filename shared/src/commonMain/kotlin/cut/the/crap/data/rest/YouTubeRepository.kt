@@ -9,7 +9,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.serialization.ContentConvertException
 import kotlinx.serialization.SerializationException
-import java.io.IOException
+import okio.IOException
 
 /**
  * Repository for fetching YouTube video metadata using oEmbed API

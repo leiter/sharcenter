@@ -59,6 +59,8 @@ kotlin {
         }
         androidMain.dependencies {
             api(libs.sqldelight.android.driver)
+            // Actual HTTP engine for the httpClientEngine() seam.
+            implementation(libs.ktor.client.okhttp)
             // The FilePicker actual registers an activity-result contract; that lives here,
             // not in Compose itself.
             implementation(libs.androidx.activity.compose)
@@ -66,6 +68,8 @@ kotlin {
         val desktopMain by getting {
             dependencies {
                 implementation(libs.sqldelight.sqlite.driver)
+                // Same engine as Android, so redirect semantics UrlResolver relies on match.
+                implementation(libs.ktor.client.okhttp)
             }
         }
         val desktopTest by getting {

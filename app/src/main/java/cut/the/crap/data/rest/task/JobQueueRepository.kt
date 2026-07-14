@@ -2,9 +2,9 @@ package cut.the.crap.data.rest.task
 
 import cut.the.crap.platform.Log
 import cut.the.crap.data.rest.Result
+import cut.the.crap.data.rest.httpClientEngine
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpTimeout
@@ -79,7 +79,7 @@ class JobQueueRepositoryImpl constructor(
     }
 
     // Dedicated HttpClient for job queue server (different base URL than main API)
-    private val client = HttpClient(OkHttp) {
+    private val client = HttpClient(httpClientEngine()) {
         install(ContentNegotiation) {
             json(json)
         }

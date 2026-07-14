@@ -186,7 +186,27 @@ changing every tweet containing "don't"). `tools/urlEncode` reproduces it exactl
 formatter seam; `java.io.File`/streams → **kotlinx-io/Okio**; `UUID` → Kotlin `Uuid`.
 Unblocks `ContentItemManager`/`ItemManager` (the `tools` date helpers) as a side-effect.
 
-### WP5 — Move `data/rest` + `data/preferences` into `:shared`  *(M)* — **SPIKED: GO**
+### WP5 — Move `data/rest` + `data/preferences` into `:shared`  *(M)* — **a/b/c DONE**
+
+- ✅ **WP5a** — `SettingsRepository` + `ColorHistoryRepository` → `commonMain`, on the multiplatform
+  DataStore. The stores are now named Koin **singles** (the Android `Context` delegate had been
+  making them singletons *by accident*; the repos are factories, so a naive port would have built
+  one DataStore per injection and crashed).
+- ✅ **WP5b** — `UrlResolver` → `commonMain`, off two raw OkHttp clients and off `org.json`.
+- ✅ **WP5c** — `expect fun httpClientEngine()` seam + the six clean repos (Message, YouTube,
+  Bluesky, Mastodon, TikTok, Reddit) + `SocialMediaParser` → `commonMain`. `java.io.IOException` →
+  `okio.IOException` throughout.
+
+**Deliberately left in `:app`, with reasons:**
+
+| File | Why it stays |
+|---|---|
+| `eci/EciPostTemplates`, `eci/EciReferenceData` | `java.time`, `NumberFormat`, `Locale` — **WP4's job**, not WP5's. Moving them would drag WP4 forward. |
+| `eci/EciStatisticsRepository`, `eci/EciModels` | Kept with their `Eci` siblings rather than splitting the cluster across modules. |
+| `task/JobQueueRepository` | `java.util.UUID`. Small swap, but it belongs with WP4's stdlib work. |
+| `YouTubeMetadataBackfiller` | Still uses the Context-bound DataStore delegate (the third store). Same fix as WP5a. |
+| `NetworkModule`, `RepositoryModule` | DI wiring, and `NetworkModule` reads `BuildConfig`. Modules are the composition root's job — they can legitimately stay. |
+| `YouTubePreviewViewModel` | A ViewModel — that is **WP6**. |
 - Ktor engine → `expect fun httpEngine()` (OkHttp on Android, Java/OkHttp on desktop).
 - **Rewrite `UrlResolver` off raw `okhttp3`** onto the Ktor client (1 file, but fiddly:
   it drives redirects manually).

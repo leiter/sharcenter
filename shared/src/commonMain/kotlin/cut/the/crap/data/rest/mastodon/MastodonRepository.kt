@@ -8,7 +8,7 @@ import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.get
-import java.io.IOException
+import okio.IOException
 import cut.the.crap.data.rest.AppError
 import cut.the.crap.data.rest.Source
 
