@@ -19,7 +19,7 @@ import java.io.OutputStream
 class FileHelper(private val context: Context) {
 
     private fun defaultFileName(): String{
-        return "ShareCare_${System.currentTimeMillis()}.txt"
+        return "ShareCenter_${System.currentTimeMillis()}.txt"
     }
     fun writeToFile(fileName: String? = null, fileContent: String, append: Boolean = true): Boolean {
         val name = fileName ?: defaultFileName()

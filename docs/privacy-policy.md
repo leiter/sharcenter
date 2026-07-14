@@ -1,10 +1,10 @@
-# Privacy Policy for ShareCare
+# Privacy Policy for ShareCenter
 
 **Last Updated: July 14, 2026**
 
 ## Overview
 
-ShareCare ("the App") is a personal social-content manager: you share links into it,
+ShareCenter ("the App") is a personal social-content manager: you share links into it,
 it builds a curated library, and you compose posts from what you saved. The App is
 developed by **Silent Force**. We are committed to protecting your privacy. This
 policy explains how the App handles your information.
@@ -13,7 +13,7 @@ policy explains how the App handles your information.
 
 **We do not collect, store, or transmit any personal data to servers operated by us.**
 
-There is no ShareCare account and no ShareCare backend. Your library, your drafts and
+There is no ShareCenter account and no ShareCenter backend. Your library, your drafts and
 your settings live on your device.
 
 ## Information Stored Locally
@@ -100,7 +100,7 @@ If you have questions about this Privacy Policy, please contact us at:
 
 ## Summary
 
-- No account, no ShareCare server
+- No account, no ShareCenter server
 - No tracking
 - No analytics
 - No ads

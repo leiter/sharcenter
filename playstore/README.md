@@ -2,7 +2,7 @@
 
 Placeholder graphics generated from the app launcher icon
 (`mipmap-*/ic_launcher_foreground` on the black adaptive-icon background)
-for uploading a Google Play **Store listing**. Text/branding: **ShareCare**.
+for uploading a Google Play **Store listing**. Text/branding: **ShareCenter**.
 
 | File | Size | Format | Play Store slot |
 |------|------|--------|-----------------|

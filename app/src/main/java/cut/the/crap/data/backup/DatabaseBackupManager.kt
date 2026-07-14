@@ -34,7 +34,7 @@ import javax.inject.Singleton
  *
  * @property uri location used to open/delete the file (a MediaStore content Uri on
  *   Android 10+, or a `file://` Uri on Android 9 and below).
- * @property displayName the file name, e.g. `ShareCare_Backup_2026-06-25_083000.db`.
+ * @property displayName the file name, e.g. `ShareCenter_Backup_2026-06-25_083000.db`.
  * @property sizeBytes file size in bytes.
  * @property lastModified last-modified time in epoch milliseconds.
  */
@@ -61,7 +61,7 @@ class DatabaseBackupManager @Inject constructor(
     companion object {
         private const val TAG = "DatabaseBackupManager"
         private const val DATABASE_NAME = "app_database"
-        private const val BACKUP_PREFIX = "ShareCare_Backup"
+        private const val BACKUP_PREFIX = "ShareCenter_Backup"
         private const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000
 
         // Keep in sync with the @Database(version = ...) value in AppDatabase.
@@ -237,7 +237,7 @@ class DatabaseBackupManager @Inject constructor(
     }
 
     /**
-     * Lists all existing `ShareCare_Backup_*.db` files in Downloads, newest first.
+     * Lists all existing `ShareCenter_Backup_*.db` files in Downloads, newest first.
      * Returns an empty list if none exist or the query fails.
      */
     suspend fun listBackups(): List<BackupInfo> {
@@ -259,7 +259,7 @@ class DatabaseBackupManager @Inject constructor(
      * Note: on Android 10+ the app can delete MediaStore files it created without a
      * prompt. Deleting files created by another app would throw a
      * `RecoverableSecurityException` requiring user consent — that is not handled here
-     * because all `ShareCare_Backup_*.db` files are created by this app.
+     * because all `ShareCenter_Backup_*.db` files are created by this app.
      *
      * @return [Result.success] with the number of files actually deleted, or
      *         [Result.failure] if the operation could not be carried out at all.
@@ -371,7 +371,7 @@ class DatabaseBackupManager @Inject constructor(
 
     /**
      * Restores the database from a user-selected `.db` backup file (a SAF [Uri],
-     * typically one of the `ShareCare_Backup_*.db` files written to Downloads).
+     * typically one of the `ShareCenter_Backup_*.db` files written to Downloads).
      *
      * The backup is validated as a real SQLite database with a compatible schema
      * version, then the live database is closed and its file replaced. The caller

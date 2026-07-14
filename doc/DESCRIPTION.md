@@ -1,26 +1,26 @@
-# ShareCare
+# ShareCenter
 
 **Cut the crap. Keep the content that matters.**
 
-ShareCare is a personal social-content manager for Android. Instead of losing
+ShareCenter is a personal social-content manager for Android. Instead of losing
 interesting links in a dozen chat threads and browser tabs, share them straight
-into ShareCare to build one curated, searchable library — then turn what you've
+into ShareCenter to build one curated, searchable library — then turn what you've
 saved into posts you can publish back out to any app on your device.
 
 ## What it's for
 
-ShareCare sits between the content you discover and the content you publish. It's
+ShareCenter sits between the content you discover and the content you publish. It's
 built for people who collect links across many social networks, tag and revisit
 them, and compose their own posts — all in one place, with no account required to
 enrich a link and no data leaving the device unless you choose to publish or export.
 
 ## Gracefully integrated platforms
 
-When you share a link into ShareCare, a pluggable per-platform handler recognizes
+When you share a link into ShareCenter, a pluggable per-platform handler recognizes
 the source and enriches it automatically — no manual copying, no pasting titles.
 Each network is handled in its own native idiom:
 
-| Platform | What ShareCare does |
+| Platform | What ShareCenter does |
 | --- | --- |
 | **YouTube** | Fetches the video's title, channel name and thumbnail via the public oEmbed endpoint. |
 | **X / Twitter** | Resolves shortened/redirect URLs to their canonical form; a shared *profile* becomes an `@handle` in your keyword pool. |
@@ -36,7 +36,7 @@ New networks are additive by design: each platform is a self-contained
 ## Features
 
 ### Links library
-- **Share-in capture** — send URLs from any app; ShareCare recognizes the platform, resolves redirects and pulls in metadata automatically.
+- **Share-in capture** — send URLs from any app; ShareCenter recognizes the platform, resolves redirects and pulls in metadata automatically.
 - **Profiles become handles** — sharing a profile saves the account to your reusable keyword pool instead of cluttering the library with a bare URL.
 - **Rich tagging** — every link carries handles, hashtags and keywords, surfaced as compact summary chips with quick dropdown menus.
 - **Fast search** — match across both title and description text.
@@ -63,6 +63,6 @@ New networks are additive by design: each platform is a self-contained
 
 ## Privacy
 
-ShareCare enriches links using each platform's public, unauthenticated endpoints
-and stores your library locally. Nothing is uploaded to a ShareCare server; your
+ShareCenter enriches links using each platform's public, unauthenticated endpoints
+and stores your library locally. Nothing is uploaded to a ShareCenter server; your
 content leaves the device only when *you* publish a post or export your data.

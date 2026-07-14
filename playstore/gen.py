@@ -57,7 +57,7 @@ with open(f"{HERE}/feature_1024x500.ps", "w") as f:
     # subtle purple underline accent
     f.write(f"{PURPLE[0]} {PURPLE[1]} {PURPLE[2]} setrgbcolor\n420 150 540 6 rectfill\n")
     f.write(image_block(icon320, 320, 320, 70, 90, 320, 320))
-    f.write(text(430, 295, 96, "ShareCare", *WHITE))
+    f.write(text(430, 295, 96, "ShareCenter", *WHITE))
     f.write(text(430, 230, 32, "Organize & share your links", *GRAY))
     f.write(text(430, 172, 26, "for X / Twitter", *TEAL))
     f.write("showpage\n")
@@ -70,7 +70,7 @@ def screenshot(path, headline, sub, tag):
         f.write(f"{PURPLE[0]} {PURPLE[1]} {PURPLE[2]} setrgbcolor\n0 1720 1080 8 rectfill\n")
         # icon centered near top
         f.write(image_block(icon200, 200, 200, 440, 1470, 200, 200))
-        f.write(text(0, 1380, 60, "ShareCare", *WHITE, center_w=1080))
+        f.write(text(0, 1380, 60, "ShareCenter", *WHITE, center_w=1080))
         # headline
         f.write(text(0, 1120, 76, headline, *PURPLE, center_w=1080))
         f.write(text(0, 1040, 40, sub, *GRAY, center_w=1080))

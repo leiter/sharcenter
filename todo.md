@@ -65,7 +65,7 @@ to `ui/content/settings/SettingsScreen.kt`:
       automatic) and deletes the oldest backups beyond N via `deleteBackups()`. MediaStore delete path
       used on Android 10+; the app created these files so deletion needs no extra consent (noted in code).
 - [x] **Browse & multi-select delete** — `BackupManagementScreen` + `BackupViewModel` list all
-      `ShareCare_Backup_*.db` files (MediaStore query on Q+, file listing on legacy) with name/date/size,
+      `ShareCenter_Backup_*.db` files (MediaStore query on Q+, file listing on legacy) with name/date/size,
       checkbox multi-select, and a confirm-guarded bulk delete. Reachable via "Manage Backups" in Settings.
 
 Implemented: `BackupInfo` model, `listBackups()` and `deleteBackups(uris)` on `DatabaseBackupManager`;

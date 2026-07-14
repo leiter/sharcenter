@@ -1,6 +1,6 @@
-# ShareCare — Features & Possibilities
+# ShareCenter — Features & Possibilities
 
-_ShareCare (`cut.the.crap`) is a personal social-content manager for Android. Share URLs
+_ShareCenter (`cut.the.crap`) is a personal social-content manager for Android. Share URLs
 into it to build a curated **Links** library, compose and manage drafts in the **Posts**
 editor, publish out to any app on the device, track an **ECI** advocacy campaign, and manage
 your data from **Settings**. This document describes what the app does today and where it can
