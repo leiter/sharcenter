@@ -39,7 +39,10 @@ kotlin {
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "Shared"
-            isStatic = true
+            // Dynamic (not static): the framework is embedded + signed by
+            // embedAndSignAppleFrameworkForXcode and is self-contained, so the Xcode app does not
+            // have to manually link the Kotlin runtime's transitive system libs (sqlite3, …).
+            isStatic = false
         }
     }
 

@@ -19,22 +19,23 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import platform.UIKit.UIViewController
 
+/** Dev API base URL for iOS. Change this to point at your job-queue server. */
+private const val DEV_API_BASE_URL = "http://192.168.1.100:8080"
+
 /**
  * Starts the Koin graph for iOS. Called once from the Swift `App` before the first
- * [MainViewController]. The base URL / debug flag are parameters so the Xcode app can supply them
- * (from Info.plist or a build setting) rather than hard-coding — they default to the dev server.
+ * [MainViewController]. Named `setupKoin` rather than `initKoin` because Kotlin/Native renames
+ * `init*` exports to `doInit*` in Swift; no parameters because Kotlin default arguments don't
+ * bridge to Swift defaults — the config is the single [DEV_API_BASE_URL] constant above.
  *
  * The module set mirrors Android's `MyApplication`: the two iOS platform modules plus the shared
  * network/repository/share/viewModel modules. `AppConfig` is provided inline here (Android reads it
  * from `BuildConfig` in `androidAppModule`).
  */
-fun initKoin(
-    apiBaseUrl: String = "http://192.168.1.100:8080",
-    isDebug: Boolean = true,
-) {
+fun setupKoin() {
     startKoin {
         modules(
-            module { single { AppConfig(apiBaseUrl = apiBaseUrl, isDebug = isDebug) } },
+            module { single { AppConfig(apiBaseUrl = DEV_API_BASE_URL, isDebug = true) } },
             iosPlatformModule,
             iosDatabaseModule,
             networkModule,
