@@ -25,9 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import cut.the.crap.shared.resources.Res
@@ -42,8 +39,6 @@ import cut.the.crap.data.domain.ContentLink
 //import cut.the.crap.mockedLinkItems
 import cut.the.crap.tools.formatTimestampWithLocalizedFormatter
 import cut.the.crap.tools.prepareUrlInformation
-import cut.the.crap.ui.theme.PreviewAppThemeProvider
-import cut.the.crap.ui.theme.PreviewThemeWrapper
 
 /**
  * Dialog for creating a comment or quote based on a ContentLink

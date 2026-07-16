@@ -1,13 +1,7 @@
 package cut.the.crap
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.ComposeUIViewController
+import cut.the.crap.ui.App
 import cut.the.crap.data.rest.AppConfig
 import cut.the.crap.data.rest.networkModule
 import cut.the.crap.data.rest.repositoryModule
@@ -47,9 +41,8 @@ fun setupKoin() {
 }
 
 /**
- * The Compose entry point the Xcode app embeds. Renders a placeholder until the shared `App()`
- * composable exists — WP7 moves the screens (and `NavigationGraph`) into commonMain, at which point
- * this becomes `ComposeUIViewController { App() }`.
+ * The Compose entry point the Xcode app embeds — the real shared [App], the same composable the
+ * Android launcher renders (WP7 moved the screens and `NavigationGraph` into commonMain).
  */
 fun MainViewController(): UIViewController = ComposeUIViewController(
     // The Info.plist sets CADisableMinimumFrameDurationOnPhone=true (for high-refresh displays),
@@ -57,14 +50,5 @@ fun MainViewController(): UIViewController = ComposeUIViewController(
     // can never hard-fail launch. Performance is unaffected — the plist key still applies.
     configure = { enforceStrictPlistSanityCheck = false },
 ) {
-    PlaceholderApp()
-}
-
-@Composable
-private fun PlaceholderApp() {
-    MaterialTheme {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("ShareCenter — iOS shell running. Shared UI lands in WP7.")
-        }
-    }
+    App()
 }

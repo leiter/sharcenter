@@ -1,4 +1,5 @@
 package cut.the.crap.ui.components
+import cut.the.crap.tools.currentTimeMillis
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
@@ -110,7 +111,7 @@ import cut.the.crap.ui.components.api.KeywordAction
 data class UndoState(
     val deletedItems: List<KeyWord>,
     val itemNames: String,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = currentTimeMillis()
 )
 
 enum class FavoriteFilter {

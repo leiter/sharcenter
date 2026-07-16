@@ -1,7 +1,6 @@
 package cut.the.crap.ui.content.settings
 
 import cut.the.crap.platform.rememberFilePicker
-import cut.the.crap.platform.toPlatformUri
 
 import cut.the.crap.platform.LoginFlow
 import cut.the.crap.platform.LoginReason
@@ -21,7 +20,6 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import org.jetbrains.compose.resources.stringResource
@@ -107,7 +105,6 @@ fun SettingsScreen(
     onSettingsChanged: (AppSettings) -> Unit
 ) {
     val currentSettings by settings.collectAsState()
-    val context = LocalContext.current
     val notifier: Notifier = koinInject()
     val loginFlow: LoginFlow = koinInject()
     var showPostsDateRangeDialog by remember { mutableStateOf(false) }
@@ -937,7 +934,6 @@ private fun XCredentialsDialog(
 ) {
     var authToken by remember { mutableStateOf(currentAuthToken) }
     var ct0Token by remember { mutableStateOf(currentCt0Token) }
-    val context = LocalContext.current
     val notifier: Notifier = koinInject()
     // Resolved in composition; the notifications below run in non-composable callbacks.
     val credentialsSavedMessage = stringResource(Res.string.settings_toast_x_credentials_saved)

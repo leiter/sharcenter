@@ -1,7 +1,6 @@
 package cut.the.crap.ui.content.posts
 
 import cut.the.crap.platform.rememberFilePicker
-import cut.the.crap.platform.toPlatformUri
 
 import cut.the.crap.platform.NotificationDuration
 
@@ -57,7 +56,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import org.jetbrains.compose.resources.stringResource
 import cut.the.crap.shared.resources.Res
 import cut.the.crap.shared.resources.dialog_delete
@@ -111,7 +109,6 @@ fun PostsScreen(
     ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val notifier: Notifier = koinInject()
-    val context = LocalContext.current
     val isEciLoading by eciLoading.collectAsState()
 
     // Navigate to the statistics table on success, or toast the error.

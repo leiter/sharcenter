@@ -3,7 +3,6 @@ package cut.the.crap.ui.content.links
 import cut.the.crap.platform.rememberFilePicker
 import cut.the.crap.tools.currentTimeMillis
 import cut.the.crap.tools.formatTimestampForFileName
-import cut.the.crap.platform.toPlatformUri
 
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.scrollBy
@@ -39,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
@@ -78,7 +76,6 @@ fun LinkScreen(
     navController: NavHostController,
     snackBarMessages: SharedFlow<LinksSnackbar>,
 ) {
-    val context = LocalContext.current
     val snackBarHostState = remember { SnackbarHostState() }
     val stateList = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()

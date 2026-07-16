@@ -6,15 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.compose.rememberNavController
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
@@ -28,18 +20,8 @@ import cut.the.crap.data.preferences.initPreferencesPath
 import cut.the.crap.data.rest.YouTubeMetadataBackfiller
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.ShareLinksTask
-import cut.the.crap.platform.AppRestarter
-import cut.the.crap.platform.Clipboard
-import cut.the.crap.platform.Notifier
-import cut.the.crap.platform.Sharer
-import cut.the.crap.platform.UrlOpener
-import cut.the.crap.ui.components.api.Action
-import cut.the.crap.ui.handleAction
-import cut.the.crap.ui.theme.MyAppTheme
-import cut.the.crap.ui.content.NavigationGraph
-import cut.the.crap.ui.content.posts.PostsViewModel
-import cut.the.crap.ui.content.links.LinksViewModel
-import cut.the.crap.ui.content.settings.SettingsViewModel
+import cut.the.crap.ui.App
+
 import cut.the.crap.data.rest.networkModule
 import cut.the.crap.data.rest.repositoryModule
 import cut.the.crap.di.androidAppModule
@@ -50,7 +32,6 @@ import cut.the.crap.share.shareModule
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
-import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.context.startKoin
 
 class MyApplication : Application(), SingletonImageLoader.Factory {
@@ -107,29 +88,18 @@ class MyApplication : Application(), SingletonImageLoader.Factory {
     }
 }
 
+/**
+ * The Android launcher. The UI itself is `App()` in `:shared/commonMain` (WP7), so this only starts
+ * the background jobs that are Android-specific and hands off to Compose. The seams and ViewModels
+ * `App()` needs come from the Koin graph, not from here.
+ */
 class MainActivity : ComponentActivity() {
-
-    private val linksViewModel: LinksViewModel by viewModel()
-
-    private val postsViewModel: PostsViewModel by viewModel()
-
-    private val settingsViewModel: SettingsViewModel by viewModel()
 
     val databaseBackupManager: BackupManager by inject()
 
     val jobQueueRepository: JobQueueRepository by inject()
 
     val youTubeMetadataBackfiller: YouTubeMetadataBackfiller by inject()
-
-    private val clipboard: Clipboard by inject()
-
-    private val urlOpener: UrlOpener by inject()
-
-    private val sharer: Sharer by inject()
-
-    private val notifier: Notifier by inject()
-
-    private val appRestarter: AppRestarter by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -161,45 +131,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        setContent {
-            // Collect theme preference from settings
-            val settings by settingsViewModel.settings.collectAsState()
-            val themePreference = settings.themePreference
-
-            MyAppTheme(themePreference = themePreference) {
-
-                val navController = rememberNavController()
-                val scope = rememberCoroutineScope()
-
-                val action: (Action) -> Unit = {
-                    handleAction(
-                        action = it,
-                        linksViewModel = linksViewModel,
-                        postsViewModel = postsViewModel,
-                        navController = navController,
-                        scope = scope,
-                        clipboard = clipboard,
-                        urlOpener = urlOpener,
-                        sharer = sharer,
-                        notifier = notifier,
-                        backupManager = databaseBackupManager,
-                        appRestarter = appRestarter,
-                    )
-                }
-
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    NavigationGraph(
-                            navController = navController,
-                            action = action,
-                            linksViewModel = linksViewModel,
-                            postsViewModel = postsViewModel,
-                            settingsViewModel = settingsViewModel
-                    )
-                }
-            }
-        }
+        setContent { App() }
     }
 }

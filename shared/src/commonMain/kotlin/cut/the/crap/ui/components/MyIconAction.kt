@@ -31,12 +31,10 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import cut.the.crap.R
 import cut.the.crap.ui.components.IconActionTag.DEFAULT_SUFFIX
 import cut.the.crap.ui.components.IconActionTag.ICON
 import cut.the.crap.ui.components.IconActionTag.ICON_ACTION

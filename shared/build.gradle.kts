@@ -64,6 +64,9 @@ kotlin {
             // androidx.activity.compose.BackHandler outright — no seam needed. `api`, because
             // :app's screens use it directly until WP7 moves them here.
             api(libs.compose.ui.backhandler)
+            // Coil 3 (multiplatform) — the link thumbnails' AsyncImage, now that the UI lives here
+            // (WP7). The ImageLoader itself is still configured per-platform by the launcher.
+            api(libs.coil.compose)
             // CMP navigation. `api` so :app still resolves NavHost/composable against it
             // (NavigationGraph stays in :app until WP7); commonMain needs NavHostController for the
             // app-root handleAction moved here in WP-iOS-1.
