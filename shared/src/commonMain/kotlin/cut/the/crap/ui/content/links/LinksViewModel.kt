@@ -24,6 +24,7 @@ import cut.the.crap.tools.isMastodonUrl
 import cut.the.crap.tools.isRedditUrl
 import cut.the.crap.tools.isTikTokUrl
 import cut.the.crap.tools.parseSocialMediaUrl
+import cut.the.crap.tools.defaultIoDispatcher
 import cut.the.crap.tools.prepareUrlInformation
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.ContentLinkAction
@@ -62,7 +63,10 @@ class LinksViewModel constructor(
     // commonMain (WP6 moves this class there), and hardcoding `Dispatchers.Default` races
     // `advanceUntilIdle` in tests, which made the suite intermittently flaky.
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    // `internal` (not private) so the LinksViewModel extension handlers in this package
+    // (LinksActionHandlers, LinksImportExport) can launch on it. Defaults to the [defaultIoDispatcher]
+    // seam because `Dispatchers.IO` does not exist in commonMain.
+    internal val ioDispatcher: CoroutineDispatcher = defaultIoDispatcher
 ) : ViewModel() {
 
     internal val itemManager = ItemManager(contentRepository)

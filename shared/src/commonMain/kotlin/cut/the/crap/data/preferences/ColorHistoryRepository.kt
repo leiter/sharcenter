@@ -1,4 +1,5 @@
 package cut.the.crap.data.preferences
+import cut.the.crap.tools.currentTimeMillis
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -46,7 +47,7 @@ class ColorHistoryRepository constructor(
         dataStore.edit { prefs ->
             val current = prefs.decodeStoredColors()
             val updated = buildList {
-                add(StoredColor(normalized, System.currentTimeMillis()))
+                add(StoredColor(normalized, currentTimeMillis()))
                 addAll(current.filter { !it.hex.equals(normalized, ignoreCase = true) })
             }.take(MAX_STORED)
             prefs[RECENT_COLORS_JSON] = json.encodeToString(updated)

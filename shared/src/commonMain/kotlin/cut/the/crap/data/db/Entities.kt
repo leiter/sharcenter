@@ -1,4 +1,5 @@
 package cut.the.crap.data.db
+import cut.the.crap.tools.currentTimeMillis
 
 import kotlinx.coroutines.flow.Flow
 
@@ -42,8 +43,8 @@ interface ContentLinkDao {
     ): Flow<List<ContentLinkDB>>
 
     suspend fun getContentLinksByTimeRange(
-        start: Long = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000,
-        end: Long = System.currentTimeMillis(),
+        start: Long = currentTimeMillis() - 7 * 24 * 60 * 60 * 1000,
+        end: Long = currentTimeMillis(),
     ): List<ContentLinkDB>
 }
 
@@ -52,8 +53,8 @@ data class KeywordDB(
     val id: Int = 0,
     val text: String,
     val type: Int, // 0 = account, 1 = hashtag, 2 = tag/word
-    val created: Long = System.currentTimeMillis(),
-    val lastUsed: Long = System.currentTimeMillis(),
+    val created: Long = currentTimeMillis(),
+    val lastUsed: Long = currentTimeMillis(),
     val usageCount: Int = 0,
     val isFavorite: Boolean = false,
     val category: String? = null,
@@ -81,7 +82,7 @@ interface KeywordDao {
 
     fun getAll(): Flow<List<KeywordDB>>
 
-    suspend fun incrementUsage(keywordId: Int, timestamp: Long = System.currentTimeMillis())
+    suspend fun incrementUsage(keywordId: Int, timestamp: Long = currentTimeMillis())
 
     suspend fun toggleFavorite(keywordId: Int, isFavorite: Boolean)
 
@@ -94,8 +95,8 @@ interface KeywordDao {
 data class ContentItemDB(
     val id: Int = 0,
     val text: String,
-    val created: Long = System.currentTimeMillis(),
-    val lastModified: Long = System.currentTimeMillis(),
+    val created: Long = currentTimeMillis(),
+    val lastModified: Long = currentTimeMillis(),
     val sortOrder: Int = 0,
     val isFavorite: Boolean = false,
     val category: String? = null,
@@ -144,8 +145,8 @@ data class SubjectDB(
     val name: String? = null,
     // Six-digit uppercase RRGGBB, matching ColorPicker's Color.toHexString().
     val colorHex: String,
-    val createdAt: Long = System.currentTimeMillis(),
-    val modifiedAt: Long = System.currentTimeMillis(),
+    val createdAt: Long = currentTimeMillis(),
+    val modifiedAt: Long = currentTimeMillis(),
 )
 
 /** Join row linking a post ([ContentItemDB]) to a [SubjectDB]. */

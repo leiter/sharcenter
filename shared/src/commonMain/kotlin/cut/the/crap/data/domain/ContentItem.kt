@@ -1,12 +1,13 @@
 package cut.the.crap.data.domain
+import cut.the.crap.tools.currentTimeMillis
 
 import cut.the.crap.data.db.ContentItemDB
 
 data class ContentItem(
     val id: Int = 0,
     val text: String,
-    val created: Long = System.currentTimeMillis(),
-    val lastModified: Long = System.currentTimeMillis(),
+    val created: Long = currentTimeMillis(),
+    val lastModified: Long = currentTimeMillis(),
     val sortOrder: Int = 0,
     val isFavorite: Boolean = false,
     val category: String? = null,

@@ -1,4 +1,5 @@
 package cut.the.crap.data.domain
+import cut.the.crap.tools.currentTimeMillis
 
 import cut.the.crap.data.db.ContentLinkDB
 
@@ -10,7 +11,7 @@ data class ContentLink(
     val id: Int = -1,
     val link: String = "",
     val description: String = "",
-    val added: Long = System.currentTimeMillis(),
+    val added: Long = currentTimeMillis(),
     val position: Int = id,
     val favourite: Boolean = false,
     val hideItem: Boolean = false,

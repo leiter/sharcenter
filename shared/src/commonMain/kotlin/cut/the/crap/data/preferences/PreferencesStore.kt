@@ -3,8 +3,8 @@ package cut.the.crap.data.preferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import cut.the.crap.tools.defaultIoDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import okio.Path
 
@@ -35,6 +35,6 @@ expect fun preferencesPath(name: String): Path
 fun createPreferencesStore(
     name: String,
     path: Path = preferencesPath(name),
-    scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+    scope: CoroutineScope = CoroutineScope(defaultIoDispatcher + SupervisorJob()),
 ): DataStore<Preferences> =
     PreferenceDataStoreFactory.createWithPath(scope = scope, produceFile = { path })

@@ -1,4 +1,5 @@
 package cut.the.crap.data.domain
+import cut.the.crap.tools.currentTimeMillis
 
 import cut.the.crap.data.db.KeywordDao
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +18,7 @@ interface KeywordRepository {
         sortByManual: Boolean = false
     ): Flow<List<KeyWord>>
     fun getAll(): Flow<List<KeyWord>>
-    suspend fun incrementUsage(id: Int, timestamp: Long = System.currentTimeMillis())
+    suspend fun incrementUsage(id: Int, timestamp: Long = currentTimeMillis())
     suspend fun toggleFavorite(id: Int, isFavorite: Boolean)
     suspend fun setArchived(id: Int, isArchived: Boolean)
     suspend fun deleteAllByType(type: KeywordType)

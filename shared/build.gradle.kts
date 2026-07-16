@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)
@@ -21,11 +23,25 @@ plugins {
  */
 kotlin {
     androidTarget {
-        compilations.all {
-            kotlinOptions { jvmTarget = "11" }
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
         }
     }
     jvm("desktop")
+
+    // iOS targets (WP-iOS-2). Device (arm64), Intel simulator (x64) and Apple-silicon simulator
+    // (simulatorArm64). Each exposes a static `Shared.framework` that the Xcode `iosApp` links
+    // against (WP-iOS-6); no CocoaPods — there are no native pod dependencies.
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64(),
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "Shared"
+            isStatic = true
+        }
+    }
 
     sourceSets {
         commonMain.dependencies {
@@ -37,8 +53,9 @@ kotlin {
             implementation(compose.ui)
             // The string/drawable catalogue. `api`, because :app resolves `Res.*` against it.
             api(compose.components.resources)
-            // JetBrains stopped publishing the icons artifact after 1.7.3; it resolves
-            // cleanly against CMP 1.8.2 (verified). The app uses 87 distinct icons.
+            // JetBrains stopped publishing the icons artifact after 1.7.3; the 1.7.3 pin resolves
+            // cleanly against newer CMP (an older klib, so a newer Kotlin/Native consumer reads it).
+            // Carried forward across the Kotlin 2.2.20 / CMP 1.10.3 bump. The app uses 87 icons.
             api(libs.compose.icons.extended)
             // BackHandler. CMP ships it as its own artifact for every target, so it replaces
             // androidx.activity.compose.BackHandler outright — no seam needed. `api`, because
@@ -84,6 +101,13 @@ kotlin {
                 // Same engine as Android, so redirect semantics UrlResolver relies on match.
                 implementation(libs.ktor.client.okhttp)
             }
+        }
+        iosMain.dependencies {
+            // Apple-native SQLDelight driver + Ktor's Darwin (NSURLSession) engine. The `iosMain`
+            // accessor is provided by the default hierarchy template and fans out to the three
+            // iOS targets above.
+            implementation(libs.sqldelight.native.driver)
+            implementation(libs.ktor.client.darwin)
         }
         val desktopTest by getting {
             dependencies {

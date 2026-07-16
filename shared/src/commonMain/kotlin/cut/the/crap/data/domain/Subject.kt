@@ -1,4 +1,5 @@
 package cut.the.crap.data.domain
+import cut.the.crap.tools.currentTimeMillis
 
 import cut.the.crap.data.db.SubjectDB
 
@@ -14,8 +15,8 @@ data class Subject(
     val id: Int = 0,
     val name: String? = null,
     val colorHex: String,
-    val createdAt: Long = System.currentTimeMillis(),
-    val modifiedAt: Long = System.currentTimeMillis(),
+    val createdAt: Long = currentTimeMillis(),
+    val modifiedAt: Long = currentTimeMillis(),
 )
 
 fun Subject.toDbItem(): SubjectDB = SubjectDB(

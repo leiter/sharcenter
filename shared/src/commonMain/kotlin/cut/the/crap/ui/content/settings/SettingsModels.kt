@@ -1,4 +1,5 @@
 package cut.the.crap.ui.content.settings
+import cut.the.crap.tools.currentTimeMillis
 
 import org.jetbrains.compose.resources.StringResource
 
@@ -52,7 +53,7 @@ enum class DateRangePreset(val displayNameResId: StringResource, val days: Int?)
             this == ALL_TIME -> null
             this == CUSTOM -> null // Custom should use customStartDate
             days != null && days > 0 -> {
-                val now = System.currentTimeMillis()
+                val now = currentTimeMillis()
                 now - (days * 24 * 60 * 60 * 1000L)
             }
             else -> null
@@ -66,7 +67,7 @@ enum class DateRangePreset(val displayNameResId: StringResource, val days: Int?)
         return when {
             this == ALL_TIME -> null
             this == CUSTOM -> null // Custom should use customEndDate
-            days != null && days > 0 -> System.currentTimeMillis()
+            days != null && days > 0 -> currentTimeMillis()
             else -> null
         }
     }

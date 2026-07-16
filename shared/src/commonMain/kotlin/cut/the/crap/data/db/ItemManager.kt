@@ -1,4 +1,5 @@
 package cut.the.crap.data.db
+import cut.the.crap.tools.currentTimeMillis
 
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.data.domain.ContentLinkRepository
@@ -34,8 +35,8 @@ data class QueryConfig(
 data class FilterState(
     val includeFavourite: Boolean? = null,
     val includeHidden: Boolean? = null,
-    val timeFrameStart: Long? = null, //System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000,
-    val timeFrameEnd: Long? = null,  //System.currentTimeMillis(),
+    val timeFrameStart: Long? = null, //currentTimeMillis() - 7 * 24 * 60 * 60 * 1000,
+    val timeFrameEnd: Long? = null,  //currentTimeMillis(),
 )
 
 data class SortState(
@@ -120,13 +121,18 @@ class ItemManager(private val repository: ContentLinkRepository) {
     ) {
         filterState.update { currentState ->
             currentState.copy(
-                includeFavourite = updates.getOrDefault("includeFavourite", currentState.includeFavourite) as Boolean?,
-                includeHidden = updates.getOrDefault("includeHidden", currentState.includeHidden) as Boolean?,
-                timeFrameStart = updates.getOrDefault("timeFrameStart", currentState.timeFrameStart) as Long?,
-                timeFrameEnd = updates.getOrDefault("timeFrameEnd", currentState.timeFrameEnd) as Long?
+                includeFavourite = updates.orDefault("includeFavourite", currentState.includeFavourite) as Boolean?,
+                includeHidden = updates.orDefault("includeHidden", currentState.includeHidden) as Boolean?,
+                timeFrameStart = updates.orDefault("timeFrameStart", currentState.timeFrameStart) as Long?,
+                timeFrameEnd = updates.orDefault("timeFrameEnd", currentState.timeFrameEnd) as Long?
             )
         }
     }
+
+    // `Map.getOrDefault` is a JVM-only extension; this preserves its exact semantics (return the
+    // value only when the key is *present*, even if that value is null) for common code.
+    private fun Map<String, Any?>.orDefault(key: String, default: Any?): Any? =
+        if (containsKey(key)) this[key] else default
 
     fun filterByHidden(include: Boolean?) {
         val newVal = filterState.value.copy(includeHidden = include)

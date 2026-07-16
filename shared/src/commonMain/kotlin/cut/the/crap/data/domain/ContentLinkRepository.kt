@@ -1,4 +1,5 @@
 package cut.the.crap.data.domain
+import cut.the.crap.tools.currentTimeMillis
 
 import cut.the.crap.data.db.ContentLinkDB
 import cut.the.crap.data.db.ContentLinkDao
@@ -29,8 +30,8 @@ interface ContentLinkRepository {
     ): Flow<List<ContentLink>>
 
     suspend fun byTimeRange(
-        start: Long = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000, // Default: one week ago
-        end: Long = System.currentTimeMillis() // Default: current time
+        start: Long = currentTimeMillis() - 7 * 24 * 60 * 60 * 1000, // Default: one week ago
+        end: Long = currentTimeMillis() // Default: current time
     ): List<ContentLink>
 }
 class ContentLinkRepositoryImpl constructor(

@@ -12,7 +12,6 @@ import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.ensureTrailingSpace
 import cut.the.crap.tools.isForThisScreen
 import cut.the.crap.tools.normalizeToStartOfDay
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -507,13 +506,13 @@ internal fun LinksViewModel.handleListAction(action: ListAction) {
 internal fun LinksViewModel.handleFileAction(action: FileAction) {
     when (action) {
         is FileAction.Export -> {
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch(ioDispatcher) {
                 emitSnackBarMessage(exportSelectedItems(fileAccess))
             }
         }
 
         is FileAction.Import -> {
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch(ioDispatcher) {
                 emitSnackBarMessage(importFromFile(action.uri, fileAccess))
             }
         }

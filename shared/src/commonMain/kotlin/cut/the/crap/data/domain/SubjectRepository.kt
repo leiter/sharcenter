@@ -1,4 +1,5 @@
 package cut.the.crap.data.domain
+import cut.the.crap.tools.currentTimeMillis
 
 import cut.the.crap.data.db.LinkSubjectCrossRef
 import cut.the.crap.data.db.PostSubjectCrossRef
@@ -37,7 +38,7 @@ class SubjectRepositoryImpl constructor(
         subjectDao.insert(subject.toDbItem())
 
     override suspend fun update(subject: Subject) =
-        subjectDao.update(subject.copy(modifiedAt = System.currentTimeMillis()).toDbItem())
+        subjectDao.update(subject.copy(modifiedAt = currentTimeMillis()).toDbItem())
 
     override suspend fun delete(subject: Subject) =
         subjectDao.delete(subject.toDbItem())

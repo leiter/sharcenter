@@ -1,4 +1,5 @@
 package cut.the.crap.data.domain
+import cut.the.crap.tools.currentTimeMillis
 
 import cut.the.crap.data.db.KeywordDB
 
@@ -16,8 +17,8 @@ data class KeyWord(
     val id: Int = 0,
     val text: String,
     val type: KeywordType,
-    val created: Long = System.currentTimeMillis(),
-    val lastUsed: Long = System.currentTimeMillis(),
+    val created: Long = currentTimeMillis(),
+    val lastUsed: Long = currentTimeMillis(),
     val usageCount: Int = 0,
     val isFavorite: Boolean = false,
     val category: String? = null,

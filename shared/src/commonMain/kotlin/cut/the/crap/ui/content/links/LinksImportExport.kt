@@ -16,7 +16,6 @@ import cut.the.crap.tools.formatTimestampForFileName
 import cut.the.crap.tools.parseSocialMediaUrl
 import cut.the.crap.ui.components.ActiveState
 import cut.the.crap.ui.components.FilterState
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
@@ -74,7 +73,7 @@ internal fun buildExportContent(
     // Add metadata section
     lines.add("")
     lines.add("# METADATA")
-    lines.add("# export_timestamp: ${System.currentTimeMillis()}")
+    lines.add("# export_timestamp: ${currentTimeMillis()}")
     lines.add("# db_version: 4")
     lines.add("# format_version: 1")
     lines.add("# total_items: ${items.size}")
@@ -146,9 +145,9 @@ internal suspend fun LinksViewModel.importFromFile(
                 } catch (_: Exception) { }
             }
             if (youtubeUrls.isNotEmpty()) {
-                viewModelScope.launch(Dispatchers.IO) {
+                viewModelScope.launch(ioDispatcher) {
                     // Query all recent items directly from DB
-                    val now = System.currentTimeMillis()
+                    val now = currentTimeMillis()
                     val allItems = contentRepository.byTimeRange(now - 60_000, now + 1000)
                     youtubeUrls.forEach { url ->
                         val dbItem = allItems.firstOrNull { it.link == url } ?: return@forEach

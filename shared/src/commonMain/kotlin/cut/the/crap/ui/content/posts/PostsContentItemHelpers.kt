@@ -1,4 +1,5 @@
 package cut.the.crap.ui.content.posts
+import cut.the.crap.tools.currentTimeMillis
 
 import androidx.lifecycle.viewModelScope
 import cut.the.crap.data.domain.ContentItem
@@ -191,7 +192,7 @@ internal fun PostsViewModel.autoSaveContentItem(textValue: TextValueWrapper) {
                 contentItemRepository.update(
                     it.copy(
                         text = textValue.newText,
-                        lastModified = System.currentTimeMillis()
+                        lastModified = currentTimeMillis()
                     )
                 )
             }
