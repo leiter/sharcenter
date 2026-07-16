@@ -44,6 +44,10 @@ kotlin {
             // androidx.activity.compose.BackHandler outright — no seam needed. `api`, because
             // :app's screens use it directly until WP7 moves them here.
             api(libs.compose.ui.backhandler)
+            // CMP navigation. `api` so :app still resolves NavHost/composable against it
+            // (NavigationGraph stays in :app until WP7); commonMain needs NavHostController for the
+            // app-root handleAction moved here in WP-iOS-1.
+            api(libs.navigation.compose)
             implementation(libs.kotlinx.coroutines.core)
             // WP5 spike: the multiplatform DataStore core. Same Preferences API as the Android
             // artifact, minus the Context-bound delegate — the file path is supplied by the caller.

@@ -1,11 +1,13 @@
 package cut.the.crap.di
 
+import cut.the.crap.platform.AndroidAppRestarter
 import cut.the.crap.platform.AndroidClipboard
 import cut.the.crap.platform.AndroidFileAccess
 import cut.the.crap.platform.AndroidLoginFlow
 import cut.the.crap.platform.AndroidNotifier
 import cut.the.crap.platform.AndroidSharer
 import cut.the.crap.platform.AndroidUrlOpener
+import cut.the.crap.platform.AppRestarter
 import cut.the.crap.platform.Clipboard
 import cut.the.crap.platform.FileAccess
 import cut.the.crap.platform.LoginFlow
@@ -35,4 +37,5 @@ val platformModule = module {
     single<UrlOpener> { AndroidUrlOpener(androidContext()) }
     single<Sharer> { AndroidSharer(androidContext()) }
     single<LoginFlow> { AndroidLoginFlow(androidContext()) }
+    single<AppRestarter> { AndroidAppRestarter(androidContext()) }
 }

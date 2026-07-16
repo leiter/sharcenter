@@ -1,17 +1,7 @@
 package cut.the.crap
 
 
-import org.jetbrains.compose.resources.getString
-
-import cut.the.crap.shared.resources.Res
-import cut.the.crap.shared.resources.backup_toast_failed
-import cut.the.crap.shared.resources.backup_toast_success
-import cut.the.crap.shared.resources.restore_toast_failed
-import cut.the.crap.shared.resources.restore_toast_success
-import cut.the.crap.shared.resources.share_chooser_title
-
 import android.app.Application
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,9 +11,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil3.ImageLoader
 import coil3.PlatformContext
@@ -38,25 +28,16 @@ import cut.the.crap.data.preferences.initPreferencesPath
 import cut.the.crap.data.rest.YouTubeMetadataBackfiller
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.ShareLinksTask
-import cut.the.crap.intent.FacebookIntent
-import cut.the.crap.intent.TwitterIntent
-import cut.the.crap.intent.extractTweetId
+import cut.the.crap.platform.AppRestarter
 import cut.the.crap.platform.Clipboard
+import cut.the.crap.platform.Notifier
 import cut.the.crap.platform.Sharer
 import cut.the.crap.platform.UrlOpener
-import cut.the.crap.tools.insertText
-import android.widget.Toast
 import cut.the.crap.ui.components.api.Action
-import cut.the.crap.ui.components.api.ContentItemAction
-import cut.the.crap.ui.components.api.ContentLinkAction
-import cut.the.crap.ui.components.api.FileAction
-import cut.the.crap.ui.components.api.TextAction
-import cut.the.crap.ui.components.api.UploadAction
+import cut.the.crap.ui.handleAction
 import cut.the.crap.ui.theme.MyAppTheme
 import cut.the.crap.ui.content.NavigationGraph
-import cut.the.crap.ui.content.Screen
 import cut.the.crap.ui.content.posts.PostsViewModel
-import cut.the.crap.ui.content.posts.composePostFromLink
 import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.settings.SettingsViewModel
 import cut.the.crap.data.rest.networkModule
@@ -144,6 +125,10 @@ class MainActivity : ComponentActivity() {
 
     private val sharer: Sharer by inject()
 
+    private val notifier: Notifier by inject()
+
+    private val appRestarter: AppRestarter by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
 
         enableEdgeToEdge()
@@ -182,6 +167,7 @@ class MainActivity : ComponentActivity() {
             MyAppTheme(themePreference = themePreference) {
 
                 val navController = rememberNavController()
+                val scope = rememberCoroutineScope()
 
                 val action: (Action) -> Unit = {
                     handleAction(
@@ -189,10 +175,13 @@ class MainActivity : ComponentActivity() {
                         linksViewModel = linksViewModel,
                         postsViewModel = postsViewModel,
                         navController = navController,
-                        activity = this,
+                        scope = scope,
                         clipboard = clipboard,
                         urlOpener = urlOpener,
                         sharer = sharer,
+                        notifier = notifier,
+                        backupManager = databaseBackupManager,
+                        appRestarter = appRestarter,
                     )
                 }
 
@@ -211,224 +200,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
-
-private fun handleAction(
-    action: Action,
-    linksViewModel: LinksViewModel,
-    postsViewModel: PostsViewModel,
-    navController: NavHostController,
-    activity: ComponentActivity,
-    clipboard: Clipboard,
-    urlOpener: UrlOpener,
-    sharer: Sharer,
-) {
-    when(action){
-        // Handle Activity-level actions (type-safe, no casts!)
-        is ContentLinkAction.Open -> urlOpener.open(action.item.link)
-        is ContentLinkAction.OpenProfile -> urlOpener.open(action.url)
-        is ContentLinkAction.CopyToClipboard -> clipboard.copy(action.item.link)
-
-        is ContentLinkAction.ComposePost -> {
-            // Bridge Links → Posts: seed the editor with this link's URL + saved markers,
-            // then switch to the Posts tab so the draft is ready to edit and send.
-            postsViewModel.composePostFromLink(action.item)
-            navController.navigate(Screen.Home.route) {
-                popUpTo(navController.graph.startDestinationId)
-                launchSingleTop = true
-            }
-        }
-
-        is ContentItemAction.CopyToClipboard -> clipboard.copy(action.contentItem.text)
-
-        is FileAction.BackupDatabase -> {
-            // Access DatabaseBackupManager from MainActivity
-            val mainActivity = activity as? MainActivity
-            mainActivity?.let { main ->
-                main.lifecycleScope.launch {
-                    val result = main.databaseBackupManager.performManualBackup()
-                    result.onSuccess { fileName ->
-                        Toast.makeText(
-                            activity,
-                            getString(Res.string.backup_toast_success, fileName),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                    result.onFailure { error ->
-                        Toast.makeText(
-                            activity,
-                            getString(Res.string.backup_toast_failed, error.message ?: ""),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            }
-        }
-
-        is FileAction.RestoreDatabase -> {
-            val mainActivity = activity as? MainActivity
-            mainActivity?.let { main ->
-                main.lifecycleScope.launch {
-                    val result = main.databaseBackupManager.restoreFromBackup(action.uri)
-                    result.onSuccess { name ->
-                        Toast.makeText(
-                            activity,
-                            getString(Res.string.restore_toast_success, name),
-                            Toast.LENGTH_LONG
-                        ).show()
-                        // Room must reopen the replaced file, so restart the process.
-                        restartApp(activity)
-                    }
-                    result.onFailure { error ->
-                        Toast.makeText(
-                            activity,
-                            getString(Res.string.restore_toast_failed, error.message ?: ""),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            }
-        }
-
-        is TextAction.PasteFromClipboard -> {
-            val pastedText = clipboard.paste()
-            if (!pastedText.isNullOrEmpty()) {
-                // Insert the pasted text into the current content
-                val currentText = postsViewModel.screenState.value.focusedContentText
-                val updatedText = currentText.insertText(pastedText)
-                postsViewModel.consumeAction(TextAction.EditContentText(updatedText))
-            }
-        }
-
-        is TextAction.CopyContentText -> {
-            // Copy the current editor content to the clipboard
-            val currentText = postsViewModel.screenState.value.focusedContentText.newText
-            if (currentText.isNotEmpty()) {
-                clipboard.copy(currentText)
-            }
-        }
-
-        is TextAction.PostContentOnTwitter -> {
-            // Post the current draft text as a new tweet on Twitter/X
-            val currentText = postsViewModel.screenState.value.focusedContentText.newText
-            if (currentText.isNotEmpty()) {
-                urlOpener.open(TwitterIntent.PostTweet(text = currentText).url)
-            }
-        }
-
-        is TextAction.PostContentOnFacebook -> {
-            // Share the current draft text as a new post on Facebook
-            val currentText = postsViewModel.screenState.value.focusedContentText.newText
-            if (currentText.isNotEmpty()) {
-                // Facebook's web sharer does not reliably prefill the post text, so copy it to the
-                // clipboard first so the user can paste it into the composer.
-                clipboard.copy(currentText)
-                urlOpener.open(FacebookIntent.SharePost(text = currentText).url)
-            }
-        }
-
-        is TextAction.ShareContentViaSheet -> {
-            // Hand the current draft text to the platform share sheet.
-            val currentText = postsViewModel.screenState.value.focusedContentText.newText
-            if (currentText.isNotEmpty()) {
-                // The chooser title is a resource, and reading the catalogue suspends.
-                activity.lifecycleScope.launch {
-                    sharer.shareText(currentText, getString(Res.string.share_chooser_title))
-                }
-            }
-        }
-
-        is ContentItemAction.PostOnTwitter -> {
-            // TwitterIntent.PostTweet automatically extracts any URLs from the content to use as link preview
-            urlOpener.open(TwitterIntent.PostTweet(text = action.contentItem.text).url)
-        }
-
-        is ContentItemAction.PostOnFacebook -> {
-            // FacebookIntent.SharePost automatically extracts any URLs from the content to use as link preview
-            // Facebook's web sharer does not reliably prefill the post text, so copy it to the
-            // clipboard first so the user can paste it into the composer.
-            clipboard.copy(action.contentItem.text)
-            urlOpener.open(FacebookIntent.SharePost(text = action.contentItem.text).url)
-        }
-
-        is ContentItemAction.ShareViaSheet -> {
-            // Hand the post text to the platform share sheet. This exposes every installed app
-            // that accepts plain text — WhatsApp, LinkedIn, Bluesky, Mastodon, Telegram, etc. —
-            // without a dedicated intent class per network.
-            activity.lifecycleScope.launch {
-                sharer.shareText(
-                    action.contentItem.text,
-                    getString(Res.string.share_chooser_title),
-                )
-            }
-        }
-
-        is ContentLinkAction.CreateComment -> {
-            // Close the dialog first (better UX - dialog closes before leaving screen)
-            linksViewModel.consumeAction(action)
-
-            // For comments, extract tweet ID to reply directly if it's a Twitter/X URL
-            val tweetId = action.item.link.extractTweetId()
-
-            // Check if extraction was successful (tweet ID will be different from original URL)
-            val twitterIntent = if (tweetId != action.item.link && tweetId.all { it.isDigit() }) {
-                // Successfully extracted tweet ID - use Reply to comment on the tweet
-                TwitterIntent.Reply(
-                    tweetId = tweetId,
-                    replyText = action.comment
-                )
-            } else {
-                // Not a tweet URL - post as regular tweet with the link as preview
-                TwitterIntent.PostTweet(
-                    text = action.comment,
-                    prominentUrl = action.item.link
-                )
-            }
-
-            urlOpener.open(twitterIntent.url)
-        }
-
-        is ContentLinkAction.CreateQuote -> {
-            // Close the dialog first (better UX - dialog closes before leaving screen)
-            linksViewModel.consumeAction(action)
-
-            // For quotes, extract tweet ID and use QuoteTweet if it's a Twitter/X URL
-            val tweetId = action.item.link.extractTweetId()
-
-            // Check if extraction was successful (tweet ID will be different from original URL)
-            val twitterIntent = if (tweetId != action.item.link && tweetId.all { it.isDigit() }) {
-                // Successfully extracted tweet ID - use native quote tweet
-                TwitterIntent.QuoteTweet(
-                    tweetId = tweetId,
-                    comment = action.quote
-                )
-            } else {
-                // Not a tweet URL or extraction failed - post as regular tweet with link
-                TwitterIntent.PostTweet(
-                    text = action.quote,
-                    prominentUrl = action.item.link
-                )
-            }
-
-            urlOpener.open(twitterIntent.url)
-        }
-
-        // Route to appropriate ViewModel
-        else -> {
-            linksViewModel.consumeAction(action)
-            postsViewModel.consumeAction(action)
-        }
-    }
-}
-
-/**
- * Relaunches the app from a cold start by killing the current process. Used after a
- * database restore so Room reopens the replaced database file from scratch.
- */
-private fun restartApp(activity: ComponentActivity) {
-    val intent = activity.packageManager.getLaunchIntentForPackage(activity.packageName)
-        ?.apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK) }
-    activity.startActivity(intent)
-    activity.finish()
-    Runtime.getRuntime().exit(0)
 }
