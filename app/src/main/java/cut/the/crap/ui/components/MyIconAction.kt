@@ -33,7 +33,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -169,29 +168,5 @@ class CircleMaskShape(private val radius: Float, private val offsetX: Float, pri
             fillType = PathFillType.EvenOdd
         }
         return Outline.Generic(path = path)
-    }
-}
-
-@Preview
-@Composable
-private fun Preview() {
-    Column(modifier = Modifier
-        .background(Color.White)
-        .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-
-    ) {
-        MyIconAction(
-            iconPainter = painterResource(id = R.mipmap.ic_launcher_foreground),
-            onClick = { }, contentDescription = "")
-
-        MyIconAction(
-            iconPainter = painterResource(id = R.mipmap.ic_launcher_foreground),
-            onClick = {  }, contentDescription = "")
-
-        MyIconAction(
-            iconPainter = painterResource(id = R.mipmap.ic_launcher_foreground),
-            showBadge = true,
-            onClick = {  }, contentDescription = "")
     }
 }

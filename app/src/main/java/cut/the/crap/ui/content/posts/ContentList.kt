@@ -16,17 +16,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.unit.max
 import cut.the.crap.data.domain.ContentItem
 //import cut.the.crap.mockedPostItems
 import cut.the.crap.ui.components.api.Action
-import cut.the.crap.ui.theme.PreviewAppThemeProvider
-import cut.the.crap.ui.theme.PreviewThemeWrapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -86,23 +81,3 @@ fun ContentList(
 // Content-type marker for drag-to-reorder. The Posts list no longer drags (long-press drives
 // batch selection), but the Links list still references this type for its own reordering.
 data class DraggableItem(val index: Int)
-
-@Preview(showBackground = true, device = Devices.PIXEL_4)
-@Composable
-private fun Preview(
-    @PreviewParameter(PreviewAppThemeProvider::class) theme: PreviewThemeWrapper,
-) {
-    theme {
-        Column(
-            modifier = Modifier.background(MaterialTheme.colorScheme.background)
-        ) {
-            // Preview with multiple content items showing drag capabilities
-            ContentList(
-                action = {},
-                paddingValues = PaddingValues(0.dp),
-                contentItems = MutableStateFlow(emptyList()),  // mockedPostItems.take(3)
-                onContentItemsReordered = {},
-            )
-        }
-    }
-}

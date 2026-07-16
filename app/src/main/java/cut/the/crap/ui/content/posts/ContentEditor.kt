@@ -35,9 +35,6 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import cut.the.crap.shared.resources.Res
 import cut.the.crap.shared.resources.cd_copy_clipboard
@@ -64,8 +61,6 @@ import cut.the.crap.ui.components.api.ChipsType
 import cut.the.crap.ui.components.api.Screen
 import cut.the.crap.ui.components.api.TextAction
 import cut.the.crap.ui.components.api.UiAction
-import cut.the.crap.ui.theme.PreviewAppThemeProvider
-import cut.the.crap.ui.theme.PreviewThemeWrapper
 import kotlin.math.max
 import kotlin.math.min
 
@@ -330,38 +325,4 @@ private fun TextValueWrapper.toTextValue(): TextFieldValue {
 private fun Pair<Int, Int>.toTextRange(): TextRange {
     return if (this.first == this.second) TextRange(this.first)
     else TextRange(min(this.first, this.second), max(this.first, this.second))
-}
-
-@Preview(showBackground = true, device = Devices.PIXEL_4)
-@Composable
-private fun Preview(
-    @PreviewParameter(PreviewAppThemeProvider::class) theme: PreviewThemeWrapper,
-) {
-    theme {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Preview with empty content
-            ContentEditor(
-                value = TextValueWrapper("", Pair(0, 0)),
-                onValueChange = {}
-            )
-
-            // Preview with some text
-            ContentEditor(
-                value = TextValueWrapper("This is a sample content being edited", Pair(0, 0)),
-                onValueChange = {}
-            )
-
-            // Preview with long text
-            ContentEditor(
-                value = TextValueWrapper(
-                    "This is a longer content item that spans multiple lines. It demonstrates how the editor handles text wrapping and displays character count for longer content.",
-                    Pair(0, 0)
-                ),
-                onValueChange = {}
-            )
-        }
-    }
 }

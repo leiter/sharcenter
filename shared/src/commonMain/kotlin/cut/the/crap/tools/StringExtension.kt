@@ -25,6 +25,28 @@ private val tldRegex = Regex("\\.(com|org|net|gov|edu|io|co|uk|de|fr|es|it|us|ru
  */
 private val urlRegex = Regex("^([a-zA-Z][a-zA-Z0-9+.\\-]*)://([^/?#]*)([^?#]*)")
 
+/** A URL's scheme and host, as returned by [urlSchemeAndHost]. */
+data class UrlSchemeHost(val scheme: String, val host: String)
+
+/**
+ * The `scheme` and `host` of [url], or null when it has no `scheme://host` or the host is not a
+ * legal host. [host] is stripped of userinfo and port, exactly as `java.net.URL.getHost()` does.
+ *
+ * Replaces `java.net.URI`/`java.net.URL` for the two UI callers that need an origin. Same reasoning
+ * as [prepareUrlInformation] — Ktor's `Url` is lenient where `java.net.URI` *throws*, and both
+ * callers depend on that rejection (they treat "doesn't parse" as "not a link"). Hence [hostRegex]:
+ * without it a host containing a space or `<` would be accepted here but rejected by `java.net.URI`,
+ * which is exactly the kind of silent divergence a green build would not show.
+ */
+private val hostRegex = Regex("^[A-Za-z0-9\\-._~%]+$")
+
+fun urlSchemeAndHost(url: String): UrlSchemeHost? {
+    val match = urlRegex.find(url) ?: return null
+    val host = match.groupValues[2].substringAfterLast('@').substringBefore(':')
+    if (!hostRegex.matches(host)) return null
+    return UrlSchemeHost(scheme = match.groupValues[1], host = host)
+}
+
 fun prepareUrlInformation(url: String): List<String> {
 
     val match = urlRegex.find(url)

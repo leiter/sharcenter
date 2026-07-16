@@ -93,4 +93,44 @@ class StringExtensionTest {
         assertEquals("a ", "a".ensureTrailingSpace())
         assertEquals("a ", "a ".ensureTrailingSpace())
     }
+
+    // ---- urlSchemeAndHost ------------------------------------------------------------------
+    // Pins the replacement for the two UI callers that used java.net.URI / java.net.URL — both
+    // *fully qualified*, so no import ever revealed them (the same blind spot as before).
+    // Behaviour that matters: these callers treat "doesn't parse" as "not a link", so anything
+    // java.net rejected must still yield null here. A lenient parser would silently make
+    // LinkVisualTransformation highlight junk as a clickable link.
+
+    @Test
+    fun `scheme and host are extracted, userinfo and port stripped like URL#getHost`() {
+        assertEquals(UrlSchemeHost("https", "example.com"), urlSchemeAndHost("https://example.com/a/b?q=1#f"))
+        assertEquals(UrlSchemeHost("http", "example.com"), urlSchemeAndHost("http://example.com"))
+        assertEquals(UrlSchemeHost("https", "example.com"), urlSchemeAndHost("https://user:pw@example.com:8443/x"))
+        assertEquals(UrlSchemeHost("https", "localhost"), urlSchemeAndHost("https://localhost:8080/api"))
+        assertEquals(UrlSchemeHost("ftp", "files.example.org"), urlSchemeAndHost("ftp://files.example.org/pub"))
+    }
+
+    @Test
+    fun `input java-net rejected still yields null`() {
+        assertEquals(null, urlSchemeAndHost("https://"))          // no host at all
+        assertEquals(null, urlSchemeAndHost("not a url at all"))  // no scheme
+        assertEquals(null, urlSchemeAndHost("www.example.com"))   // no scheme
+        assertEquals(null, urlSchemeAndHost(""))
+        // Illegal host characters: java.net.URI throws, so a match here would be a false positive.
+        assertEquals(null, urlSchemeAndHost("https://ex ample.com"))
+        assertEquals(null, urlSchemeAndHost("https://ex<ample>.com"))
+    }
+
+    @Test
+    fun `isValidUrl semantics - http-s scheme plus a dotted host`() {
+        // What LinkVisualTransformation.isValidUrl asks of it.
+        fun valid(c: String): Boolean = urlSchemeAndHost(c)
+            ?.let { (it.scheme == "http" || it.scheme == "https") && it.host.contains(".") } ?: false
+
+        assertEquals(true, valid("https://example.com/x"))
+        assertEquals(true, valid("http://a.b.co/x"))
+        assertEquals(false, valid("https://localhost/x"))   // host without a dot
+        assertEquals(false, valid("https://"))              // bare scheme
+        assertEquals(false, valid("ftp://files.example.org")) // not http(s)
+    }
 }

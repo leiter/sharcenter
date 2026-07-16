@@ -11,9 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -25,8 +22,6 @@ import cut.the.crap.shared.resources.import_export_import
 import cut.the.crap.shared.resources.settings_import_export
 import cut.the.crap.ui.components.BottomNavigationBar
 import cut.the.crap.ui.components.api.Action
-import cut.the.crap.ui.theme.PreviewAppThemeProvider
-import cut.the.crap.ui.theme.PreviewThemeWrapper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,18 +117,5 @@ fun ImportExportScreen(
                 Text(stringResource(Res.string.import_export_import))
             }
         }
-    }
-}
-
-@Preview(showBackground = true, device = Devices.PIXEL_4)
-@Composable
-private fun ImportExportScreenPreview(
-    @PreviewParameter(PreviewAppThemeProvider::class) theme: PreviewThemeWrapper,
-) {
-    theme {
-        ImportExportScreen(
-            action = {},
-            navController = rememberNavController()
-        )
     }
 }

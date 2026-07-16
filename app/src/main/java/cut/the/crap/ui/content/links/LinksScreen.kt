@@ -40,9 +40,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
@@ -64,8 +61,6 @@ import cut.the.crap.ui.components.api.FileAction
 import cut.the.crap.ui.components.api.ListAction
 import cut.the.crap.ui.components.api.UiAction
 import cut.the.crap.ui.content.posts.DraggableItem
-import cut.the.crap.ui.theme.PreviewAppThemeProvider
-import cut.the.crap.ui.theme.PreviewThemeWrapper
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -505,27 +500,5 @@ fun LinkScreen(
         ) {
             SnackbarHost(hostState = snackBarHostState)
         }
-    }
-}
-
-@Preview(showBackground = true, device = Devices.PIXEL_4)
-@Composable
-private fun Preview(
-    @PreviewParameter(PreviewAppThemeProvider::class) theme: PreviewThemeWrapper,
-) {
-    theme {
-//        val itemListFlow = MutableStateFlow(emptyList())  //mockedLinkItems
-        val totalCountFlow = MutableStateFlow(3)
-        val screenStateFlow = MutableStateFlow(LinksScreenState())
-        val snackBarFlow = MutableSharedFlow<LinksSnackbar>()
-
-        LinkScreen(
-            action = {},
-            itemList = MutableStateFlow(emptyList()),  // itemListFlow
-            totalCount = totalCountFlow,
-            screenState = screenStateFlow,
-            navController = rememberNavController(),
-            snackBarMessages = snackBarFlow
-        )
     }
 }

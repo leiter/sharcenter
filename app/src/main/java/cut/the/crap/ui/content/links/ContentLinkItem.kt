@@ -1,4 +1,5 @@
 package cut.the.crap.ui.content.links
+import cut.the.crap.tools.urlSchemeAndHost
 
 //import cut.the.crap.mockedLinkItems
 import androidx.compose.animation.AnimatedVisibility
@@ -65,9 +66,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import cut.the.crap.shared.resources.Res
@@ -111,8 +109,6 @@ import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.ChipsType
 import cut.the.crap.ui.components.api.ContentLinkAction
 import cut.the.crap.ui.components.api.TextAction
-import cut.the.crap.ui.theme.PreviewAppThemeProvider
-import cut.the.crap.ui.theme.PreviewThemeWrapper
 
 @Composable
 fun LinkListItem(
@@ -689,12 +685,10 @@ private fun platformIconDomain(isMastodon: Boolean, isReddit: Boolean, fallback:
  * `domain` text shown on the card is only a display token (TLD stripped), so the real host is
  * re-parsed from the link here. Returns null for a malformed link.
  */
-private fun domainHomeUrl(link: String): String? = try {
-    val url = java.net.URL(link)
-    url.host.takeIf { it.isNotBlank() }?.let { "${url.protocol}://$it" }
-} catch (e: Exception) {
-    null
-}
+private fun domainHomeUrl(link: String): String? =
+    // Was java.net.URL (JVM-only, fully qualified). `scheme.lowercase()` reproduces
+    // URL.getProtocol(), which lowercases; urlSchemeAndHost returns the scheme as parsed.
+    urlSchemeAndHost(link)?.let { "${it.scheme.lowercase()}://${it.host}" }
 
 @Composable
 private fun DomainIcon(
@@ -731,31 +725,5 @@ private fun DomainIcon(
             contentScale = ContentScale.Fit,
             contentDescription = if (hasDomain) "Tap to open link, long press to filter by domain" else "No domain available"
         )
-    }
-}
-
-@Preview(showBackground = true, device = Devices.PIXEL_4)
-@Composable
-private fun Preview(
-    @PreviewParameter(PreviewAppThemeProvider::class) theme: PreviewThemeWrapper,
-) {
-    theme {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-//            (mockedLinkItems + mockedLinkItems).forEach {
-//                LinkListItem(
-//                    item = it,
-//                    action = {},
-//                    selectionState = Random.nextBoolean(),
-//                    isChecked = Random.nextBoolean()
-//                )
-//            }
-
-        }
-
     }
 }

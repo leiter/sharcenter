@@ -1,4 +1,5 @@
 package cut.the.crap.ui.content.posts
+import cut.the.crap.tools.urlSchemeAndHost
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
@@ -48,13 +49,11 @@ internal fun findUrlAt(text: String, offset: Int): String? =
  * with a dot (a TLD). This rejects bare `https://`, scheme-only-with-garbage, and
  * host-without-a-dot cases while staying free of a stale hard-coded TLD list.
  */
-private fun isValidUrl(candidate: String): Boolean = try {
-    val uri = java.net.URI(candidate)
-    (uri.scheme == "http" || uri.scheme == "https") &&
-        !uri.host.isNullOrBlank() &&
-        uri.host.contains(".")
-} catch (e: java.net.URISyntaxException) {
-    false
+private fun isValidUrl(candidate: String): Boolean {
+    // Was java.net.URI (JVM-only, and fully qualified so no import revealed it). urlSchemeAndHost
+    // returns null for the cases URI threw on, so "doesn't parse" still means "not a link".
+    val parsed = urlSchemeAndHost(candidate) ?: return false
+    return (parsed.scheme == "http" || parsed.scheme == "https") && parsed.host.contains(".")
 }
 
 /**

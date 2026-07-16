@@ -33,7 +33,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cut.the.crap.shared.resources.Res
 import cut.the.crap.shared.resources.app_name
@@ -300,37 +299,4 @@ private object MyFilterChipTag {
     const val TEXT = "Text"
     const val ICON = "Icon"
     const val SKELETON = "Default"
-}
-
-@Preview
-@Composable
-private fun Preview() {
-
-    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-
-        MyFilterChip(
-            text = "Todo",
-            onCloseClicked = { },
-            onLabelClicked = { }
-        )
-
-        MyFilterChip(text = "Todo",
-            state = MyFilterChipState.Selected,
-            onCloseClicked = { },
-            onLabelClicked = { }
-        )
-
-        MyFilterChip(text = "Todo",
-            state = MyFilterChipState.Disabled,
-            onCloseClicked = { },
-            onLabelClicked = { }
-        )
-
-        MyFilterChip(text = "Todo",
-            onCloseClicked = { },
-            onLabelClicked = { }
-        )
-
-    }
-
 }

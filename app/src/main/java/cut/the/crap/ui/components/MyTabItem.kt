@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cut.the.crap.ui.components.TabBarItemTag.CONTAINER
 import cut.the.crap.ui.components.TabBarItemTag.DEFAULT_SUFFIX
@@ -70,49 +69,4 @@ private fun Modifier.uniqueTestTag(suffix: String, tag: String = CONTAINER) =
 private object TabBarItemTag {
     const val DEFAULT_SUFFIX = "Default"
     const val CONTAINER = "CONTAINER"
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview() {
-    Row(modifier = Modifier.padding(16.dp)) {
-
-        MyTabBarItem(
-            selected = true,
-            onClick = { },
-            icon = rememberVectorPainter(image = Icons.Default.Drafts),
-            label = "Drafts"
-        )
-        MyTabBarItem(
-            selected = true,
-            onClick = { },
-            icon = rememberVectorPainter(image = Icons.Default.Edit),
-            label = "Drafts"
-        )
-        MyTabBarItem(
-            selected = true,
-            onClick = { },
-            icon = rememberVectorPainter(image = Icons.Default.Note),
-            label = "Drafts"
-        )
-
-        MyTabBarItem(
-            selected = false,
-            onClick = { },
-            icon = rememberVectorPainter(image = Icons.AutoMirrored.Default.Article),
-            label = "Content"
-        )
-        MyTabBarItem(
-            selected = false,
-            onClick = { },
-            icon = rememberVectorPainter(image = Icons.Default.Inventory2),
-            label = "Content"
-        )
-        MyTabBarItem(
-            selected = false,
-            onClick = { },
-            icon = rememberVectorPainter(image = Icons.AutoMirrored.Default.LibraryBooks),
-            label = "Content"
-        )
-    }
 }

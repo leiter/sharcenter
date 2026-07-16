@@ -19,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cut.the.crap.ui.components.FilterChipRowTag.DEFAULT_SUFFIX
 
@@ -132,40 +131,4 @@ fun MyFilterChipState.toggle(): MyFilterChipState {
         MyFilterChipState.Selected -> MyFilterChipState.Unselected
         MyFilterChipState.Disabled -> this
     }
-}
-
-@Preview
-@Composable
-private fun Preview() {
-
-    val filterTitles = listOf(
-        "Accounts", "Stock", "Investments",
-        "Finance", "Button", "Upcoming"
-    )
-    val filters = remember {
-        val list = mutableStateListOf<MyFilterChipItem>()
-        list.addAll(
-            filterTitles.mapIndexed { index, item ->
-                MyFilterChipItem(
-                    text = item,
-                    state = when (index % 3){
-                        0 -> MyFilterChipState.Unselected
-                        1 -> MyFilterChipState.Selected
-                        else -> MyFilterChipState.Disabled
-                    }
-                )
-            }
-        )
-        list
-    }
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        MyFilterChipRow(
-            filterList = filters ,
-            onFilterClicked = {},
-            onCloseClicked = {}
-        )
-
-    }
-
 }

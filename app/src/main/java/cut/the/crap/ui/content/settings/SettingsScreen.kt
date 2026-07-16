@@ -25,9 +25,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -98,8 +95,6 @@ import cut.the.crap.ui.components.colorFromHex
 import cut.the.crap.ui.components.toHexString
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.FileAction
-import cut.the.crap.ui.theme.PreviewAppThemeProvider
-import cut.the.crap.ui.theme.PreviewThemeWrapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -1098,19 +1093,4 @@ private fun BackupRetentionDialog(
             }
         }
     )
-}
-
-@Preview(showBackground = true, device = Devices.PIXEL_4)
-@Composable
-private fun Preview(
-    @PreviewParameter(PreviewAppThemeProvider::class) theme: PreviewThemeWrapper,
-) {
-    theme {
-        SettingsScreen(
-            action = {},
-            navController = rememberNavController(),
-            settings = MutableStateFlow(AppSettings(developerMode = true)),
-            onSettingsChanged = {}
-        )
-    }
 }

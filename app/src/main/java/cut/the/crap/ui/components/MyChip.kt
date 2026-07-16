@@ -32,7 +32,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cut.the.crap.tools.formatDateOnly
 import cut.the.crap.ui.theme.conditional
@@ -218,99 +217,6 @@ private fun backgroundColor(filterState: FilterState): Color {
                 filterState.isApplied() -> MaterialTheme.colorScheme.secondary
                 else -> MaterialTheme.colorScheme.surface
             }
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun Preview() {
-    cut.the.crap.ui.theme.MyAppTheme {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Default (All items):",
-                style = MaterialTheme.typography.labelSmall
-            )
-            MyChip(
-                onClick = {},
-                state = FilterState.TripleState(
-                    defaultLabel = "Favorites",
-                    iconPainterInclude = Icons.Filled.Star,
-                    iconPainterExclude = Icons.Outlined.StarOutline,
-                    activeState = ActiveState.Default
-                )
-            )
-
-            Text(
-                text = "Include (Only favorites):",
-                style = MaterialTheme.typography.labelSmall
-            )
-            MyChip(
-                onClick = {},
-                state = FilterState.TripleState(
-                    defaultLabel = "Favorites",
-                    iconPainterInclude = Icons.Filled.Star,
-                    iconPainterExclude = Icons.Outlined.StarOutline,
-                    activeState = ActiveState.Include
-                )
-            )
-
-            Text("Exclude (No favorites):", style = MaterialTheme.typography.labelSmall)
-            MyChip(
-                onClick = {},
-                state = FilterState.TripleState(
-                    defaultLabel = "Favorites",
-                    iconPainterInclude = Icons.Filled.Star,
-                    iconPainterExclude = Icons.Outlined.StarOutline,
-                    activeState = ActiveState.Exclude
-                )
-            )
-
-            Text("Disabled:", style = MaterialTheme.typography.labelSmall)
-            MyChip(
-                onClick = {},
-                state = FilterState.TripleState(
-                    defaultLabel = "Favorites",
-                    iconPainterInclude = Icons.Filled.Star,
-                    iconPainterExclude = Icons.Outlined.StarOutline,
-                    activeState = ActiveState.Disabled
-                )
-            )
-
-            Text("Date Range (Not set):", style = MaterialTheme.typography.labelSmall)
-            MyChip(
-                onClick = {},
-                state = FilterState.DateState(
-                    defaultLabel = "Date Range",
-                    date = null,
-                    dateType = DateType.START
-                )
-            )
-
-            Text("Date - Start (Set):", style = MaterialTheme.typography.labelSmall)
-            MyChip(
-                onClick = {},
-                onLeadingClicked = {},
-                state = FilterState.DateState(
-                    defaultLabel = "Start Date",
-                    date = 1704067200000L, // Jan 1, 2024
-                    dateType = DateType.START
-                )
-            )
-
-            Text("Date - End (Set):", style = MaterialTheme.typography.labelSmall)
-            MyChip(
-                onClick = {},
-                onLeadingClicked = {},
-                state = FilterState.DateState(
-                    defaultLabel = "End Date",
-                    date = 1735689600000L, // Jan 1, 2025
-                    dateType = DateType.END
-                )
-            )
         }
     }
 }

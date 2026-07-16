@@ -25,9 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import cut.the.crap.shared.resources.Res
@@ -55,8 +52,6 @@ import cut.the.crap.ui.components.MySearchBar
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.TextAction
 import cut.the.crap.ui.components.api.UiAction
-import cut.the.crap.ui.theme.PreviewAppThemeProvider
-import cut.the.crap.ui.theme.PreviewThemeWrapper
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
@@ -395,39 +390,6 @@ fun linksTopBar(
                     action = action
                 )
             }
-        }
-    }
-}
-
-@Preview(showBackground = true, device = Devices.PIXEL_4)
-@Composable
-private fun Preview(
-    @PreviewParameter(PreviewAppThemeProvider::class) theme: PreviewThemeWrapper,
-) {
-    theme {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(32.dp)
-        ) {
-            
-            linksTopBar(
-                LinksScreenState(
-                    query = "Search you might find",
-                    searchExpanded = true,
-                ),
-                currentItemCount = 5,
-                totalItemCount = 10,
-            ) {}()
-
-            linksTopBar(
-                LinksScreenState(
-                    query = "Search you might find",
-                    searchExpanded = false,
-                ),
-                currentItemCount = 10,
-                totalItemCount = 10,
-            ) {}()
-
         }
     }
 }

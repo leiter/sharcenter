@@ -31,8 +31,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -160,33 +158,4 @@ private fun handlePlaceHolder(string: String?): @Composable (() -> Unit)? {
     } else {
         null
     }
-}
-
-@Preview(showBackground = true, device = Devices.PIXEL_4)
-@Composable
-private fun Preview() {
-    Column {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-        ) {
-            MySearchBar(query = "Search",
-                expanded = true, onQueryChanged = {},
-                onQuerySubmit = {}, onExpandedChanged ={} )
-        }
-
-        Row(
-            horizontalArrangement = Arrangement.End,
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-        ) {
-            MySearchBar(query = "Find",
-                expanded = false, onQueryChanged = {},
-                onQuerySubmit = {}, onExpandedChanged ={} )
-        }
-
-    }
-
 }

@@ -22,9 +22,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import cut.the.crap.shared.resources.Res
@@ -34,8 +31,6 @@ import cut.the.crap.ui.components.MySearchBar
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.TextAction
 import cut.the.crap.ui.components.api.UiAction
-import cut.the.crap.ui.theme.PreviewAppThemeProvider
-import cut.the.crap.ui.theme.PreviewThemeWrapper
 
 @Composable
 fun ListStatusBar(
@@ -179,53 +174,6 @@ fun ListStatusBar(
                     }
                 }
             }
-        }
-    }
-}
-
-@Preview(showBackground = true, device = Devices.PIXEL_4)
-@Composable
-private fun Preview(
-    @PreviewParameter(PreviewAppThemeProvider::class) theme: PreviewThemeWrapper,
-) {
-    theme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // All items shown, no selection
-            ListStatusBar(
-                textInputExpanded = false,
-                currentItemCount = 10,
-                totalItemCount = 10,
-                selectedItemCount = 0
-            )
-
-            // Filtered items, no selection
-            ListStatusBar(
-                textInputExpanded = false,
-                currentItemCount = 5,
-                totalItemCount = 10,
-                selectedItemCount = 0
-            )
-
-            // Filtered items with selection
-            ListStatusBar(
-                textInputExpanded = false,
-                currentItemCount = 5,
-                totalItemCount = 10,
-                selectedItemCount = 3
-            )
-
-            // All items with selection, text input expanded (no top padding)
-            ListStatusBar(
-                textInputExpanded = true,
-                currentItemCount = 10,
-                totalItemCount = 10,
-                selectedItemCount = 7
-            )
         }
     }
 }
