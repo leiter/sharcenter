@@ -7,8 +7,8 @@ import androidx.compose.runtime.remember
  * iOS file picker — **not yet wired**.
  *
  * The real implementation presents a `UIDocumentPickerViewController` and hands back its
- * security-scoped `NSURL`s; that has to be built together with the iOS [FileAccess] actual (which
- * consumes those URLs), so it lands in WP-iOS-4. Until then the launcher yields nothing, which the
+ * security-scoped `NSURL`s. That needs *presentation* testing to verify — not just compilation —
+ * so it lands at app bring-up (WP-iOS-6/7). Until then the launcher yields nothing, which the
  * reduced iOS v1 tolerates: the only callers are the import/restore paths, and backup/restore is
  * capability-flagged off on iOS.
  */
