@@ -51,7 +51,12 @@ fun setupKoin() {
  * composable exists — WP7 moves the screens (and `NavigationGraph`) into commonMain, at which point
  * this becomes `ComposeUIViewController { App() }`.
  */
-fun MainViewController(): UIViewController = ComposeUIViewController {
+fun MainViewController(): UIViewController = ComposeUIViewController(
+    // The Info.plist sets CADisableMinimumFrameDurationOnPhone=true (for high-refresh displays),
+    // but we also opt out of Compose's *crash-on-startup* strict check so a plist/packaging hiccup
+    // can never hard-fail launch. Performance is unaffected — the plist key still applies.
+    configure = { enforceStrictPlistSanityCheck = false },
+) {
     PlaceholderApp()
 }
 
