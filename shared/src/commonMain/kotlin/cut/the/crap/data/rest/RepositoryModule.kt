@@ -24,9 +24,12 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /**
- * Remote-repository interface bindings (formerly the Hilt `RepositoryModule` `@Binds`),
- * plus the settings/backfill collaborators Hilt previously provided implicitly via
- * `@Inject` constructors. `factory` mirrors the previous unscoped lifetime.
+ * Remote-repository interface bindings plus the settings collaborators, now in commonMain — every
+ * binding here is platform-agnostic. `factory` mirrors the previous unscoped lifetime.
+ *
+ * `YouTubeMetadataBackfiller` is deliberately *not* bound here: it still lives in :app (it uses the
+ * Context-bound DataStore delegate), so Android binds it in its own module. Nothing in common code
+ * injects it — only the Android launcher does, at startup.
  */
 val repositoryModule = module {
     factoryOf(::MessageRepositoryImpl) bind MessageRepository::class
@@ -50,5 +53,4 @@ val repositoryModule = module {
     // Previously provided implicitly by Hilt via constructors (unscoped).
     factory { SettingsRepository(get(named(SETTINGS_STORE))) }
     factory { ColorHistoryRepository(get(named(COLOR_HISTORY_STORE))) }
-    factoryOf(::YouTubeMetadataBackfiller)
 }

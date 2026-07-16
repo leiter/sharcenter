@@ -1,6 +1,5 @@
 package cut.the.crap.data.rest
 
-import cut.the.crap.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -14,15 +13,17 @@ import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
 /**
- * Shared Ktor [HttpClient] (formerly the Hilt `NetworkModule`), registered as a
- * `single` to mirror the previous `@Singleton` scope.
+ * Shared Ktor [HttpClient], on the per-platform [httpClientEngine] and the injected [AppConfig]
+ * (base URL + debug flag) — no `BuildConfig`, so this lives in commonMain. `single` to mirror the
+ * previous `@Singleton` scope.
  */
 val networkModule = module {
     single {
+        val config = get<AppConfig>()
         HttpClient(httpClientEngine()) {
             // Default request configuration with base URL
             defaultRequest {
-                url(BuildConfig.API_BASE_URL)
+                url(config.apiBaseUrl)
             }
 
             // Content Negotiation for JSON serialization
@@ -42,7 +43,7 @@ val networkModule = module {
             }
 
             // Logging (only in debug builds)
-            if (BuildConfig.DEBUG) {
+            if (config.isDebug) {
                 install(Logging) {
                     logger = Logger.DEFAULT
                     level = LogLevel.INFO

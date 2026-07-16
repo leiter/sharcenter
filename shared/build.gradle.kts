@@ -73,6 +73,9 @@ kotlin {
             api(libs.kotlinx.datetime)
             // WP5 spike: does Ktor expose what UrlResolver needs from OkHttp?
             api(libs.ktor.client.core)
+            // The Logging plugin, used by networkModule (moved here in WP-iOS-5). Was implicitly
+            // on :app's classpath; commonMain must depend on it explicitly.
+            api(libs.ktor.client.logging)
             api(libs.ktor.client.content.negotiation)
             api(libs.ktor.serialization.kotlinx.json)
             api(libs.kotlinx.serialization.json)

@@ -30,6 +30,7 @@ class KoinGraphTest {
     fun koinGraphResolves() {
         module {
             includes(
+                androidAppModule,
                 platformModule,
                 databaseModule,
                 networkModule,
@@ -48,6 +49,11 @@ class KoinGraphTest {
                 // LinksViewModel's dispatchers have Kotlin default values, which verify()
                 // also cannot see for the same reason.
                 CoroutineDispatcher::class,
+                // AppConfig's fields are literal BuildConfig values (androidAppModule), not Koin
+                // bindings; verify() reflects its constructor, so declare the field types external.
+                // No other definition constructor-injects a raw String/Boolean, so nothing real is hidden.
+                String::class,
+                Boolean::class,
             ),
         )
     }
