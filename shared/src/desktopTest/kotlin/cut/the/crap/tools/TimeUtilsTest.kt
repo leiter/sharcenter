@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package cut.the.crap.tools
 
 import kotlinx.datetime.Instant
