@@ -1,7 +1,12 @@
 [versions]
 agp = "8.10.1"
 kotlin = "2.2.20"
-koin = "4.0.0"
+# 4.1.1, not 4.0.0: koinViewModel() failed to link on iOS with an undefined
+# LocalViewModelStoreOwner$stableprop_getter$artificial symbol (Koin issue #2175, fixed in the
+# 4.1.0 milestone). Android was unaffected, and it only surfaced at *link* time, not compile.
+# NOT 4.2.x: its klibs are built by Kotlin 2.3.20 (ABI 2.3.0), which this project's Kotlin 2.2.20
+# cannot consume on Native. 4.1.1 is the newest 4.1.x — has the fix, predates the 2.3 bump.
+koin = "4.1.1"
 sqldelight = "2.0.2"
 composeMultiplatform = "1.10.3"
 composeIcons = "1.7.3"
@@ -40,10 +45,10 @@ compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4
 compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 navigation-compose = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
-lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleCompose" }
 # The JetBrains multiplatform fork of androidx.lifecycle. Same `androidx.lifecycle.ViewModel`
-# package and class, published for every target — so the ViewModels move to commonMain without
-# a single import changing, and on Android it still resolves to the real androidx implementation.
+# package and class, published for every target — so the ViewModels live in commonMain without a
+# single import changing, and on Android it still resolves to the real androidx implementation.
+lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleCompose" }
 lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "lifecycleCompose" }
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }

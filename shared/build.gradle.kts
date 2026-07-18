@@ -92,6 +92,10 @@ kotlin {
             // WP6. `api` throughout: :app's screens still resolve the ViewModels, the Koin
             // module and koinViewModel() against these until WP7 moves the UI here too.
             api(libs.lifecycle.viewmodel)
+            // koinViewModel() resolves against LocalViewModelStoreOwner, which lives here. It was
+            // only an :app dependency until WP7 moved App()/the screens into commonMain — the klib
+            // was on the compile classpath transitively, so this only surfaced at *link* time.
+            api(libs.lifecycle.viewmodel.compose)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
             api(libs.koin.compose.viewmodel)
