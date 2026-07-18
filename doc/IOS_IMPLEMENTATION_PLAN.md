@@ -1,10 +1,11 @@
 # iOS Implementation Plan — ShareCenter (`cut.the.crap`)
 
-**Status:** WP-iOS-1 … WP-iOS-6 ✅ **done — the iOS app builds, launches and renders Compose on
-the Simulator.** The UI is still a **placeholder**: the real screens need WP7 (the Phase-4C UI
-move), which is what will finally exercise the SQLite driver, the full Koin graph and the locale
-formatting at runtime. Android stayed green throughout.
-**Last updated:** 2026-07-16
+**Status:** WP-iOS-1 … WP-iOS-6 **and WP7** ✅ **done — the iOS app runs the real UI on the
+Simulator, runtime-verified.** Rendering the real screens (not the old placeholder) confirmed the
+SQLite driver, the full Koin graph and the locale formatting on-device. Android/desktop stayed green
+throughout (`desktopTest` 201/0, app unit tests incl. Koin verify). Remaining work is all deferred
+items (§4) + the desktop app (WP8, now unblocked).
+**Last updated:** 2026-07-18
 
 ---
 
@@ -33,9 +34,17 @@ actual. What it did *not* predict was a toolchain/dependency problem (see §3).
 | **iOS-4** | `Clipboard`→UIPasteboard, `UrlOpener`→`openURL`, `Sharer`→`UIActivityViewController`, `Notifier`→SharedFlow, `FileAccess`→**okio** (no cinterop), `LoginFlow`/`AppRestarter`/`BackupManager`→capability-flagged no-ops, `createDriver`→**NativeSqliteDriver** (foreign keys on), `iosPlatformModule` + `iosDatabaseModule`. |
 | **iOS-5** | **`AppConfig`** seam replaces `BuildConfig`; `networkModule` + `repositoryModule` → `commonMain`; `androidAppModule` (AppConfig from BuildConfig + `YouTubeMetadataBackfiller`); iOS `setupKoin()` + `MainViewController()`. |
 | **iOS-6** | `iosApp/` — SwiftUI host, **XcodeGen** `project.yml` (no hand-written `.pbxproj`), Gradle `embedAndSignAppleFrameworkForXcode` pre-build script. **Launches on the Simulator.** |
+| **WP7** | The ~33 UI files (screens, `My*` components, `NavigationGraph`, `DomainIcons`) → `commonMain`; root **`App()`** extracted from `MainActivity.setContent{}`. Both launchers are now one-liners over the same `App()`. `@Preview`s stay Android-only in sibling `*Previews.kt` (WP1d). |
 
 **New seams added along the way** (neither was in the plan): `AppRestarter` (process restart —
 Android only) and `defaultIoDispatcher` (`Dispatchers.IO` is *internal* on Native).
+
+**Runtime verification (Simulator, the real UI):** app launches, no crash; the Links list renders
+from `NativeSqliteDriver` (confirmed the driver *created* `app_database` with the full schema —
+`tweets_table`, `handle_tag_table`, cross-ref tables — then queried it); seeded rows render with
+**correct dates**, closing the `LocaleFormat` "invisible bug" risk. So the SQLite driver, the full
+Koin graph, the ViewModels, `LocaleFormat`, and Compose-on-iOS are all confirmed at runtime, not
+just at compile.
 
 ---
 
@@ -116,6 +125,26 @@ naturally with WP7.
 - A **dynamic** framework (`isStatic = false`) avoids making the Xcode app link the Kotlin runtime's
   transitive system libs (sqlite3, …) by hand.
 
+**6. WP7 was mechanical — until the *link* step, a whole failure class compile could not show.**
+Moving the UI into `commonMain` was as smooth as promised (a handful of dead-code couplings the
+compiler flagged one file at a time — see the WP7 commit). Both compile and iOS *compile* were
+green on all targets. Then `linkDebugFrameworkIosSimulatorArm64` failed with
+`Undefined symbols: androidx.lifecycle.viewmodel.compose#LocalViewModelStoreOwner$stableprop_getter$artificial`,
+referenced from the three functions that call `koinViewModel()` (`App`, `SettingsScreen`,
+`BackupManagementScreen`). Two dead ends before the real cause:
+- It *looks* like a lifecycle-version problem, so I chased the JetBrains lifecycle fork: 2.9.6/2.10.0
+  resolve but still miss the symbol, 2.11.0 has no iOS artifacts, androidx's own
+  `lifecycle-viewmodel-compose` is Android/JVM-only even at 2.10.0. All wrong.
+- The actual cause is **Koin issue #2175**: `koinViewModel()` didn't link on iOS with Koin 4.0.x
+  (fixed in the 4.1.0 milestone). But Koin **4.2.x** fails for the *opposite* reason — its klibs are
+  built by **Kotlin 2.3.20** (ABI 2.3.0), unconsumable by our 2.2.20 (the datastore ABI-lock,
+  inverted). **4.1.1** threads the needle: has the fix, predates the 2.3 bump.
+
+*Lessons:* (a) linking is a distinct gate — several deps that *compile* fine only fail at link,
+because Kotlin/Native resolves inline bodies and Compose-generated symbols then. (b) For any KMP dep
+there is now a **two-sided version window**: new enough to have the fix/feature, old enough that its
+klib was built with a Kotlin ≤ ours. Both edges bit here.
+
 ---
 
 ## 4. Deliberately deferred
@@ -132,13 +161,21 @@ naturally with WP7.
 
 ## 5. Next
 
-1. **WP7 — move the ~57 UI files into `commonMain`** (screens, `My*` components, `NavigationGraph`),
-   then flip `MainViewController()` from the placeholder to `App()`. This is the payoff: it makes
-   iOS render the real app, proves the driver/graph/formatting at runtime, and unblocks the
-   never-built **desktop app (WP8)**.
-2. **WP-iOS-7** — CI (macOS runner: assemble the framework), and the deprecation cleanup.
+WP7 is done and runtime-verified. Remaining, in rough priority:
 
-**Estimate accuracy:** the ~1.5–2 week estimate held for the *seam* work (it was as mechanical as
-promised). The unbudgeted cost was the toolchain bump + making `commonMain` genuinely native-clean —
-roughly a day that the plan priced at zero, because it assumed a fact ("native-clean") that only a
-native compile could have established.
+1. **Android regression run** — `MainActivity` now resolves ViewModels via `koinViewModel()` inside
+   the shared `App()` (was `by viewModel()`), and Koin went 4.0.0→4.1.1. Behaviour should be
+   identical; not yet re-confirmed on a device.
+2. **Desktop app (WP8)** — now unblocked: `App()` is common. A `desktopApp` with
+   `application { Window { App() } }`, the JDBC driver, an `AppConfig`, and a desktop Koin module.
+3. **Real `rememberFilePicker`**, then the iOS **Share Extension** — the two things that make iOS a
+   first-class client rather than a viewer.
+4. **WP-iOS-7** — CI (macOS runner: assemble/link the framework), and the kotlinx-datetime 0.7
+   deprecation cleanup.
+
+**Estimate accuracy:** the ~1.5–2 week estimate held for the *seam* work — it was as mechanical as
+promised, WP7 included. The unbudgeted cost was entirely **dependency/toolchain alignment**: the
+forced Kotlin bump (§3.1), making `commonMain` genuinely native-clean (§3.2), the kotlinx-datetime
+skew (§3.3), and the Koin/lifecycle link saga (§3.6). Every one was a version-compatibility problem
+invisible to the JVM and, in two cases, invisible to compilation itself. That — not the seam
+plumbing — is where an "add iOS to an existing KMP app" estimate should put its contingency.
