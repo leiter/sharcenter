@@ -16,9 +16,9 @@ import platform.Foundation.NSUserDomainMask
  * cinterop. A [PlatformUri] is either a `file://` URL (from the document picker) or a bare path;
  * both resolve to a filesystem path.
  *
- * ⚠️ When the real document picker lands (it currently yields nothing on iOS v1), files it returns
- * are *security-scoped* — the caller must `startAccessingSecurityScopedResource` around the read.
- * That wiring belongs with the picker; this reads plain paths for now.
+ * The document picker presents with `asCopy = true` (see [rememberFilePicker]), so the URLs it
+ * returns point at ordinary copies in the app's temp sandbox — *not* security-scoped resources.
+ * There is therefore no `startAccessingSecurityScopedResource` to bracket the read with here.
  */
 class IosFileAccess : FileAccess {
 
