@@ -1,5 +1,6 @@
 package cut.the.crap.ui
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -8,6 +9,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.navigation.compose.rememberNavController
 import cut.the.crap.data.backup.BackupManager
 import cut.the.crap.platform.AppRestarter
@@ -54,6 +57,7 @@ fun App() {
 
         val navController = rememberNavController()
         val scope = rememberCoroutineScope()
+        val focusManager = LocalFocusManager.current
 
         val action: (Action) -> Unit = {
             handleAction(
@@ -72,7 +76,15 @@ fun App() {
         }
 
         Surface(
-            modifier = Modifier.fillMaxSize(),
+            // Tap-outside-to-dismiss: a tap that reaches the root Surface is one no TextField,
+            // button, or scrollable consumed, so clearing focus here hides the soft keyboard
+            // without stealing taps from interactive content. detectTapGestures only fires on a
+            // real tap (not a drag/scroll), so scrolling still works. Common to every platform.
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = { focusManager.clearFocus() })
+                },
             color = MaterialTheme.colorScheme.background,
         ) {
             NavigationGraph(
