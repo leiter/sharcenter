@@ -1,14 +1,20 @@
 package cut.the.crap
 
 import androidx.compose.ui.window.ComposeUIViewController
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+import coil3.network.ktor2.KtorNetworkFetcherFactory
+import coil3.request.crossfade
 import cut.the.crap.ui.App
 import cut.the.crap.data.rest.AppConfig
+import cut.the.crap.data.rest.httpClientEngine
 import cut.the.crap.data.rest.networkModule
 import cut.the.crap.data.rest.repositoryModule
 import cut.the.crap.di.iosDatabaseModule
 import cut.the.crap.di.iosPlatformModule
 import cut.the.crap.di.viewModelModule
 import cut.the.crap.share.shareModule
+import io.ktor.client.HttpClient
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import platform.UIKit.UIViewController
@@ -37,6 +43,25 @@ fun setupKoin() {
             shareModule,
             viewModelModule,
         )
+    }
+    setupImageLoader()
+}
+
+/**
+ * Coil's singleton ImageLoader for iOS — the counterpart to Android's
+ * `MyApplication : SingletonImageLoader.Factory`. Coil 3 ships no network fetcher, so without this
+ * the link-card thumbnails (`AsyncImage`) never load on iOS. `setSafe` sets the factory only if one
+ * isn't already installed. The fetcher gets its own Ktor client on the Darwin engine — separate from
+ * the API client, which has a base-URL `defaultRequest` that must not be prepended to image URLs.
+ */
+private fun setupImageLoader() {
+    SingletonImageLoader.setSafe { context ->
+        ImageLoader.Builder(context)
+            .components {
+                add(KtorNetworkFetcherFactory(httpClient = { HttpClient(httpClientEngine()) }))
+            }
+            .crossfade(true)
+            .build()
     }
 }
 

@@ -121,6 +121,9 @@ kotlin {
             // iOS targets above.
             implementation(libs.sqldelight.native.driver)
             implementation(libs.ktor.client.darwin)
+            // Coil's Ktor network fetcher — Coil 3 ships none, so iOS must add it explicitly (as
+            // :app does for Android) or AsyncImage can't load the link thumbnails.
+            implementation(libs.coil.network.ktor2)
         }
         val desktopTest by getting {
             dependencies {
