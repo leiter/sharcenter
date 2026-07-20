@@ -30,7 +30,7 @@ actual. What it did *not* predict was a toolchain/dependency problem (see §3).
 |---|---|
 | **iOS-1** | `handleAction` + the `Screen` destinations → `commonMain`, behind a new **`AppRestarter`** seam plus the existing `Notifier`/`BackupManager`/`CoroutineScope`. `NavigationGraph` stayed in `:app`. |
 | **iOS-2** | iOS targets + framework; **Kotlin 2.1.21→2.2.20, CMP 1.8.2→1.10.3** (forced, see §3); `commonMain` made genuinely Native-clean. |
-| **iOS-3** | `iosMain` actuals: `Log`→println, `httpClientEngine`→**Darwin**, `preferencesPath`→`NSDocumentDirectory`, `LocaleFormat`→`NSNumberFormatter`/`NSDateFormatter`. `rememberFilePicker` **stubbed**. |
+| **iOS-3** | `iosMain` actuals: `Log`→println, `httpClientEngine`→**Darwin**, `preferencesPath`→`NSDocumentDirectory`, `LocaleFormat`→`NSNumberFormatter`/`NSDateFormatter`. `rememberFilePicker` stubbed *at the time* — **since implemented for real** (`UIDocumentPickerViewController`; see §6). |
 | **iOS-4** | `Clipboard`→UIPasteboard, `UrlOpener`→`openURL`, `Sharer`→`UIActivityViewController`, `Notifier`→SharedFlow, `FileAccess`→**okio** (no cinterop), `LoginFlow`/`AppRestarter`/`BackupManager`→capability-flagged no-ops, `createDriver`→**NativeSqliteDriver** (foreign keys on), `iosPlatformModule` + `iosDatabaseModule`. |
 | **iOS-5** | **`AppConfig`** seam replaces `BuildConfig`; `networkModule` + `repositoryModule` → `commonMain`; `androidAppModule` (AppConfig from BuildConfig + `YouTubeMetadataBackfiller`); iOS `setupKoin()` + `MainViewController()`. |
 | **iOS-6** | `iosApp/` — SwiftUI host, **XcodeGen** `project.yml` (no hand-written `.pbxproj`), Gradle `embedAndSignAppleFrameworkForXcode` pre-build script. **Launches on the Simulator.** |
@@ -151,7 +151,6 @@ klib was built with a Kotlin ≤ ours. Both edges bit here.
 
 | Item | Why |
 |---|---|
-| **Real `rememberFilePicker`** | `UIDocumentPickerViewController` + delegate + **security-scoped URLs** (which the iOS `FileAccess` must cooperate with). Needs *presentation* testing, not just compilation. Import/restore is capability-flagged in v1, so the stub yields nothing. |
 | **Backup/restore, WebView X-login** | `IosBackupManager` / `IosLoginFlow.isSupported = false`. Android impls are MediaStore/SAF + WebView specific. Concrete plans: §6.2, §6.3. |
 | **iOS Share Extension** | Separate target + app groups. The platform-agnostic **share pipeline is now extracted** (`SharedUrlProcessor`, commonMain), so the remaining work is the Xcode target + wiring, not the logic. Concrete plan: §6.1. |
 | **iOS test suite / CI** | The suite is JVM-only (JUnit/MockK/Truth). Running it on `iosSimulatorArm64` means porting the test libs — real work, not a source-set add. **WP-iOS-7.** |
@@ -168,8 +167,9 @@ WP7 is done and runtime-verified. Remaining, in rough priority:
    identical; not yet re-confirmed on a device.
 2. **Desktop app (WP8)** — now unblocked: `App()` is common. A `desktopApp` with
    `application { Window { App() } }`, the JDBC driver, an `AppConfig`, and a desktop Koin module.
-3. **Real `rememberFilePicker`**, then the iOS **Share Extension** — the two things that make iOS a
-   first-class client rather than a viewer.
+3. **iOS Share Extension** — now the main thing that makes iOS a first-class client rather than a
+   viewer (the real `rememberFilePicker` already landed). The share pipeline is extracted (§6.1); the
+   remaining work is the Xcode target + App Group container.
 4. **WP-iOS-7** — CI (macOS runner: assemble/link the framework), and the kotlinx-datetime 0.7
    deprecation cleanup.
 
@@ -189,6 +189,8 @@ present, every platform seam DI-bound) and that the remaining gaps are implement
 missing wiring. Small fixes landed immediately; the three large features have concrete plans below.
 
 ### Landed
+- **Real `rememberFilePicker`.** The `iOS-3` stub was replaced with a `UIDocumentPickerViewController`
+  implementation (with the weak-delegate retention fix), so file import works — no longer deferred.
 - **Notifier feedback now renders on iOS.** `IosNotifier`/`DesktopNotifier` published to a
   `SharedFlow` that nothing collected — every toast/snackbar was silently dropped. The buffered-flow
   impl moved to a shared `FlowNotifier`/`ObservableNotifier` (commonMain) and the collector was added
