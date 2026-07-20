@@ -22,6 +22,16 @@
     <string>1</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
+    <!-- IosFileAccess.saveToDownloads writes exports into the app's Documents directory (iOS has
+         no Downloads folder). These two keys are what actually make that directory reachable:
+         UIFileSharingEnabled exposes it in the Files app under "On My iPhone > ShareCenter", and
+         LSSupportsOpeningDocumentsInPlace lets Files open/edit those exports in place rather than
+         handing out a copy. Without both, an export "succeeds" into a sandbox the user cannot
+         browse. -->
+    <key>UIFileSharingEnabled</key>
+    <true/>
+    <key>LSSupportsOpeningDocumentsInPlace</key>
+    <true/>
     <!-- Required by Compose Multiplatform: without it, its startup PlistSanityCheck throws.
          Lets Compose drive the display at its full refresh rate (e.g. 120Hz ProMotion). -->
     <key>CADisableMinimumFrameDurationOnPhone</key>
