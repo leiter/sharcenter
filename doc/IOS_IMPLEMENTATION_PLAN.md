@@ -152,8 +152,8 @@ klib was built with a Kotlin ≤ ours. Both edges bit here.
 | Item | Why |
 |---|---|
 | **Real `rememberFilePicker`** | `UIDocumentPickerViewController` + delegate + **security-scoped URLs** (which the iOS `FileAccess` must cooperate with). Needs *presentation* testing, not just compilation. Import/restore is capability-flagged in v1, so the stub yields nothing. |
-| **Backup/restore, WebView X-login** | `IosBackupManager` / `IosLoginFlow.isSupported = false`. Android impls are MediaStore/SAF + WebView specific. |
-| **iOS Share Extension** | Separate target + app groups. |
+| **Backup/restore, WebView X-login** | `IosBackupManager` / `IosLoginFlow.isSupported = false`. Android impls are MediaStore/SAF + WebView specific. Concrete plans: §6.2, §6.3. |
+| **iOS Share Extension** | Separate target + app groups. The platform-agnostic **share pipeline is now extracted** (`SharedUrlProcessor`, commonMain), so the remaining work is the Xcode target + wiring, not the logic. Concrete plan: §6.1. |
 | **iOS test suite / CI** | The suite is JVM-only (JUnit/MockK/Truth). Running it on `iosSimulatorArm64` means porting the test libs — real work, not a source-set add. **WP-iOS-7.** |
 | **kotlinx-datetime 0.7 deprecations** | `dayOfMonth`→`day`, `monthNumber`→`month`, `Instant` typealias. Warnings only. |
 
@@ -179,3 +179,67 @@ forced Kotlin bump (§3.1), making `commonMain` genuinely native-clean (§3.2), 
 skew (§3.3), and the Koin/lifecycle link saga (§3.6). Every one was a version-compatibility problem
 invisible to the JVM and, in two cases, invisible to compilation itself. That — not the seam
 plumbing — is where an "add iOS to an existing KMP app" estimate should put its contingency.
+
+---
+
+## 6. iOS parity gaps — status & plans
+
+An Android↔iOS gap scan (2026-07-20) confirmed the architecture is symmetric (all `expect`/`actual`
+present, every platform seam DI-bound) and that the remaining gaps are implementation depth, not
+missing wiring. Small fixes landed immediately; the three large features have concrete plans below.
+
+### Landed
+- **Notifier feedback now renders on iOS.** `IosNotifier`/`DesktopNotifier` published to a
+  `SharedFlow` that nothing collected — every toast/snackbar was silently dropped. The buffered-flow
+  impl moved to a shared `FlowNotifier`/`ObservableNotifier` (commonMain) and the collector was added
+  to `App()` (a root `SnackbarHost`). Android keeps its system Toast (plain `Notifier`, `as?` skips
+  the collector). *Note:* the desktop app's own composition root (`desktopApp/App.kt`) does not use
+  the shared `App()`, so desktop still needs the same collector added — tracked in §5.
+- **iOS exports reachable in Files.** `UIFileSharingEnabled` + `LSSupportsOpeningDocumentsInPlace`
+  added to `Info.plist`; `IosFileAccess.saveToDownloads` now lands in a browsable directory.
+- **ATS narrowed.** `NSAllowsArbitraryLoads` (blanket cleartext, App-Store review flag) replaced with
+  `NSAllowsLocalNetworking` — keeps the LAN dev server working, closes the open-internet hole.
+- **Share pipeline extracted.** The resolve → save/enrich → handle-pool logic moved out of Android's
+  `ShareReceiverActivity` into `SharedUrlProcessor` (commonMain, unit-tested in `desktopTest`). This
+  is the prerequisite for §6.1: iOS can now drive identical share logic.
+
+### 6.1 iOS Share Extension  *(largest; the app's namesake feature)*
+- **Goal:** an entry in the iOS share sheet that ingests a shared URL exactly as Android's
+  `ShareReceiverActivity` does.
+- **Xcode:** new **Share Extension** target in `iosApp.xcodeproj`; its own `Info.plist` with an
+  `NSExtension` `NSExtensionActivationRule` matching `public.url`/`public.plain-text`.
+- **Data sharing:** the extension runs in a **separate process**, so the DB and prefs must move to an
+  **App Group** container (`group.<bundle-id>`) — update `preferencesPath`/`DatabaseFactory.ios` to
+  resolve the shared container, add the App Groups entitlement to both targets. *This is the real
+  work and the main risk.*
+- **Kotlin:** expose a small suspend entry point (e.g. `ShareIngest.handle(url)`) that starts a
+  minimal Koin graph (repos + `shareModule` only, no UI) and calls `SharedUrlProcessor.resolve` then
+  `saveLink`/`saveHandle`. Skip the edit dialog and X-login (unsupported on iOS → save unresolved).
+- **Feedback:** the extension has no Compose host, so `Notifier` won't show; use the extension's own
+  completion UI or a silent finish.
+- **Test:** processor logic already covered; the target itself needs manual share-sheet testing.
+- **Estimate:** 2–4 days, most of it App Group/entitlement plumbing and provisioning.
+
+### 6.2 iOS backup/restore
+- **Goal:** replace the inert `IosBackupManager` with a real Files/iCloud story so iOS users aren't
+  without any backup (Android auto-backs-up daily on launch).
+- **Approach:** implement `BackupManager` over the shared okio `FileSystem` writing timestamped DB
+  copies into the Documents/App-Group container (now user-visible via the Files keys from §Landed);
+  optionally an iCloud `NSFileManager.url(forUbiquityContainerIdentifier:)` tier later.
+- **Wire daily backup:** call `performDailyBackupIfNeeded()` from `iOSApp.init` (Android does it in
+  `MainActivity`). `AppRestarter` stays unsupported — restore prompts the user to reopen.
+- **Test:** `BackupManager` contract is fakeable in `desktopTest`; the iOS FS paths need device test.
+- **Estimate:** 2–3 days for local-file backup; iCloud is a separate, larger effort.
+
+### 6.3 WKWebView X sign-in
+- **Goal:** flip `IosLoginFlow.isSupported` to true with a real interactive flow so X redirect
+  resolution works on iOS (today it always saves unresolved).
+- **Approach:** present a `WKWebView` (or `ASWebAuthenticationSession`) from `topViewController()`,
+  capture the session cookies/credentials the resolver needs, persist them where the X handler reads.
+- **Caveat:** depends on the X handler's credential contract; confirm what `XSharedLinkHandler.resolve`
+  expects before building the UI. Interactive — needs device testing.
+- **Estimate:** 2–4 days, mostly auth-cookie handling and testing.
+
+### Not iOS-specific (all targets)
+`ImportExportScreen` export/import TODOs and `MyEditDialog`'s bare `TODO()` are in commonMain and
+affect Android/desktop equally — out of scope for iOS parity.

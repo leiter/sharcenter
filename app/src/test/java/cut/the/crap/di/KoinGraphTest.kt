@@ -4,14 +4,19 @@ import kotlinx.coroutines.CoroutineDispatcher
 
 import android.app.Application
 import android.content.Context
+import cut.the.crap.data.domain.ContentLinkRepository
+import cut.the.crap.data.domain.KeywordRepository
 import cut.the.crap.data.rest.networkModule
 import cut.the.crap.data.rest.repositoryModule
+import cut.the.crap.share.SharedUrlProcessor
 import cut.the.crap.share.shareModule
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
 import org.junit.Test
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.dsl.module
+import org.koin.test.verify.definition
+import org.koin.test.verify.injectedParameters
 import org.koin.test.verify.verify
 
 /**
@@ -54,6 +59,17 @@ class KoinGraphTest {
                 // No other definition constructor-injects a raw String/Boolean, so nothing real is hidden.
                 String::class,
                 Boolean::class,
+            ),
+            // SharedUrlProcessor takes a List<SharedLinkHandler>. Constructor reflection carries the
+            // generic arg (List<SharedLinkHandler>), but the shareModule binding is keyed under the
+            // bare List::class, so verify() reports it missing. Declaring the params as bare KClasses
+            // matches the binding. The two repositories are named so this stays a real check on them.
+            injections = injectedParameters(
+                definition<SharedUrlProcessor>(
+                    ContentLinkRepository::class,
+                    KeywordRepository::class,
+                    List::class,
+                ),
             ),
         )
     }

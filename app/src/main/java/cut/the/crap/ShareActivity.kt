@@ -42,17 +42,12 @@ import androidx.compose.ui.Modifier
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
-import cut.the.crap.data.domain.ContentLink
-import cut.the.crap.data.domain.ContentLinkRepository
-import cut.the.crap.data.domain.KeyWord
-import cut.the.crap.data.domain.KeywordRepository
-import cut.the.crap.data.domain.KeywordType
 import cut.the.crap.data.preferences.SettingsRepository
-import cut.the.crap.share.SharedLinkHandler
-import cut.the.crap.share.UrlResolution
-import cut.the.crap.tools.LinkMetadata
+import cut.the.crap.share.HandleResult
+import cut.the.crap.share.ResolveResult
+import cut.the.crap.share.SaveResult
+import cut.the.crap.share.SharedUrlProcessor
 import cut.the.crap.ui.XLoginActivity
-import cut.the.crap.ui.components.api.ChipsType
 import cut.the.crap.ui.content.settings.ThemePreference
 import cut.the.crap.ui.theme.MyAppTheme
 import kotlinx.coroutines.flow.first
@@ -63,17 +58,14 @@ private const val TAG = "ShareReceiver"
 
 class ShareReceiverActivity : ComponentActivity() {
 
-    private val contentRepository: ContentLinkRepository by inject()
-
     private val settingsRepository: SettingsRepository by inject()
 
-    private val keywordRepository: KeywordRepository by inject()
-
     /**
-     * Ordered chain of platform handlers (see [SharedLinkHandler]). The first that recognizes a
-     * shared URL owns its processing; the generic fallback is guaranteed last.
+     * The platform-agnostic share pipeline (resolve → save/enrich → handle pool). This activity is
+     * now just the Android shell around it: intent parsing, the edit dialog, the X sign-in prompt,
+     * and toast feedback. See [SharedUrlProcessor].
      */
-    private val sharedLinkHandlers: List<SharedLinkHandler> by inject()
+    private val processor: SharedUrlProcessor by inject()
 
     // Store pending URL for retry after login
     private var pendingUrl: String? = null
@@ -93,8 +85,7 @@ class ShareReceiverActivity : ComponentActivity() {
             pendingUrl?.let { url ->
                 Log.d(TAG, "Login cancelled, saving unresolved URL")
                 lifecycleScope.launch {
-                    val handler = sharedLinkHandlers.first { it.recognizes(url) }
-                    saveUrlAndFinish(handler, url, wasResolved = false)
+                    saveUrlAndFinish(url, wasResolved = false)
                 }
             } ?: finish()
         }
@@ -154,23 +145,19 @@ class ShareReceiverActivity : ComponentActivity() {
 
     private fun processUrl(url: String, isRetry: Boolean) {
         lifecycleScope.launch {
-            // The first handler that recognizes the URL owns its processing (generic fallback last).
-            val handler = sharedLinkHandlers.first { it.recognizes(url) }
-            when (val resolution = handler.resolve(url)) {
-                is UrlResolution.Resolved -> {
-                    Log.d(TAG, "URL resolved: ${resolution.url} (changed=${resolution.changed})")
-                    saveUrlAndFinish(handler, resolution.url, wasResolved = resolution.changed)
+            when (val resolution = processor.resolve(url)) {
+                is ResolveResult.Ready -> {
+                    saveUrlAndFinish(resolution.url, wasResolved = resolution.wasResolved)
                 }
 
-                is UrlResolution.AuthRequired -> {
-                    Log.d(TAG, "Auth required for URL resolution")
+                is ResolveResult.AuthRequired -> {
                     if (isRetry) {
                         // Already tried login, just save the unresolved URL
                         Log.w(TAG, "Auth still failing after login, saving unresolved")
-                        saveUrlAndFinish(handler, url, wasResolved = false)
+                        saveUrlAndFinish(resolution.url, wasResolved = false)
                     } else {
                         // Prompt user to login, then retry via the activity result callback
-                        pendingUrl = url
+                        pendingUrl = resolution.url
                         val reason = if (resolution.credentialsPresent) {
                             XLoginActivity.REASON_AUTH_EXPIRED
                         } else {
@@ -199,10 +186,10 @@ class ShareReceiverActivity : ComponentActivity() {
         xLoginLauncher.launch(loginIntent)
     }
 
-    private suspend fun saveUrlAndFinish(handler: SharedLinkHandler, url: String, wasResolved: Boolean) {
+    private suspend fun saveUrlAndFinish(url: String, wasResolved: Boolean) {
         // Some shares save a handle to the keyword pool instead of storing the link — e.g. an
-        // X/Twitter profile. The handler decides; when it returns a handle we skip the link insert.
-        val handle = handler.handleToSaveInstead(url)
+        // X/Twitter profile. The processor decides; when it returns a handle we skip the link insert.
+        val handle = processor.handleToSaveInstead(url)
         if (handle != null) {
             saveHandleAndFinish(handle)
             return
@@ -210,9 +197,9 @@ class ShareReceiverActivity : ComponentActivity() {
         val settings = settingsRepository.settingsFlow.first()
         if (settings.editSharedLinkBeforeSave) {
             // Let the user review/edit the link (and add keywords) before it's saved.
-            showEditDialog(handler, url, wasResolved, settings.themePreference)
+            showEditDialog(url, wasResolved, settings.themePreference)
         } else {
-            insertAndFinish(handler, url, keywords = emptyList(), wasResolved = wasResolved)
+            insertAndFinish(url, keywords = emptyList(), wasResolved = wasResolved)
         }
     }
 
@@ -221,7 +208,6 @@ class ShareReceiverActivity : ComponentActivity() {
      * edited) link and keywords are inserted; on cancel nothing is saved.
      */
     private fun showEditDialog(
-        handler: SharedLinkHandler,
         url: String,
         wasResolved: Boolean,
         themePreference: ThemePreference
@@ -232,7 +218,7 @@ class ShareReceiverActivity : ComponentActivity() {
                     initialUrl = url,
                     onSave = { editedUrl, keywords ->
                         lifecycleScope.launch {
-                            insertAndFinish(handler, editedUrl, keywords, wasResolved)
+                            insertAndFinish(editedUrl, keywords, wasResolved)
                         }
                     },
                     onCancel = { finish() }
@@ -242,59 +228,38 @@ class ShareReceiverActivity : ComponentActivity() {
     }
 
     private suspend fun insertAndFinish(
-        handler: SharedLinkHandler,
         url: String,
         keywords: List<String>,
         wasResolved: Boolean
     ) {
-        var contentLink = ContentLink(link = url)
-        if (keywords.isNotEmpty()) {
-            contentLink = LinkMetadata.setTags(contentLink, keywords, ChipsType.KeyWords)
-        }
-        contentRepository.insert(contentLink)
+        // Insert first and toast immediately, then enrich — enrichment does network I/O, so the
+        // user sees "saved" without waiting on it. lifecycleScope is cancelled on finish(), so
+        // enrichSaved must complete before finish().
+        val result: SaveResult = processor.insertLink(url, keywords, wasResolved)
 
-        val message = if (wasResolved) {
+        val message = if (result.wasResolved) {
             getString(Res.string.share_toast_link_resolved_saved)
         } else {
             getString(Res.string.share_toast_link_saved)
         }
         Toast.makeText(this@ShareReceiverActivity, message, Toast.LENGTH_SHORT).show()
 
-        // Let the platform handler enrich the saved row (e.g. YouTube title/thumbnail) before we
-        // finish — lifecycleScope is cancelled on finish(), so any network fetch must complete here.
-        // insert() does not return the row id, so re-read the just-saved link by its timestamp.
-        val saved = contentRepository
-            .byTimeRange(start = contentLink.added - 1000, end = contentLink.added + 1000)
-            .firstOrNull { it.link == url }
-        if (saved != null) {
-            try {
-                handler.enrich(saved)?.let { enriched ->
-                    contentRepository.update(enriched)
-                    Log.d(TAG, "Metadata enriched for: $url")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Metadata enrichment failed for: $url", e)
-            }
-        }
-
+        processor.enrichSaved(url, result.savedAt)
         finish()
     }
 
     /**
-     * Saves [handle] to the `ACCOUNT` keyword pool — the same pool the handles dialog reads from —
-     * and finishes. Deduped case-insensitively: skipping an existing handle avoids the unique-index
-     * REPLACE from resetting its favorite/usage stats.
+     * Saves [handle] to the `ACCOUNT` keyword pool (deduped case-insensitively by the processor)
+     * and finishes, toasting whether it was newly added or already present.
      */
     private suspend fun saveHandleAndFinish(handle: String) {
-        val existing = keywordRepository.getByType(KeywordType.ACCOUNT).first()
-        if (existing.any { it.text.equals(handle, ignoreCase = true) }) {
-            Log.d(TAG, "Handle already in pool, skipping: $handle")
-            Toast.makeText(this, getString(Res.string.share_toast_handle_exists, handle), Toast.LENGTH_SHORT).show()
+        val result: HandleResult = processor.saveHandle(handle)
+        val message = if (result.alreadyExisted) {
+            getString(Res.string.share_toast_handle_exists, result.handle)
         } else {
-            keywordRepository.insert(KeyWord(text = handle, type = KeywordType.ACCOUNT))
-            Log.d(TAG, "Added handle to pool: $handle")
-            Toast.makeText(this, getString(Res.string.share_toast_handle_saved, handle), Toast.LENGTH_SHORT).show()
+            getString(Res.string.share_toast_handle_saved, result.handle)
         }
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         finish()
     }
 

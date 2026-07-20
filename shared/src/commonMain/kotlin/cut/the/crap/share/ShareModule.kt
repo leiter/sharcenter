@@ -30,4 +30,8 @@ val shareModule = module {
             get<GenericSharedLinkHandler>(),
         )
     }
+
+    // The platform-agnostic share pipeline. Android's ShareReceiverActivity and a future iOS Share
+    // Extension both resolve this rather than each reimplementing resolve/save/enrich.
+    factory { SharedUrlProcessor(get(), get(), get()) }
 }

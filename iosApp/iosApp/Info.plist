@@ -44,11 +44,14 @@
         <string>UIInterfaceOrientationLandscapeLeft</string>
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
-    <!-- The dev job-queue server is plain http://, which iOS App Transport Security blocks by
-         default. Allow arbitrary loads for development; tighten (or serve over https) before ship. -->
+    <!-- The dev job-queue server is a plain-http:// address on the LAN, which iOS App Transport
+         Security blocks by default. NSAllowsLocalNetworking permits cleartext to local/reserved
+         addresses (loopback, .local, and private ranges like 192.168.x.x) WITHOUT the blanket
+         NSAllowsArbitraryLoads hole that would also allow cleartext to the whole internet — and
+         which is an App Store review flag. A production https:// endpoint needs neither key. -->
     <key>NSAppTransportSecurity</key>
     <dict>
-        <key>NSAllowsArbitraryLoads</key>
+        <key>NSAllowsLocalNetworking</key>
         <true/>
     </dict>
 </dict>
