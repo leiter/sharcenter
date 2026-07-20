@@ -151,7 +151,7 @@ klib was built with a Kotlin ≤ ours. Both edges bit here.
 
 | Item | Why |
 |---|---|
-| **Backup/restore, WebView X-login** | `IosBackupManager` / `IosLoginFlow.isSupported = false`. Android impls are MediaStore/SAF + WebView specific. Concrete plans: §6.2, §6.3. |
+| **Backup *restore*, WebView X-login** | Backup itself now works (§6, Landed); *restore* stays deferred (needs a live-DB swap + relaunch, and `IosAppRestarter.isSupported = false`). `IosLoginFlow.isSupported = false`. Concrete plans: §6.2, §6.3. |
 | **iOS Share Extension** | Separate target + app groups. The platform-agnostic **share pipeline is now extracted** (`SharedUrlProcessor`, commonMain), so the remaining work is the Xcode target + wiring, not the logic. Concrete plan: §6.1. |
 | **iOS test suite / CI** | The suite is JVM-only (JUnit/MockK/Truth). Running it on `iosSimulatorArm64` means porting the test libs — real work, not a source-set add. **WP-iOS-7.** |
 | **kotlinx-datetime 0.7 deprecations** | `dayOfMonth`→`day`, `monthNumber`→`month`, `Instant` typealias. Warnings only. |
@@ -191,6 +191,16 @@ missing wiring. Small fixes landed immediately; the three large features have co
 ### Landed
 - **Real `rememberFilePicker`.** The `iOS-3` stub was replaced with a `UIDocumentPickerViewController`
   implementation (with the weak-delegate retention fix), so file import works — no longer deferred.
+- **iOS local backup (backup-only).** `IosBackupManager` was inert; it now writes timestamped copies
+  of the SQLite DB into `Documents/backups/` (Files-visible), reading the file at sqliter's real
+  location (`<Application Support>/databases/app_database`) and running `PRAGMA wal_checkpoint(TRUNCATE)`
+  first so the single copied file is complete + consistent. Daily cadence + "keep last N" retention
+  reuse the same `backupFrequency`/`backupRetention` settings and `toStartOfDay` math as Android, and
+  `performDailyBackupIfNeeded()` runs from `setupKoin()`. **Restore stays unsupported** (§6.2).
+  *Compile-verified only* — no iOS test suite exists (WP-iOS-7). On a simulator, verify: (1) the DB
+  path resolves and a backup file appears under On My iPhone → ShareCenter → backups; (2) restoring
+  that copied file into a fresh install opens without "database disk image is malformed" (the WAL
+  check); (3) retention prunes to N and the daily check skips within the same day.
 - **Notifier feedback now renders on iOS.** `IosNotifier`/`DesktopNotifier` published to a
   `SharedFlow` that nothing collected — every toast/snackbar was silently dropped. The buffered-flow
   impl moved to a shared `FlowNotifier`/`ObservableNotifier` (commonMain) and the collector was added
@@ -223,15 +233,15 @@ missing wiring. Small fixes landed immediately; the three large features have co
 - **Estimate:** 2–4 days, most of it App Group/entitlement plumbing and provisioning.
 
 ### 6.2 iOS backup/restore
-- **Goal:** replace the inert `IosBackupManager` with a real Files/iCloud story so iOS users aren't
-  without any backup (Android auto-backs-up daily on launch).
-- **Approach:** implement `BackupManager` over the shared okio `FileSystem` writing timestamped DB
-  copies into the Documents/App-Group container (now user-visible via the Files keys from §Landed);
-  optionally an iCloud `NSFileManager.url(forUbiquityContainerIdentifier:)` tier later.
-- **Wire daily backup:** call `performDailyBackupIfNeeded()` from `iOSApp.init` (Android does it in
-  `MainActivity`). `AppRestarter` stays unsupported — restore prompts the user to reopen.
-- **Test:** `BackupManager` contract is fakeable in `desktopTest`; the iOS FS paths need device test.
-- **Estimate:** 2–3 days for local-file backup; iCloud is a separate, larger effort.
+- **Backup: DONE** (see §Landed). `IosBackupManager` now writes timestamped, WAL-checkpointed DB
+  copies into `Documents/backups/` (Files-visible), with the same daily cadence + retention settings
+  as Android, wired into `setupKoin()`. Compile-verified; **not yet device-verified** — see §Landed
+  for the checks to run on a simulator.
+- **Restore: still deferred.** Replacing the live DB needs every connection closed + a relaunch, and
+  `IosAppRestarter.isSupported = false`. A restore flow would have to swap the file on next cold
+  start and ask the user to reopen. ~1–2 days.
+- **Optional later:** an iCloud (`NSFileManager.url(forUbiquityContainerIdentifier:)`) tier so
+  backups survive device loss — separate, larger effort.
 
 ### 6.3 WKWebView X sign-in
 - **Goal:** flip `IosLoginFlow.isSupported` to true with a real interactive flow so X redirect

@@ -6,6 +6,7 @@ import coil3.SingletonImageLoader
 import coil3.network.ktor2.KtorNetworkFetcherFactory
 import coil3.request.crossfade
 import cut.the.crap.ui.App
+import cut.the.crap.data.backup.BackupManager
 import cut.the.crap.data.rest.AppConfig
 import cut.the.crap.data.rest.httpClientEngine
 import cut.the.crap.data.rest.networkModule
@@ -15,6 +16,9 @@ import cut.the.crap.di.iosPlatformModule
 import cut.the.crap.di.viewModelModule
 import cut.the.crap.share.shareModule
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import platform.UIKit.UIViewController
@@ -33,7 +37,7 @@ private const val DEV_API_BASE_URL = "http://192.168.1.100:8080"
  * from `BuildConfig` in `androidAppModule`).
  */
 fun setupKoin() {
-    startKoin {
+    val koin = startKoin {
         modules(
             module { single { AppConfig(apiBaseUrl = DEV_API_BASE_URL, isDebug = true) } },
             iosPlatformModule,
@@ -43,8 +47,14 @@ fun setupKoin() {
             shareModule,
             viewModelModule,
         )
-    }
+    }.koin
     setupImageLoader()
+
+    // Fire-and-forget daily database backup, mirroring Android's MainActivity.onCreate. Errors are
+    // swallowed inside performDailyBackupIfNeeded (it returns false), so this never fails startup.
+    CoroutineScope(Dispatchers.Default).launch {
+        koin.get<BackupManager>().performDailyBackupIfNeeded()
+    }
 }
 
 /**

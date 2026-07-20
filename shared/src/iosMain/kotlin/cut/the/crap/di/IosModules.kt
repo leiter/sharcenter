@@ -75,5 +75,5 @@ val iosDatabaseModule = module {
     singleOf(::ContentItemRepositoryImpl) bind ContentItemRepository::class
     singleOf(::SubjectRepositoryImpl) bind SubjectRepository::class
 
-    single<BackupManager> { IosBackupManager() }
+    single<BackupManager> { IosBackupManager(get(), get()) }
 }
