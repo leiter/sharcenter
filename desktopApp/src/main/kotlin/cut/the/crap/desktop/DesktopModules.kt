@@ -22,7 +22,9 @@ import cut.the.crap.data.domain.KeywordRepository
 import cut.the.crap.data.domain.KeywordRepositoryImpl
 import cut.the.crap.data.domain.SubjectRepository
 import cut.the.crap.data.domain.SubjectRepositoryImpl
+import cut.the.crap.platform.AppRestarter
 import cut.the.crap.platform.Clipboard
+import cut.the.crap.platform.DesktopAppRestarter
 import cut.the.crap.platform.DesktopClipboard
 import cut.the.crap.platform.DesktopFileAccess
 import cut.the.crap.platform.DesktopLoginFlow
@@ -76,6 +78,7 @@ val desktopPlatformModule = module {
     single<UrlOpener> { DesktopUrlOpener() }
     single<LoginFlow> { DesktopLoginFlow() }
     single<Sharer> { DesktopSharer(clipboard = get(), notifier = get()) }
+    single<AppRestarter> { DesktopAppRestarter() }
     single<BackupManager> { DesktopBackupManager() }
 }
 
