@@ -153,7 +153,7 @@ klib was built with a Kotlin ≤ ours. Both edges bit here.
 |---|---|
 | **Backup *restore*, WebView X-login** | Backup itself now works (§6, Landed); *restore* stays deferred (needs a live-DB swap + relaunch, and `IosAppRestarter.isSupported = false`). `IosLoginFlow.isSupported = false`. Concrete plans: §6.2, §6.3. |
 | ~~**iOS Share Extension**~~ | **Implemented** (inbox hand-off) — see §6.1. Pending App Group provisioning + simulator verification. |
-| **iOS test suite / CI** | The suite is JVM-only (JUnit/MockK/Truth). Running it on `iosSimulatorArm64` means porting the test libs — real work, not a source-set add. **WP-iOS-7.** |
+| ~~**iOS test suite / CI**~~ | **Set up** (WP-iOS-7): `commonTest` (kotlin-test, timezone-independent) runs on JVM + native; a first `iosTest`; `.github/workflows/ci.yml` with a JVM job and a macOS job (`iosSimulatorArm64Test` + framework link). The JVM-only exact-string tests stay in `desktopTest`. Native tests are compile-verified here; the macOS job runs on push. |
 | ~~**kotlinx-datetime 0.7 deprecations**~~ | **Done** — `dayOfMonth()`→`day()`, `monthNumber`→`month.ordinal+1`, `kotlinx.datetime.Instant`→`kotlin.time.Instant`. Zero datetime deprecations remain. |
 
 ---
@@ -170,8 +170,10 @@ WP7 is done and runtime-verified. Remaining, in rough priority:
 3. **iOS Share Extension — implemented** (inbox hand-off, §6.1). Remaining: register the App Group
    in the developer account and **verify on a simulator** — the code is in, but the Swift/Xcode side
    is unbuilt off-macOS.
-4. **WP-iOS-7** — CI (macOS runner: assemble/link the framework), and the kotlinx-datetime 0.7
-   deprecation cleanup.
+4. **WP-iOS-7 — done.** iOS test suite (`commonTest`/`iosTest`) + `.github/workflows/ci.yml` (JVM
+   job + macOS job that runs the native tests and links the framework); kotlinx-datetime 0.7
+   deprecations cleared. Remaining growth: migrate more shared logic into `commonTest` (blocked on
+   the desktopTest JUnit/MockK/Truth → kotlin-test port) so it also runs on native.
 
 **Estimate accuracy:** the ~1.5–2 week estimate held for the *seam* work — it was as mechanical as
 promised, WP7 included. The unbudgeted cost was entirely **dependency/toolchain alignment**: the

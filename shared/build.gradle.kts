@@ -100,6 +100,13 @@ kotlin {
             api(libs.koin.core.viewmodel)
             api(libs.koin.compose.viewmodel)
         }
+        // Shared tests that run on EVERY target — JVM (via desktopTest/androidUnitTest) and native
+        // (via iosSimulatorArm64Test). Only multiplatform test libs here: kotlin-test + the
+        // coroutines test dispatcher. JVM-only libs (JUnit4, Truth, MockK) stay in desktopTest.
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
+        }
         androidMain.dependencies {
             api(libs.sqldelight.android.driver)
             // Actual HTTP engine for the httpClientEngine() seam.
