@@ -56,8 +56,8 @@ actual fun formatIntegerForLanguage(value: Long, languageTag: String): String =
 actual fun formatMediumDateForLanguage(date: LocalDate, languageTag: String): String {
     val components = NSDateComponents().apply {
         year = date.year.toLong()
-        month = date.monthNumber.toLong()
-        day = date.dayOfMonth.toLong()
+        month = (date.month.ordinal + 1).toLong() // Month is 1-based for NSDateComponents; ordinal is 0-based
+        day = date.day.toLong()
     }
     val nsDate = NSCalendar.currentCalendar.dateFromComponents(components) ?: return ""
     return NSDateFormatter().apply {

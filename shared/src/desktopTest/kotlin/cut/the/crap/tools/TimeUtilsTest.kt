@@ -2,7 +2,7 @@
 
 package cut.the.crap.tools
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before

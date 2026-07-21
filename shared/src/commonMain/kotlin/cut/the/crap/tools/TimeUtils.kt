@@ -3,7 +3,7 @@
 package cut.the.crap.tools
 
 import kotlin.time.Clock
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -61,7 +61,7 @@ fun normalizeToStartOfDay(timestamp: Long): Long = toStartOfDay(timestamp)
 
 // `dd.MM.yy, HH:mm` — e.g. "13.07.26, 21:27". Shown on every link and post card.
 private val dateTimeFormat = LocalDateTime.Format {
-    dayOfMonth(Padding.ZERO)
+    day(Padding.ZERO)
     char('.')
     monthNumber(Padding.ZERO)
     char('.')
@@ -74,7 +74,7 @@ private val dateTimeFormat = LocalDateTime.Format {
 
 // `dd.MM.yy` — e.g. "13.07.26".
 private val dateOnlyFormat = LocalDateTime.Format {
-    dayOfMonth(Padding.ZERO)
+    day(Padding.ZERO)
     char('.')
     monthNumber(Padding.ZERO)
     char('.')
@@ -87,7 +87,7 @@ private val fileNameFormat = LocalDateTime.Format {
     char('-')
     monthNumber(Padding.ZERO)
     char('-')
-    dayOfMonth(Padding.ZERO)
+    day(Padding.ZERO)
     char('_')
     hour(Padding.ZERO)
     minute(Padding.ZERO)
@@ -100,7 +100,7 @@ private val isoLikeFormat = LocalDateTime.Format {
     char('-')
     monthNumber(Padding.ZERO)
     char('-')
-    dayOfMonth(Padding.ZERO)
+    day(Padding.ZERO)
     char(' ')
     hour(Padding.ZERO)
     char(':')

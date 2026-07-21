@@ -18,7 +18,7 @@ object EciReferenceData {
 
     /** Registration dates arrive as "dd/MM/yyyy". */
     val REGISTRATION_DATE_FORMAT = LocalDate.Format {
-        dayOfMonth(Padding.ZERO)
+        day(Padding.ZERO)
         char('/')
         monthNumber(Padding.ZERO)
         char('/')

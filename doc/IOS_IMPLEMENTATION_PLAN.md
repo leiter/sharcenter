@@ -154,7 +154,7 @@ klib was built with a Kotlin ≤ ours. Both edges bit here.
 | **Backup *restore*, WebView X-login** | Backup itself now works (§6, Landed); *restore* stays deferred (needs a live-DB swap + relaunch, and `IosAppRestarter.isSupported = false`). `IosLoginFlow.isSupported = false`. Concrete plans: §6.2, §6.3. |
 | ~~**iOS Share Extension**~~ | **Implemented** (inbox hand-off) — see §6.1. Pending App Group provisioning + simulator verification. |
 | **iOS test suite / CI** | The suite is JVM-only (JUnit/MockK/Truth). Running it on `iosSimulatorArm64` means porting the test libs — real work, not a source-set add. **WP-iOS-7.** |
-| **kotlinx-datetime 0.7 deprecations** | `dayOfMonth`→`day`, `monthNumber`→`month`, `Instant` typealias. Warnings only. |
+| ~~**kotlinx-datetime 0.7 deprecations**~~ | **Done** — `dayOfMonth()`→`day()`, `monthNumber`→`month.ordinal+1`, `kotlinx.datetime.Instant`→`kotlin.time.Instant`. Zero datetime deprecations remain. |
 
 ---
 
