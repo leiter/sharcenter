@@ -9,6 +9,19 @@
   - Current: `http://192.168.1.100:8080`
   - Needs: Production server URL before deploying
 
+### iOS Share Extension — verification (code landed, commit `cc4afc6`)
+Needs a Mac/Xcode; the Kotlin side is compile-verified but the Swift/Xcode side is unbuilt off-macOS.
+- [ ] **Register `group.cut.the.crap` App Group in the Apple Developer account** for device builds
+  (the simulator is lenient without it). Must match the entitlements on both targets and
+  `APP_GROUP_ID` in `shared/src/iosMain/.../share/ShareInbox.kt`.
+- [ ] **Regenerate the Xcode project**: `cd iosApp && xcodegen generate`, then build both targets.
+- [ ] **Simulator smoke-tests** (per `~/.claude/plans/plan-the-share-extension-parsed-bee.md`):
+  - [ ] Extension shows in the share sheet (Safari → Share → ShareCenter) and dismisses.
+  - [ ] Link appears on next app open (snackbar + in the links list).
+  - [ ] Foreground case: share while app is open, switch back → inbox drains.
+  - [ ] Queue case: share 3 URLs while app closed → all 3 saved, no duplicates.
+  - [ ] Handle case: share an X/Twitter profile URL → lands in the keyword/handle pool, not links.
+
 ### Crash Risk
 - [ ] **ExportLinks dialog** - `MyEditDialog.kt:144`
   - `MyEditDialogStyle.ExportLinks -> TODO()` throws exception if triggered
