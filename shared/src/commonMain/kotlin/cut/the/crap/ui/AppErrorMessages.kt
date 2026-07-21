@@ -10,6 +10,12 @@ import cut.the.crap.shared.resources.bsky_error_not_found
 import cut.the.crap.shared.resources.bsky_error_server
 import cut.the.crap.shared.resources.bsky_error_timeout
 import cut.the.crap.shared.resources.bsky_error_unavailable
+import cut.the.crap.shared.resources.campaign_error_load_failed
+import cut.the.crap.shared.resources.campaign_error_not_found
+import cut.the.crap.shared.resources.campaign_error_server
+import cut.the.crap.shared.resources.campaign_error_timeout
+import cut.the.crap.shared.resources.campaign_error_unexpected_response
+import cut.the.crap.shared.resources.campaign_error_unrecognised_url
 import cut.the.crap.shared.resources.eci_error_invalid_number
 import cut.the.crap.shared.resources.eci_error_load_failed
 import cut.the.crap.shared.resources.eci_error_not_found
@@ -161,6 +167,7 @@ private fun Source.invalidUrlRes(): StringResource = when (this) {
     Source.TIKTOK -> Res.string.tiktok_error_invalid_url
     Source.YOUTUBE -> Res.string.yt_error_invalid_url
     Source.ECI -> Res.string.eci_error_unrecognised_url
+    Source.CAMPAIGN -> Res.string.campaign_error_unrecognised_url
 }
 
 private fun Source.notFoundRes(): StringResource = when (this) {
@@ -170,6 +177,7 @@ private fun Source.notFoundRes(): StringResource = when (this) {
     Source.TIKTOK -> Res.string.tiktok_error_not_found
     Source.YOUTUBE -> Res.string.yt_error_not_found
     Source.ECI -> Res.string.eci_error_not_found
+    Source.CAMPAIGN -> Res.string.campaign_error_not_found
 }
 
 private fun Source.unavailableRes(): StringResource = when (this) {
@@ -179,6 +187,7 @@ private fun Source.unavailableRes(): StringResource = when (this) {
     Source.TIKTOK -> Res.string.tiktok_error_unavailable
     Source.YOUTUBE -> Res.string.yt_error_unavailable
     Source.ECI -> Res.string.eci_error_unexpected_response
+    Source.CAMPAIGN -> Res.string.campaign_error_unexpected_response
 }
 
 private fun Source.serverRes(): StringResource = when (this) {
@@ -188,6 +197,7 @@ private fun Source.serverRes(): StringResource = when (this) {
     Source.TIKTOK -> Res.string.tiktok_error_server
     Source.YOUTUBE -> Res.string.yt_error_server
     Source.ECI -> Res.string.eci_error_server
+    Source.CAMPAIGN -> Res.string.campaign_error_server
 }
 
 private fun Source.timeoutRes(): StringResource = when (this) {
@@ -197,6 +207,7 @@ private fun Source.timeoutRes(): StringResource = when (this) {
     Source.TIKTOK -> Res.string.tiktok_error_timeout
     Source.YOUTUBE -> Res.string.yt_error_timeout
     Source.ECI -> Res.string.eci_error_timeout
+    Source.CAMPAIGN -> Res.string.campaign_error_timeout
 }
 
 private fun Source.fetchFailedRes(): StringResource = when (this) {
@@ -206,4 +217,5 @@ private fun Source.fetchFailedRes(): StringResource = when (this) {
     Source.TIKTOK -> Res.string.tiktok_error_fetch_failed
     Source.YOUTUBE -> Res.string.yt_error_fetch_failed
     Source.ECI -> Res.string.eci_error_load_failed
+    Source.CAMPAIGN -> Res.string.campaign_error_load_failed
 }

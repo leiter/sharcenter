@@ -15,6 +15,12 @@ import org.koin.dsl.module
  *   in :app. Its `Context` resolves from `androidContext()`.
  */
 val androidAppModule = module {
-    single { AppConfig(apiBaseUrl = BuildConfig.API_BASE_URL, isDebug = BuildConfig.DEBUG) }
+    single {
+        AppConfig(
+            apiBaseUrl = BuildConfig.API_BASE_URL,
+            campaignBaseUrl = BuildConfig.CAMPAIGN_BASE_URL,
+            isDebug = BuildConfig.DEBUG,
+        )
+    }
     factoryOf(::YouTubeMetadataBackfiller)
 }

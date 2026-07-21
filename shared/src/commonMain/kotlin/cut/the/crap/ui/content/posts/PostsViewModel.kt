@@ -12,8 +12,8 @@ import cut.the.crap.tools.TextValueWrapper
 import cut.the.crap.ui.components.FilterState
 import cut.the.crap.data.rest.AppError
 import cut.the.crap.data.rest.Result
-import cut.the.crap.data.rest.eci.EciStatistics
-import cut.the.crap.data.rest.eci.EciStatisticsRepository
+import cut.the.crap.data.rest.campaign.Campaign
+import cut.the.crap.data.rest.campaign.CampaignRepository
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.ContentItemAction
@@ -48,15 +48,14 @@ sealed interface PostsSnackbarEvent {
 }
 
 /**
- * One-shot events emitted while loading the European Citizens' Initiative statistics
- * table from the top bar's key button.
+ * One-shot events emitted while loading the action campaign from the top bar's campaign button.
  */
-sealed interface EciUiEvent {
-    /** Statistics loaded and parsed successfully — navigate to the table screen. */
-    data object NavigateToTable : EciUiEvent
+sealed interface CampaignUiEvent {
+    /** Campaign loaded successfully — navigate to the country list. */
+    data object NavigateToCountries : CampaignUiEvent
 
-    /** Loading failed — show [message] in a toast. */
-    data class ShowError(val error: AppError) : EciUiEvent
+    /** Loading failed — show [error] in a toast. */
+    data class ShowError(val error: AppError) : CampaignUiEvent
 }
 
 class PostsViewModel constructor(
@@ -64,15 +63,9 @@ class PostsViewModel constructor(
     internal val contentItemRepository: ContentItemRepository,
     private val settingsRepository: cut.the.crap.data.preferences.SettingsRepository,
     internal val jobQueueRepository: JobQueueRepository,
-    private val eciStatisticsRepository: EciStatisticsRepository,
+    private val campaignRepository: CampaignRepository,
     internal val fileAccess: FileAccess
 ) : ViewModel() {
-
-    companion object {
-        /** The European Citizens' Initiative whose statistics the key button loads. */
-        private const val ECI_INITIATIVE_URL =
-            "https://citizens-initiative.europa.eu/initiatives/details/2025/000005_en"
-    }
 
     internal val internalScreenState = MutableStateFlow(PostsScreenState())
 
@@ -105,35 +98,35 @@ class PostsViewModel constructor(
         _snackBarEvents.emit(event)
     }
 
-    // ECI statistics: loading flag, last loaded result, and one-shot nav/error events.
-    private val _eciLoading = MutableStateFlow(false)
-    val eciLoading: StateFlow<Boolean> = _eciLoading
+    // Action campaign: loading flag, last loaded result, and one-shot nav/error events.
+    private val _campaignLoading = MutableStateFlow(false)
+    val campaignLoading: StateFlow<Boolean> = _campaignLoading
 
-    private val _eciStatistics = MutableStateFlow<EciStatistics?>(null)
-    val eciStatistics: StateFlow<EciStatistics?> = _eciStatistics
+    private val _campaign = MutableStateFlow<Campaign?>(null)
+    val campaign: StateFlow<Campaign?> = _campaign
 
-    private val _eciEvents = MutableSharedFlow<EciUiEvent>()
-    val eciEvents: SharedFlow<EciUiEvent> = _eciEvents.asSharedFlow()
+    private val _campaignEvents = MutableSharedFlow<CampaignUiEvent>()
+    val campaignEvents: SharedFlow<CampaignUiEvent> = _campaignEvents.asSharedFlow()
 
     /**
-     * Loads and parses the ECI statistics table. Toggles [eciLoading] for the button's
-     * spinner, then emits [EciUiEvent.NavigateToTable] on success or
-     * [EciUiEvent.ShowError] on failure. Ignores taps while a load is in flight.
+     * Loads the action campaign. Toggles [campaignLoading] for the button's spinner, then emits
+     * [CampaignUiEvent.NavigateToCountries] on success or [CampaignUiEvent.ShowError] on failure.
+     * Ignores taps while a load is in flight.
      */
-    fun loadEciStatistics() {
-        if (_eciLoading.value) return
-        _eciLoading.value = true
+    fun loadCampaign() {
+        if (_campaignLoading.value) return
+        _campaignLoading.value = true
         viewModelScope.launch {
-            when (val result = eciStatisticsRepository.getStatistics(ECI_INITIATIVE_URL)) {
+            when (val result = campaignRepository.getCampaign()) {
                 is Result.Success -> {
-                    _eciStatistics.value = result.data
-                    _eciEvents.emit(EciUiEvent.NavigateToTable)
+                    _campaign.value = result.data
+                    _campaignEvents.emit(CampaignUiEvent.NavigateToCountries)
                 }
                 is Result.Error -> {
-                    _eciEvents.emit(EciUiEvent.ShowError(result.error))
+                    _campaignEvents.emit(CampaignUiEvent.ShowError(result.error))
                 }
             }
-            _eciLoading.value = false
+            _campaignLoading.value = false
         }
     }
 

@@ -8,6 +8,7 @@ enum class Source {
     TIKTOK,
     YOUTUBE,
     ECI,
+    CAMPAIGN,
 }
 
 /**

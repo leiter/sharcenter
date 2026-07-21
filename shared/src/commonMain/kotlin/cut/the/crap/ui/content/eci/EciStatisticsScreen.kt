@@ -52,6 +52,9 @@ import cut.the.crap.data.rest.eci.EciStatistics
 import cut.the.crap.ui.components.BottomNavigationBar
 
 /**
+ * DORMANT since the campaign swap: no destination in `NavigationGraph` points here any more —
+ * `CampaignCountryScreen` took its place. Kept for the day another initiative needs tracking.
+ *
  * Standalone screen showing the European Citizens' Initiative "signatures per country"
  * table. The [statistics] are loaded before navigation (from the Posts top bar), so this
  * screen only renders — it shows a fallback if navigated to without data.

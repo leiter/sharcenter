@@ -17,6 +17,10 @@ import cut.the.crap.data.rest.Source
  * Loads and parses the "signatures per country" statistics for a European Citizens'
  * Initiative.
  *
+ * DORMANT since the campaign swap: the Posts top bar now opens the Abu-Safiya action campaign
+ * (`data/rest/campaign/`). Nothing navigates here — kept, and still bound in `repositoryModule`,
+ * in case an initiative worth tracking comes along again.
+ *
  * The public detail pages (e.g.
  * https://citizens-initiative.europa.eu/initiatives/details/2025/000005_en) render the
  * table client-side from the register API, so we call that API directly:

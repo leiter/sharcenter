@@ -21,7 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -66,7 +66,7 @@ import cut.the.crap.shared.resources.links_select_all_filtered
 import cut.the.crap.shared.resources.posts_cd_collapse_filters
 import cut.the.crap.shared.resources.posts_cd_create_item
 import cut.the.crap.shared.resources.posts_cd_expand_filters
-import cut.the.crap.shared.resources.posts_cd_load_stats
+import cut.the.crap.shared.resources.posts_cd_load_campaign
 import cut.the.crap.shared.resources.posts_selection_count
 import cut.the.crap.shared.resources.posts_snackbar_cleared
 import androidx.compose.ui.unit.dp
@@ -103,20 +103,20 @@ fun PostsScreen(
     contentItems: StateFlow<List<ContentItem>>,
     onContentItemsReordered: (List<ContentItem>) -> Unit,
     snackBarEvents: SharedFlow<PostsSnackbarEvent> = MutableSharedFlow(),
-    eciLoading: StateFlow<Boolean> = MutableStateFlow(false),
-    eciEvents: SharedFlow<EciUiEvent> = MutableSharedFlow(),
-    onLoadEciStatistics: () -> Unit = {},
+    campaignLoading: StateFlow<Boolean> = MutableStateFlow(false),
+    campaignEvents: SharedFlow<CampaignUiEvent> = MutableSharedFlow(),
+    onLoadCampaign: () -> Unit = {},
     ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val notifier: Notifier = koinInject()
-    val isEciLoading by eciLoading.collectAsState()
+    val isCampaignLoading by campaignLoading.collectAsState()
 
-    // Navigate to the statistics table on success, or toast the error.
+    // Navigate to the campaign country list on success, or toast the error.
     LaunchedEffect(Unit) {
-        eciEvents.collect { event ->
+        campaignEvents.collect { event ->
             when (event) {
-                EciUiEvent.NavigateToTable -> navController.navigate("eci_statistics")
-                is EciUiEvent.ShowError ->
+                CampaignUiEvent.NavigateToCountries -> navController.navigate("campaign_countries")
+                is CampaignUiEvent.ShowError ->
                     notifier.show(event.error.localizedText(), NotificationDuration.Long)
             }
         }
@@ -340,7 +340,7 @@ fun PostsScreen(
                             showBadge = hasActiveFilters && !filterExpanded
                         )
 
-                        if (isEciLoading) {
+                        if (isCampaignLoading) {
                             Box(
                                 modifier = Modifier.size(48.dp),
                                 contentAlignment = Alignment.Center
@@ -353,10 +353,10 @@ fun PostsScreen(
                         } else {
                             MyIconAction(
                                 iconPainter = rememberVectorPainter(
-                                    Icons.Filled.BarChart
+                                    Icons.Filled.Campaign
                                 ),
-                                onClick = { onLoadEciStatistics() },
-                                contentDescription = stringResource(Res.string.posts_cd_load_stats)
+                                onClick = { onLoadCampaign() },
+                                contentDescription = stringResource(Res.string.posts_cd_load_campaign)
                             )
                         }
                     },

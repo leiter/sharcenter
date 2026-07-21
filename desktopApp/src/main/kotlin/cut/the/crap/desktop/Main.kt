@@ -21,6 +21,13 @@ import org.koin.dsl.module
  * dev server as the Android debug build for now.
  */
 private const val API_BASE_URL = "http://192.168.1.100:8080"
+
+/**
+ * Origin of the action-campaign site (`/api/abu-safiya`) — a different host from [API_BASE_URL].
+ * Point it at the local Flask server (e.g. "http://192.168.178.26:5000") when working on the
+ * campaign itself.
+ */
+private const val CAMPAIGN_BASE_URL = "https://cutthecrap.link"
 private const val IS_DEBUG = true
 
 /**
@@ -34,7 +41,15 @@ fun main() {
         modules(
             // AppConfig is provided inline (no BuildConfig off Android); networkModule is a plain
             // module that reads it — mirrors iOS MainViewController.setupKoin().
-            module { single { AppConfig(apiBaseUrl = API_BASE_URL, isDebug = IS_DEBUG) } },
+            module {
+                single {
+                    AppConfig(
+                        apiBaseUrl = API_BASE_URL,
+                        campaignBaseUrl = CAMPAIGN_BASE_URL,
+                        isDebug = IS_DEBUG,
+                    )
+                }
+            },
             desktopPlatformModule,
             desktopDatabaseModule,
             networkModule,

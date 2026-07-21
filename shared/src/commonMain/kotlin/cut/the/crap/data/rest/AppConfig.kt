@@ -8,5 +8,10 @@ package cut.the.crap.data.rest
  */
 data class AppConfig(
     val apiBaseUrl: String,
+    /**
+     * Origin of the action-campaign site (`/api/abu-safiya`). A separate host from [apiBaseUrl]:
+     * that one is the job-queue backend, this one is the public campaign site.
+     */
+    val campaignBaseUrl: String,
     val isDebug: Boolean,
 )

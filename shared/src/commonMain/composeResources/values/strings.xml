@@ -221,7 +221,15 @@
     <string name="reddit_error_unavailable">Post unavailable</string>
     <string name="reddit_error_fetch_failed">Failed to fetch post metadata: %1$s</string>
 
-    <!-- ECI statistics errors -->
+    <!-- Action campaign errors -->
+    <string name="campaign_error_unrecognised_url">Not a recognised campaign URL: %1$s</string>
+    <string name="campaign_error_not_found">Campaign not found</string>
+    <string name="campaign_error_server">Campaign server error: %1$d</string>
+    <string name="campaign_error_timeout">Request timed out. Please check your connection.</string>
+    <string name="campaign_error_unexpected_response">Unexpected response from the campaign site</string>
+    <string name="campaign_error_load_failed">Failed to load the campaign: %1$s</string>
+
+    <!-- ECI statistics errors (dormant — see the campaign screens) -->
     <string name="eci_error_unrecognised_url">Not a recognised initiative URL: %1$s</string>
     <string name="eci_error_invalid_number">Invalid initiative number: %1$s</string>
     <string name="eci_error_not_found">Initiative %1$s/%2$s not found</string>
@@ -234,7 +242,34 @@
     <!-- Common actions -->
     <string name="action_back">Back</string>
 
-    <!-- ECI statistics screen &amp; table -->
+    <!-- Action campaign: country picker -->
+    <string name="campaign_countries_title">Campaign countries</string>
+    <string name="campaign_no_data">No campaign data available.</string>
+    <string name="campaign_create_posts_cd">Create campaign posts</string>
+    <string name="campaign_country_languages">%1$s · %2$d posts</string>
+    <string name="campaign_country_no_posts">No posts for this country yet</string>
+    <string name="campaign_parliament_badge">Write to your MP</string>
+
+    <!-- Action campaign: post composer -->
+    <string name="campaign_composer_title">Create posts</string>
+    <string name="campaign_copy_post">Copy post to clipboard</string>
+    <string name="campaign_post_copied">Post copied to clipboard</string>
+    <string name="campaign_select_countries">Select countries</string>
+    <string name="campaign_show_preview">Show preview</string>
+    <string name="campaign_hide_preview">Hide preview</string>
+    <string name="campaign_variant_label">Variant:</string>
+    <string name="campaign_variant">Variant %1$d</string>
+    <string name="campaign_sort_label">Sort:</string>
+    <string name="campaign_filter_chip">%1$s (%2$d)</string>
+    <!-- Filter labels -->
+    <string name="campaign_filter_none">All countries</string>
+    <string name="campaign_filter_with_posts">With posts</string>
+    <string name="campaign_filter_parliament">Parliament action</string>
+    <!-- Sort labels -->
+    <string name="campaign_sort_registry">Campaign order</string>
+    <string name="campaign_sort_alpha">A–Z</string>
+
+    <!-- ECI statistics screen &amp; table (dormant) -->
     <string name="eci_screen_title">Signatures by country</string>
     <string name="eci_table_title">Signatures per country</string>
     <string name="eci_table_updated">updated %1$s</string>
@@ -286,6 +321,14 @@
         <item quantity="one">%1$d char</item>
         <item quantity="other">%1$d chars</item>
     </plurals>
+    <plurals name="campaign_drafts_created">
+        <item quantity="one">Created %1$d draft</item>
+        <item quantity="other">Created %1$d drafts</item>
+    </plurals>
+    <plurals name="campaign_create_posts_button">
+        <item quantity="one">Create %1$d post</item>
+        <item quantity="other">Create %1$d posts</item>
+    </plurals>
     <plurals name="eci_drafts_created">
         <item quantity="one">Created %1$d draft</item>
         <item quantity="other">Created %1$d drafts</item>
@@ -318,6 +361,7 @@
     <string name="posts_snackbar_cleared">Post cleared</string>
     <string name="posts_cd_collapse_filters">Collapse filters</string>
     <string name="posts_cd_expand_filters">Expand filters</string>
+    <string name="posts_cd_load_campaign">Open the action campaign</string>
     <string name="posts_cd_load_stats">Load initiative statistics</string>
     <string name="posts_cd_create_item">Create new content item</string>
     <string name="posts_selection_count">%1$d selected</string>

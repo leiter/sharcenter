@@ -13,8 +13,8 @@ import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.links.LinkScreen
 import cut.the.crap.ui.content.settings.BackupManagementScreen
 import cut.the.crap.ui.content.settings.ImportExportScreen
-import cut.the.crap.ui.content.eci.EciPostComposerScreen
-import cut.the.crap.ui.content.eci.EciStatisticsScreen
+import cut.the.crap.ui.content.campaign.CampaignCountryScreen
+import cut.the.crap.ui.content.campaign.CampaignPostComposerScreen
 import cut.the.crap.ui.content.settings.SettingsScreen
 import cut.the.crap.ui.content.settings.SettingsViewModel
 
@@ -39,9 +39,9 @@ fun NavigationGraph(
                     postsViewModel.updateContentItemSortOrders(items)
                 },
                 snackBarEvents = postsViewModel.snackBarEvents,
-                eciLoading = postsViewModel.eciLoading,
-                eciEvents = postsViewModel.eciEvents,
-                onLoadEciStatistics = postsViewModel::loadEciStatistics
+                campaignLoading = postsViewModel.campaignLoading,
+                campaignEvents = postsViewModel.campaignEvents,
+                onLoadCampaign = postsViewModel::loadCampaign
             )
         }
         composable(Screen.Search.route) {
@@ -73,16 +73,16 @@ fun NavigationGraph(
                 navController = navController
             )
         }
-        composable("eci_statistics") {
-            EciStatisticsScreen(
+        composable("campaign_countries") {
+            CampaignCountryScreen(
                 navController = navController,
-                statistics = postsViewModel.eciStatistics.collectAsState().value
+                campaign = postsViewModel.campaign.collectAsState().value
             )
         }
-        composable("eci_post_composer") {
-            EciPostComposerScreen(
+        composable("campaign_composer") {
+            CampaignPostComposerScreen(
                 navController = navController,
-                statistics = postsViewModel.eciStatistics.collectAsState().value,
+                campaign = postsViewModel.campaign.collectAsState().value,
                 onCreateDrafts = { texts -> postsViewModel.createDraftPosts(texts) }
             )
         }

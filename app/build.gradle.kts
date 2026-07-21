@@ -53,6 +53,9 @@ android {
             // Debug API URL - typically points to local development server
             // Example: "http://192.168.1.100:8080" or "http://10.0.2.2:8080" for Android emulator
             buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.100:8080\"")
+            // Action campaign site (a different host from the job-queue backend above).
+            // Point this at the local Flask server while working on the campaign.
+            buildConfigField("String", "CAMPAIGN_BASE_URL", "\"https://cutthecrap.link\"")
         }
         release {
 
@@ -63,6 +66,7 @@ android {
             // TODO: Update this to your production server URL when deploying
             // Example: "https://api.yourapp.com"
             buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.100:8080\"")
+            buildConfigField("String", "CAMPAIGN_BASE_URL", "\"https://cutthecrap.link\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

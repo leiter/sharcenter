@@ -7,6 +7,8 @@ import cut.the.crap.data.preferences.SettingsRepository
 import cut.the.crap.data.preferences.createPreferencesStore
 import cut.the.crap.data.rest.bluesky.BlueskyRepository
 import cut.the.crap.data.rest.bluesky.BlueskyRepositoryImpl
+import cut.the.crap.data.rest.campaign.CampaignRepository
+import cut.the.crap.data.rest.campaign.CampaignRepositoryImpl
 import cut.the.crap.data.rest.eci.EciStatisticsRepository
 import cut.the.crap.data.rest.eci.EciStatisticsRepositoryImpl
 import cut.the.crap.data.rest.mastodon.MastodonRepository
@@ -39,6 +41,8 @@ val repositoryModule = module {
     factoryOf(::TikTokRepositoryImpl) bind TikTokRepository::class
     factoryOf(::RedditRepositoryImpl) bind RedditRepository::class
     factoryOf(::JobQueueRepositoryImpl) bind JobQueueRepository::class
+    factoryOf(::CampaignRepositoryImpl) bind CampaignRepository::class
+    // Dormant since the campaign swap — kept bound so the ECI feature still compiles.
     factoryOf(::EciStatisticsRepositoryImpl) bind EciStatisticsRepository::class
 
     // The preferences stores. These MUST be singles: DataStore throws if two live instances share

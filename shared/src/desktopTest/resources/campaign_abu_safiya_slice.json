@@ -1,0 +1,92 @@
+{
+  "campaign": "abu-safiya",
+  "locateUrl": "https://cutthecrap.link/abu-safiya/locate",
+  "version": 1,
+  "countries": [
+    {
+      "code": "de",
+      "defaultLang": "de",
+      "flag": "🇩🇪",
+      "langs": [
+        "de"
+      ],
+      "name": "Deutschland",
+      "parliament": true,
+      "posts": [
+        {
+          "id": "A — Der Aufruf",
+          "lang": "de",
+          "text": "Ein Kinderarzt sitzt seit über einem Jahr ohne Anklage im Gefängnis, weil er bis zuletzt Kranke und Kinder versorgt hat. Dr. Hussam Abu Safiya braucht unsere Stimme. In unter einer Minute eine fertige E-Mail an Außenministerium & Co. senden: 👇\nhttps://cutthecrap.link/abu-safiya/locate\n#FreeAbuSafiya"
+        },
+        {
+          "id": "B — Niedrige Hürde",
+          "lang": "de",
+          "text": "Du willst helfen, aber weißt nicht wie? Ein Klick. Deine Mail-App öffnet sich mit fertigem Text — du drückst nur noch auf Senden. Am Handy: QR-Code scannen. Für die Freilassung von Dr. Abu Safiya:\nhttps://cutthecrap.link/abu-safiya/locate\n#AbuSafiya #Menschenrechte"
+        },
+        {
+          "id": "C — Das Prinzip",
+          "lang": "de",
+          "text": "Schweigen ist bequem. Eine E-Mail dauert 30 Sekunden. Dr. Hussam Abu Safiya, Kinderarzt aus Gaza, ist seit dem 27.12.2024 ohne Anklage in Haft. Schreib jetzt an die Verantwortlichen — Text ist schon fertig:\nhttps://cutthecrap.link/abu-safiya/locate\n#FreeAbuSafiya"
+        },
+        {
+          "id": "D — Appell an Ärzt:innen / Kolleg:innen",
+          "lang": "de",
+          "text": "Wer Kranke behandelt, gehört nicht ins Gefängnis. Dr. Abu Safiya hat das Kamal-Adwan-Krankenhaus geleitet, bis er verhaftet wurde. Der Schutz von medizinischem Personal ist Völkerrecht. Fordere seine Freilassung — 1 Klick:\nhttps://cutthecrap.link/abu-safiya/locate"
+        }
+      ],
+      "url": "https://cutthecrap.link/de/abu-safiya"
+    },
+    {
+      "code": "it",
+      "defaultLang": "it",
+      "flag": "🇮🇹",
+      "langs": [
+        "it"
+      ],
+      "name": "Italia",
+      "parliament": false,
+      "posts": [
+        {
+          "id": "IT-1",
+          "lang": "it",
+          "text": "🇮🇹 Un pediatra detenuto da oltre un anno senza accusa. Il Dr. Hussam Abu Safiya dirigeva l'ospedale Kamal Adwan a Gaza. In meno di un minuto invii un appello già pronto a Farnesina, Palazzo Chigi e ambasciata 👇\nhttps://cutthecrap.link/it/abu-safiya\n#FreeAbuSafiya"
+        },
+        {
+          "id": "IT-2 (breve)",
+          "lang": "it",
+          "text": "🇮🇹 Il testo è già scritto. Devi solo inviarlo. Per la liberazione del pediatra Dr Abu Safiya:\nhttps://cutthecrap.link/it/abu-safiya"
+        },
+        {
+          "id": "IT — risposta/commento",
+          "lang": "it",
+          "text": "🇮🇹 Se vuoi fare qualcosa di concreto: in un clic invii un appello per la liberazione del Dr Abu Safiya 👉\nhttps://cutthecrap.link/it/abu-safiya"
+        }
+      ],
+      "url": "https://cutthecrap.link/it/abu-safiya"
+    },
+    {
+      "code": "lu",
+      "defaultLang": "fr",
+      "flag": "🇱🇺",
+      "langs": [
+        "fr",
+        "de"
+      ],
+      "name": "Luxembourg",
+      "parliament": false,
+      "posts": [
+        {
+          "id": "LU (français)",
+          "lang": "fr",
+          "text": "🇱🇺 Un pédiatre détenu sans inculpation depuis plus d'un an. En moins d'une minute, écrivez au MAEE, au Ministère d'État et à l'ambassade pour la libération du Dr Abu Safiya 👇\nhttps://cutthecrap.link/lu/abu-safiya\n#FreeAbuSafiya"
+        },
+        {
+          "id": "LU (Deutsch)",
+          "lang": "de",
+          "text": "🇱🇺 Ein Kinderarzt, seit über einem Jahr ohne Anklage in Haft. Schreib in unter einer Minute an Außenministerium, Staatsministerium und Botschaft für die Freilassung von Dr. Abu Safiya 👇\nhttps://cutthecrap.link/lu/abu-safiya?lang=de\n#FreeAbuSafiya"
+        }
+      ],
+      "url": "https://cutthecrap.link/lu/abu-safiya"
+    }
+  ]
+}

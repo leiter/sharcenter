@@ -26,6 +26,9 @@ import platform.UIKit.UIViewController
 /** Dev API base URL for iOS. Change this to point at your job-queue server. */
 private const val DEV_API_BASE_URL = "http://192.168.1.100:8080"
 
+/** Origin of the action-campaign site (`/api/abu-safiya`) — a different host from the one above. */
+private const val CAMPAIGN_BASE_URL = "https://cutthecrap.link"
+
 /**
  * Starts the Koin graph for iOS. Called once from the Swift `App` before the first
  * [MainViewController]. Named `setupKoin` rather than `initKoin` because Kotlin/Native renames
@@ -39,7 +42,15 @@ private const val DEV_API_BASE_URL = "http://192.168.1.100:8080"
 fun setupKoin() {
     val koin = startKoin {
         modules(
-            module { single { AppConfig(apiBaseUrl = DEV_API_BASE_URL, isDebug = true) } },
+            module {
+                single {
+                    AppConfig(
+                        apiBaseUrl = DEV_API_BASE_URL,
+                        campaignBaseUrl = CAMPAIGN_BASE_URL,
+                        isDebug = true,
+                    )
+                }
+            },
             iosPlatformModule,
             iosDatabaseModule,
             networkModule,
