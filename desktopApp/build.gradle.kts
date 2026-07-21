@@ -43,6 +43,11 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation(libs.lifecycle.viewmodel.compose)
 
+    // Supplies Dispatchers.Main on the JVM (the Swing EDT). Without it every ViewModel that
+    // touches the main dispatcher fails to construct — Android gets this from
+    // kotlinx-coroutines-android, desktop needs the Swing artifact explicitly.
+    implementation(libs.kotlinx.coroutines.swing)
+
     // Koin: core to start the graph, koin-compose for KoinContext/koinInject, and the
     // viewmodel bridge for koinViewModel() in the composition.
     implementation(libs.koin.core)
