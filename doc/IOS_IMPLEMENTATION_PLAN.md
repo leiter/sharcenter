@@ -152,7 +152,7 @@ klib was built with a Kotlin ≤ ours. Both edges bit here.
 | Item | Why |
 |---|---|
 | **Backup *restore*, WebView X-login** | Backup itself now works (§6, Landed); *restore* stays deferred (needs a live-DB swap + relaunch, and `IosAppRestarter.isSupported = false`). `IosLoginFlow.isSupported = false`. Concrete plans: §6.2, §6.3. |
-| **iOS Share Extension** | Separate target + app groups. The platform-agnostic **share pipeline is now extracted** (`SharedUrlProcessor`, commonMain), so the remaining work is the Xcode target + wiring, not the logic. Concrete plan: §6.1. |
+| ~~**iOS Share Extension**~~ | **Implemented** (inbox hand-off) — see §6.1. Pending App Group provisioning + simulator verification. |
 | **iOS test suite / CI** | The suite is JVM-only (JUnit/MockK/Truth). Running it on `iosSimulatorArm64` means porting the test libs — real work, not a source-set add. **WP-iOS-7.** |
 | **kotlinx-datetime 0.7 deprecations** | `dayOfMonth`→`day`, `monthNumber`→`month`, `Instant` typealias. Warnings only. |
 
@@ -167,9 +167,9 @@ WP7 is done and runtime-verified. Remaining, in rough priority:
    identical; not yet re-confirmed on a device.
 2. **Desktop app (WP8)** — now unblocked: `App()` is common. A `desktopApp` with
    `application { Window { App() } }`, the JDBC driver, an `AppConfig`, and a desktop Koin module.
-3. **iOS Share Extension** — now the main thing that makes iOS a first-class client rather than a
-   viewer (the real `rememberFilePicker` already landed). The share pipeline is extracted (§6.1); the
-   remaining work is the Xcode target + App Group container.
+3. **iOS Share Extension — implemented** (inbox hand-off, §6.1). Remaining: register the App Group
+   in the developer account and **verify on a simulator** — the code is in, but the Swift/Xcode side
+   is unbuilt off-macOS.
 4. **WP-iOS-7** — CI (macOS runner: assemble/link the framework), and the kotlinx-datetime 0.7
    deprecation cleanup.
 
@@ -215,22 +215,28 @@ missing wiring. Small fixes landed immediately; the three large features have co
   `ShareReceiverActivity` into `SharedUrlProcessor` (commonMain, unit-tested in `desktopTest`). This
   is the prerequisite for §6.1: iOS can now drive identical share logic.
 
-### 6.1 iOS Share Extension  *(largest; the app's namesake feature)*
-- **Goal:** an entry in the iOS share sheet that ingests a shared URL exactly as Android's
-  `ShareReceiverActivity` does.
-- **Xcode:** new **Share Extension** target in `iosApp.xcodeproj`; its own `Info.plist` with an
-  `NSExtension` `NSExtensionActivationRule` matching `public.url`/`public.plain-text`.
-- **Data sharing:** the extension runs in a **separate process**, so the DB and prefs must move to an
-  **App Group** container (`group.<bundle-id>`) — update `preferencesPath`/`DatabaseFactory.ios` to
-  resolve the shared container, add the App Groups entitlement to both targets. *This is the real
-  work and the main risk.*
-- **Kotlin:** expose a small suspend entry point (e.g. `ShareIngest.handle(url)`) that starts a
-  minimal Koin graph (repos + `shareModule` only, no UI) and calls `SharedUrlProcessor.resolve` then
-  `saveLink`/`saveHandle`. Skip the edit dialog and X-login (unsupported on iOS → save unresolved).
-- **Feedback:** the extension has no Compose host, so `Notifier` won't show; use the extension's own
-  completion UI or a silent finish.
-- **Test:** processor logic already covered; the target itself needs manual share-sheet testing.
-- **Estimate:** 2–4 days, most of it App Group/entitlement plumbing and provisioning.
+### 6.1 iOS Share Extension — IMPLEMENTED (inbox hand-off), pending device verification
+Built with the **inbox hand-off** architecture (chosen over direct shared-DB write to avoid
+relocating the DB/prefs and running a heavy stack in the memory-limited extension process):
+- **Extension (pure Swift, no `Shared.framework`):** `iosApp/ShareExtension/ShareViewController.swift`
+  extracts the shared `public.url`/`public.plain-text` and writes one file per item into
+  `<AppGroup>/inbox/`, then completes. `Info.plist` (`NSExtension` share-services, activation for web
+  URL + text) and `ShareExtension.entitlements` (App Group) alongside it.
+- **App-side drain (Kotlin):** `shared/src/iosMain/.../share/ShareInbox.kt` — `ShareInbox`
+  (reads/clears the inbox over okio) + exported `drainShareInbox()`, which resolves
+  `SharedUrlProcessor`+`Notifier` from the running Koin (`KoinPlatform.getKoinOrNull()`) and runs the
+  non-interactive save path (resolve → `saveHandle`/`saveLink`; `AuthRequired` saved unresolved;
+  no edit dialog), Mutex-guarded + empty-safe, feedback via the existing snackbar.
+- **Wiring:** `iOSApp.swift` calls `ShareInboxKt.drainShareInbox()` on `scenePhase == .active`;
+  `project.yml` gains the App Group entitlement on the app + the embedded `ShareExtension`
+  `app-extension` target (regenerate with `xcodegen generate`).
+- **App Group id:** `group.cut.the.crap` (Kotlin `APP_GROUP_ID`, both `.entitlements`, Swift — all four match).
+- **Trade-off:** a shared link is captured instantly but saved+enriched on next app foreground.
+- **Status:** Kotlin compile-verified; the Swift/Xcode side is **not** buildable off-macOS.
+  **Prerequisites for device builds:** register the App Group in the Apple Developer account +
+  provisioning. **Verify on a simulator** per the plan file's verification steps (extension appears
+  in the share sheet, link appears on next open, queue/handle cases). Full plan:
+  `~/.claude/plans/plan-the-share-extension-parsed-bee.md`.
 
 ### 6.2 iOS backup/restore
 - **Backup: DONE** (see §Landed). `IosBackupManager` now writes timestamped, WAL-checkpointed DB

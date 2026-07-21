@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Must match the app's entitlement and APP_GROUP_ID in ShareInbox.kt. Registering this group
+         in the Apple Developer account is required for device builds (the simulator is lenient). -->
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.cut.the.crap</string>
+    </array>
+</dict>
+</plist>
