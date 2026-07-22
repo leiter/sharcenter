@@ -165,8 +165,10 @@ WP7 is done and runtime-verified. Remaining, in rough priority:
 1. **Android regression run** — `MainActivity` now resolves ViewModels via `koinViewModel()` inside
    the shared `App()` (was `by viewModel()`), and Koin went 4.0.0→4.1.1. Behaviour should be
    identical; not yet re-confirmed on a device.
-2. **Desktop app (WP8)** — now unblocked: `App()` is common. A `desktopApp` with
-   `application { Window { App() } }`, the JDBC driver, an `AppConfig`, and a desktop Koin module.
+2. **Desktop app (WP8) — exists and compiles.** `desktopApp` with `Window { App() }`, the JDBC
+   driver, an inline `AppConfig`, and a desktop Koin module. Its post-refactor build drift
+   (`handleAction` / `networkModule` had moved on) was fixed this session, and the notifier collector
+   was added. Remaining: runtime verification.
 3. **iOS Share Extension — implemented** (inbox hand-off, §6.1). Remaining: register the App Group
    in the developer account and **verify on a simulator** — the code is in, but the Swift/Xcode side
    is unbuilt off-macOS.
@@ -174,6 +176,15 @@ WP7 is done and runtime-verified. Remaining, in rough priority:
    job + macOS job that runs the native tests and links the framework); kotlinx-datetime 0.7
    deprecations cleared. Remaining growth: migrate more shared logic into `commonTest` (blocked on
    the desktopTest JUnit/MockK/Truth → kotlin-test port) so it also runs on native.
+5. **Production API URL — blocked on the URL.** iOS `MainViewController.kt` and `desktopApp/Main.kt`
+   hardcode the dev LAN `apiBaseUrl` + `isDebug = true` (Android reads it from `BuildConfig`). Needs
+   the production URL and a debug/release switch before shipping.
+6. **Push the CI workflow.** `.github/workflows/ci.yml` is written and validated locally but not yet
+   committed/pushed — GitHub rejects it without a `workflow`-scoped token (or add it via the web UI).
+   Once pushed, the macOS job runs the iOS tests + framework link for the first time.
+7. **Device/simulator verification of this session's work** — the Share Extension, iOS local backup,
+   and the notifier snackbar are all compile-/unit-verified only. A single Mac session validates all
+   three (see §6.1 / §Landed for the specific checks).
 
 **Estimate accuracy:** the ~1.5–2 week estimate held for the *seam* work — it was as mechanical as
 promised, WP7 included. The unbudgeted cost was entirely **dependency/toolchain alignment**: the
@@ -245,9 +256,26 @@ relocating the DB/prefs and running a heavy stack in the memory-limited extensio
   copies into `Documents/backups/` (Files-visible), with the same daily cadence + retention settings
   as Android, wired into `setupKoin()`. Compile-verified; **not yet device-verified** — see §Landed
   for the checks to run on a simulator.
-- **Restore: still deferred.** Replacing the live DB needs every connection closed + a relaunch, and
-  `IosAppRestarter.isSupported = false`. A restore flow would have to swap the file on next cold
-  start and ask the user to reopen. ~1–2 days.
+- **Restore: still deferred — but realizable without a process restart.** iOS gives an app no
+  App-Store-safe way to relaunch itself (`exit(0)`/suspend are rejected as crashes), which is why
+  `IosAppRestarter.isSupported = false` is correct and stays that way. Restore does **not** need a
+  restart, though — it needs the app to come up on the restored DB. Two ways:
+  - **Recommended — deferred swap on next cold start.** `restoreFromBackup` validates the chosen
+    backup, stages it (copy to a staging path, or store a "pending restore → file" marker in prefs/a
+    marker file), and tells the user *"Restore staged — reopen the app to finish."* On the next cold
+    launch, a hook at the **very top of `setupKoin()`** (before anything opens the DB — note the
+    daily-backup/share-drain kickoffs already resolve the driver during `setupKoin`) checks the
+    marker, deletes the live `app_database` + `-wal`/`-shm`, copies the staged backup into place, and
+    clears the marker. The file is swapped when nothing has it open — no live-connection hazard. This
+    mirrors the Share Extension's "capture now, apply on next launch" pattern. The "reopen" prompt
+    replaces the (unavailable) restart honestly. **~1 day.**
+  - **Alternative — in-process teardown + rebuild** (no reopen, harder): close the live sqliter
+    driver, swap the file, open a fresh driver + `ShareDatabase`, and route DAO access through a
+    swappable `DatabaseHolder` so every injected holder picks up the new instance, then refresh
+    ViewModel state. Immediate effect but many more moving parts. ~2–3 days.
+  - **Not viable:** `exit(0)` / `UIApplication.suspend` — App Store rejection.
+  - Items §6.2-restore and §5 (app restart) collapse into this single piece of work: the cold-start
+    swap *is* the restore mechanism, and `AppRestarter` stays unsupported because it is no longer needed.
 - **Optional later:** an iCloud (`NSFileManager.url(forUbiquityContainerIdentifier:)`) tier so
   backups survive device loss — separate, larger effort.
 
