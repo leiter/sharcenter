@@ -12,6 +12,7 @@ import cut.the.crap.data.rest.repositoryModule
 import cut.the.crap.di.viewModelModule
 import cut.the.crap.share.shareModule
 import org.koin.compose.KoinContext
+import cut.the.crap.identity.identityModule
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 
@@ -52,6 +53,7 @@ fun main() {
             },
             desktopPlatformModule,
             desktopDatabaseModule,
+            identityModule,
             networkModule,
             repositoryModule,
             shareModule,

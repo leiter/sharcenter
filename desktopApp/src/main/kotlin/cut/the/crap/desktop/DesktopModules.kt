@@ -28,11 +28,15 @@ import cut.the.crap.platform.DesktopAppRestarter
 import cut.the.crap.platform.DesktopClipboard
 import cut.the.crap.platform.DesktopFileAccess
 import cut.the.crap.platform.DesktopLoginFlow
+import cut.the.crap.platform.CryptoProvider
+import cut.the.crap.platform.DesktopIdentityKeyStore
 import cut.the.crap.platform.DesktopNotifier
 import cut.the.crap.platform.DesktopSharer
 import cut.the.crap.platform.DesktopUrlOpener
 import cut.the.crap.platform.FileAccess
 import cut.the.crap.platform.LoginFlow
+import cut.the.crap.platform.IdentityKeyStore
+import cut.the.crap.platform.JvmCryptoProvider
 import cut.the.crap.platform.Notifier
 import cut.the.crap.platform.Sharer
 import cut.the.crap.platform.UrlOpener
@@ -80,6 +84,11 @@ val desktopPlatformModule = module {
     single<Sharer> { DesktopSharer(clipboard = get(), notifier = get()) }
     single<AppRestarter> { DesktopAppRestarter() }
     single<BackupManager> { DesktopBackupManager() }
+
+    // Identity key material. Same Bouncy Castle provider as Android (jvmShared source set); the
+    // seed is a chmod-600 file beside the preferences, never inside the app database.
+    single<CryptoProvider> { JvmCryptoProvider() }
+    single<IdentityKeyStore> { DesktopIdentityKeyStore() }
 }
 
 /**

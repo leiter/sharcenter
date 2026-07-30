@@ -3,13 +3,17 @@ package cut.the.crap.di
 import cut.the.crap.platform.AndroidAppRestarter
 import cut.the.crap.platform.AndroidClipboard
 import cut.the.crap.platform.AndroidFileAccess
+import cut.the.crap.platform.AndroidIdentityKeyStore
 import cut.the.crap.platform.AndroidLoginFlow
 import cut.the.crap.platform.AndroidNotifier
 import cut.the.crap.platform.AndroidSharer
 import cut.the.crap.platform.AndroidUrlOpener
 import cut.the.crap.platform.AppRestarter
 import cut.the.crap.platform.Clipboard
+import cut.the.crap.platform.CryptoProvider
 import cut.the.crap.platform.FileAccess
+import cut.the.crap.platform.IdentityKeyStore
+import cut.the.crap.platform.JvmCryptoProvider
 import cut.the.crap.platform.LoginFlow
 import cut.the.crap.platform.Notifier
 import cut.the.crap.platform.Sharer
@@ -38,4 +42,10 @@ val platformModule = module {
     single<Sharer> { AndroidSharer(androidContext()) }
     single<LoginFlow> { AndroidLoginFlow(androidContext()) }
     single<AppRestarter> { AndroidAppRestarter(androidContext()) }
+
+    // Identity key material. The seed is wrapped by a non-exportable Android Keystore
+    // key and kept out of the app database, so DatabaseBackupManager's daily copy into
+    // Downloads never carries it (IDENTITY_SPEC §6.2).
+    single<CryptoProvider> { JvmCryptoProvider() }
+    single<IdentityKeyStore> { AndroidIdentityKeyStore(androidContext()) }
 }

@@ -1,7 +1,9 @@
 # Identity Spec — Keypair Identity for ShareCenter (`cut.the.crap`)
 
-**Status:** §9 **step 1 implemented** (client-side key material, unwired); steps 2–4 still
-specification only. Crypto library decided in §3.2, verified against published klib ABIs.
+**Status:** §9 **steps 1–2 implemented** — key material, the `CTC-Sig` signing plugin, and the
+server's `user`/`user_key`/`seen_nonce` store with `POST /api/users` and `GET /api/ping`, verified
+end to end against a live Flask server. Steps 3–4 still specification only. Crypto library decided
+in §3.2, verified against published klib ABIs.
 **Scope:** Client (`:shared`, KMP) + the `cut.the.crap` Flask server.
 **Motivates:** per-user campaigns, campaign ownership, membership, and per-user work assignment.
 **Last updated:** 2026-07-30
@@ -394,11 +396,18 @@ Each step is independently shippable; nothing user-visible changes before step 4
 | # | Step | Verification |
 |---|---|---|
 | 1 ✅ | `IdentityKeyStore` + `CryptoProvider` interfaces; Bouncy Castle implementation shared by Android and desktop via the `jvmShared` source-set group; `IdentityManager`; BIP-39. iOS implementation deferred (§3.2). Client-only, wired to nothing. | **Done.** 32 tests in `desktopTest`: RFC 8032 §7.1 Ed25519 vectors, the published BIP-39 256-bit vectors, seed → phrase → seed round-trips, concurrent create. Whole suite 255/0. All three iOS targets, Android and desktop still compile. |
-| 2 | Ktor signing plugin + server-side `user` / `user_key` / `seen_nonce` tables, `POST /api/users`, `GET /api/ping`. | `/api/ping` returns the right `user_id` from all three clients. Replay and skew both rejected. |
+| 2 ✅ | Ktor signing plugin (`CtcSignature`, installed on the shared client for the campaign host only) + server `routes/identity.py`, `utils/ctc_sig.py`, `utils/identity_store.py`. | **Done.** Server suite 27/27 (replay, skew both directions, unknown key, forged signature, swapped body, malformed headers, 503 when the store or PyNaCl is missing). Client 9 plugin tests. **Three fixed contract vectors are asserted in both languages** so a canonicalisation drift turns one suite red instead of 401-ing in production. `IdentityIntegrationTest` runs the real Ktor client against a live Flask server — register, ping, restore-by-phrase, 401 for an unregistered key — and skips unless `CTC_SERVER` is set. |
 | 3 | `GET`/`PATCH /api/users/me`, device add (§5.4) and revoke (§5.5), recovery-phrase entry. | Two installs resolve to one `user_id`. |
 | 4 | Point campaign ownership and membership at `user_id`; identity section in Settings incl. reset. | Separate spec. |
 
 Step 1 lands entirely inside `:shared` and is testable without touching the server.
+
+**iOS is deliberately unsigned for now.** `identityModule` is loaded on Android and desktop only;
+iOS has no `CryptoProvider`/`IdentityKeyStore` implementation yet (§3.1), so loading it there would
+turn a missing binding into a startup crash. `CtcSignature` resolves its signer optionally and
+sends requests unsigned when none is bound, which is what keeps the iOS build running. Step 2's
+verification is therefore met on two of the three clients; the third needs the Keychain and
+CryptoKit implementations, which are Mac-only work.
 
 ---
 

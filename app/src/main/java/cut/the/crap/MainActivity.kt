@@ -32,6 +32,7 @@ import cut.the.crap.share.shareModule
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
+import cut.the.crap.identity.identityModule
 import org.koin.core.context.startKoin
 
 class MyApplication : Application(), SingletonImageLoader.Factory {
@@ -47,6 +48,7 @@ class MyApplication : Application(), SingletonImageLoader.Factory {
                 androidAppModule,
                 platformModule,
                 databaseModule,
+                identityModule,
                 networkModule,
                 repositoryModule,
                 shareModule,

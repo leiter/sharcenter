@@ -39,7 +39,7 @@ class Identity internal constructor(val publicKey: ByteArray) {
 class IdentityManager(
     private val keyStore: IdentityKeyStore,
     private val crypto: CryptoProvider,
-) {
+) : RequestSigner {
     private val bip39 = Bip39(crypto)
 
     // Serialises create/restore/reset against each other: two concurrent getOrCreate() calls must
@@ -86,6 +86,18 @@ class IdentityManager(
      */
     suspend fun sign(message: ByteArray): ByteArray? =
         keyStore.loadSeed()?.let { crypto.ed25519Sign(it, message) }
+
+    /**
+     * [RequestSigner] — one seed read for both halves, so the plugin cannot sign with one identity
+     * and attribute it to another if a reset lands between the two calls.
+     */
+    override suspend fun signRequest(message: ByteArray): SignedMessage? {
+        val seed = keyStore.loadSeed() ?: return null
+        return SignedMessage(
+            keyId = crypto.ed25519PublicKey(seed).encodeBase64Url(),
+            signature = crypto.ed25519Sign(seed, message),
+        )
+    }
 
     /**
      * Erases this install's identity. The server-side user is not deleted and its campaigns still
