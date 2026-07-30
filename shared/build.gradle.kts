@@ -46,7 +46,28 @@ kotlin {
         }
     }
 
+    // Android and desktop share one Bouncy Castle CryptoProvider (doc/IDENTITY_SPEC.md §3.2): the
+    // lightweight org.bouncycastle.crypto.* API is plain Java, so the same source compiles for both
+    // JVM targets. The default hierarchy has no android+jvm grouping, so the template is *extended*
+    // with one — declaring the edge by hand instead (`jvmSharedMain by creating` + `dependsOn`)
+    // silently switches the whole default template off, which disconnects iosMain from the iOS
+    // targets and fails their compile with "expected … has no actual declaration … for Native".
+    applyDefaultHierarchyTemplate {
+        common {
+            group("jvmShared") {
+                withAndroidTarget()
+                withJvm()
+            }
+        }
+    }
+
     sourceSets {
+        // Nothing iOS-facing here: CryptoProvider is a Koin-bound interface, not expect/actual, so
+        // the iOS targets compile while their implementation is still outstanding.
+        getByName("jvmSharedMain").dependencies {
+            implementation(libs.bouncycastle.prov)
+        }
+
         commonMain.dependencies {
             // Compose Multiplatform. On Android these artifacts delegate to the same
             // androidx.compose libraries, so :app renders identically.

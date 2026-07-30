@@ -14,7 +14,8 @@ actual fun preferencesPath(name: String): Path =
 
 private const val APP_DIR = "ShareCare"
 
-private fun appDataDirectory(): String {
+/** Internal so the identity key store can put its file beside the preferences. */
+internal fun appDataDirectory(): String {
     val home = System.getProperty("user.home")
     val os = System.getProperty("os.name").lowercase()
     return when {

@@ -102,6 +102,10 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            // Bouncy Castle (the identity layer's Ed25519) and jspecify both ship an OSGi
+            // manifest under the same multi-release path, which the merger will not resolve on
+            // its own. None of it is used at runtime on Android.
+            excludes += "/META-INF/versions/9/OSGI-INF/MANIFEST.MF"
         }
     }
 

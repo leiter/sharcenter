@@ -1,7 +1,7 @@
 # Identity Spec — Keypair Identity for ShareCenter (`cut.the.crap`)
 
-**Status:** Specification only — no code written. Crypto library **decided** (§3.2, verified against
-published klib ABIs on 2026-07-30).
+**Status:** §9 **step 1 implemented** (client-side key material, unwired); steps 2–4 still
+specification only. Crypto library decided in §3.2, verified against published klib ABIs.
 **Scope:** Client (`:shared`, KMP) + the `cut.the.crap` Flask server.
 **Motivates:** per-user campaigns, campaign ownership, membership, and per-user work assignment.
 **Last updated:** 2026-07-30
@@ -106,7 +106,7 @@ package cut.the.crap.platform
  * DatabaseBackupManager copies the database into Downloads, which must never contain a
  * signing key.
  */
-interface KeyStore {
+interface IdentityKeyStore {
     /** The stored private key seed (32 bytes), or null if this install has no identity yet. */
     suspend fun loadSeed(): ByteArray?
 
@@ -118,11 +118,11 @@ interface KeyStore {
 }
 ```
 
-| Target | Implementation |
-|---|---|
-| Android | `EncryptedSharedPreferences` (or Keystore-wrapped AES over a DataStore blob). `minSdk = 26` is fine for both. |
-| iOS | Keychain, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`. |
-| Desktop | A file with owner-only permissions under the app config dir. No OS keyring dependency in v1; documented as weaker. |
+| Target | Implementation | Status |
+|---|---|---|
+| Android | AES-GCM under a non-exportable Android Keystore key, ciphertext in `filesDir`. `androidx.security:security-crypto` avoided — it is deprecated, and this is the same construction with fewer parts. | done |
+| Desktop | A `chmod 600` file in the app data directory. Filesystem permissions only; weaker than Android, and stated as such in the class doc. | done |
+| iOS | Keychain, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`. | outstanding |
 
 The *public* key and `display_name` are ordinary settings and may live in the existing
 `SettingsRepository` DataStore.
@@ -177,7 +177,8 @@ Kotlin 2.3.20.**
 This is safe to reverse because **§4.2 fixes the wire format, not the library**: raw 32-byte
 Ed25519 public keys and 64-byte signatures, base64url-encoded. Raw Ed25519 encoding is canonical,
 so swapping the implementation later changes no bytes on the wire, no stored seed, and no server
-code. The library is an implementation detail behind `Signer`, exactly as `KeyStore` hides key
+code. The library is an implementation detail behind `CryptoProvider`, exactly as
+`IdentityKeyStore` hides key
 storage.
 
 Rejected for now: libsodium bindings — dragging JNA and per-ABI native libraries into the Android
@@ -327,7 +328,7 @@ the UI at creation time; there is no server-side recovery, by design (D4).
 
 `DatabaseBackupManager` writes one `.db` per day into **Downloads**. If the private key were stored
 in the app database, every daily backup would drop a signing key into a world-readable location.
-Hence D6: the key lives in `KeyStore` (§3.1), never in SQLDelight, and is **excluded from backup
+Hence D6: the key lives in `IdentityKeyStore` (§3.1), never in SQLDelight, and is **excluded from backup
 and from Import/Export**.
 
 The iOS backup path is being implemented now (`IOS_IMPLEMENTATION_PLAN.md`) — it must be written
@@ -335,7 +336,7 @@ with this exclusion already in place rather than retrofitted.
 
 ### 6.3 Reset identity
 
-A Settings action that calls `KeyStore.clear()`, drops the cached `user_id`, and generates a fresh
+A Settings action that calls `IdentityManager.reset()`, drops the cached `user_id`, and generates a fresh
 keypair on next use. The old server-side user is **not** deleted (its campaigns and completions
 still exist); it simply becomes unreachable. The UI must state that owned campaigns become
 permanently unmanageable.
@@ -392,7 +393,7 @@ Each step is independently shippable; nothing user-visible changes before step 4
 
 | # | Step | Verification |
 |---|---|---|
-| 1 | `KeyStore` + `Signer` interfaces; Bouncy Castle implementation shared by Android and desktop; key generation; mnemonic derivation. iOS actual deferred (§3.2). Client-only, wired to nothing. | Unit tests in `desktopTest`: generate → sign → verify; seed → mnemonic → seed round-trip; a fixed test vector so a later library swap is provably byte-identical. |
+| 1 ✅ | `IdentityKeyStore` + `CryptoProvider` interfaces; Bouncy Castle implementation shared by Android and desktop via the `jvmShared` source-set group; `IdentityManager`; BIP-39. iOS implementation deferred (§3.2). Client-only, wired to nothing. | **Done.** 32 tests in `desktopTest`: RFC 8032 §7.1 Ed25519 vectors, the published BIP-39 256-bit vectors, seed → phrase → seed round-trips, concurrent create. Whole suite 255/0. All three iOS targets, Android and desktop still compile. |
 | 2 | Ktor signing plugin + server-side `user` / `user_key` / `seen_nonce` tables, `POST /api/users`, `GET /api/ping`. | `/api/ping` returns the right `user_id` from all three clients. Replay and skew both rejected. |
 | 3 | `GET`/`PATCH /api/users/me`, device add (§5.4) and revoke (§5.5), recovery-phrase entry. | Two installs resolve to one `user_id`. |
 | 4 | Point campaign ownership and membership at `user_id`; identity section in Settings incl. reset. | Separate spec. |

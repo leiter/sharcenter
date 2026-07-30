@@ -19,6 +19,12 @@ lifecycleCompose = "2.9.1"
 lifecycle = "2.9.4"
 datastore = "1.2.1"
 okio = "3.9.1"
+# Ed25519 for the identity layer, on the two JVM targets. The *lightweight* API
+# (org.bouncycastle.crypto.*) is plain Java needing no JCE provider registration, so one
+# implementation covers Android (minSdk 26) and desktop. See doc/IDENTITY_SPEC.md §3.2 —
+# cryptography-kotlin only gained EdDSA in 0.6.0, whose klibs are ABI 2.3.0 and unreadable by
+# Kotlin 2.2.20, the same block as koin 4.2.x above.
+bouncycastle = "1.85"
 kotlinxDatetime = "0.7.1"
 kotlinxSerializationJson = "1.8.1"
 coil = "3.2.0"
@@ -76,6 +82,7 @@ datastore-preferences = { group = "androidx.datastore", name = "datastore-prefer
 # The multiplatform core: same Preferences API, no Android Context, path supplied by the caller.
 datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastore" }
 okio = { group = "com.squareup.okio", name = "okio", version.ref = "okio" }
+bouncycastle-prov = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxDatetime" }
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
