@@ -1,6 +1,7 @@
 # Identity Spec — Keypair Identity for ShareCenter (`cut.the.crap`)
 
-**Status:** Specification only — no code written. Library choice is an **open decision** (§3.2).
+**Status:** Specification only — no code written. Crypto library **decided** (§3.2, verified against
+published klib ABIs on 2026-07-30).
 **Scope:** Client (`:shared`, KMP) + the `cut.the.crap` Flask server.
 **Motivates:** per-user campaigns, campaign ownership, membership, and per-user work assignment.
 **Last updated:** 2026-07-30
@@ -126,21 +127,62 @@ interface KeyStore {
 The *public* key and `display_name` are ordinary settings and may live in the existing
 `SettingsRepository` DataStore.
 
-### 3.2 OPEN DECISION — crypto library
+### 3.2 Crypto library — verified 2026-07-30
 
 `minSdk = 26` rules out the platform's own Ed25519 on Android (`Signature.getInstance("Ed25519")`
-is not reliably available until far newer APIs), so an implementation must be bundled. With three
-targets (`androidTarget`, `jvm("desktop")`, `iosX64`/`iosArm64`/`iosSimulatorArm64`) there are two
-routes:
+is not reliably available until far newer APIs), so an implementation must be bundled.
 
-| Option | Assessment |
-|---|---|
-| **One multiplatform library** *(recommended)* | Single key encoding, single API. Candidates: `com.ionspin.kotlin:multiplatform-crypto-libsodium-bindings` (Ed25519 is core libsodium; covers all targets) and `dev.whyoleg.cryptography` (nicer API, provider-per-platform — **verify Ed25519 support before committing**). Default recommendation: the libsodium bindings. |
-| Three `actual`s | BouncyCastle on Android, JDK on desktop, CryptoKit `Curve25519.Signing` on iOS. Three key encodings to reconcile; encoding mismatch is where this work historically burns days. Only if the library route fails. |
+**The choice is constrained by klib ABI, not by features.** Every candidate was checked by reading
+the published `iosArm64` klib manifest, because this project has already been bitten once by a
+dependency whose klibs were built by a newer compiler than it runs (see the `koin` comment in
+`gradle/libs.versions.toml`: Koin 4.2.x is excluded for exactly this reason).
 
-**Must be verified before implementation:** compatibility with the current toolchain
-(Kotlin 2.2.20 / CMP 1.10.3) and that it introduces no transitive constraint that collides with the
-AGP-8.10→9.1 upgrade currently gating dependency bumps.
+#### `dev.whyoleg.cryptography` (cryptography-kotlin)
+
+| Version | Ed25519? | klib `compiler_version` / `abi_version` | Usable at Kotlin 2.2.20 |
+|---|---|---|---|
+| 0.4.0 | ❌ no EdDSA | 2.0.20 / 1.8.0 | yes |
+| 0.5.0 | ❌ no EdDSA | 2.2.0 / 2.2.0 | yes |
+| 0.6.0 | ✅ `EdDSA` (Curve, KeyPair, RAW/DER/PEM/JWK) | **2.3.20 / 2.3.0** | **no** |
+
+EdDSA arrived only in 0.6.0, whose klibs are ABI 2.3.0 — **the identical block as Koin 4.2.x**.
+This library is the better long-term answer (clean API, no JNA, platform providers: JDK / Apple /
+OpenSSL) but it is **unavailable until this project moves to Kotlin ≥ 2.3.20**, which is already
+part of the planned AGP 8.10→9.1 / Gradle 9 / Kotlin coordinated migration.
+
+#### `com.ionspin.kotlin:multiplatform-crypto-libsodium-bindings`
+
+Latest **0.9.5** (Nov 2025). Ed25519 present and complete: `crypto.signature.Signature`,
+`SignatureKeyPair`, `Ed25519SignatureState`. klib **1.9.23 / ABI 1.8.0** → consumable today.
+
+Costs, all real:
+- **JNA** on *both* JVM and Android, plus `com.goterl:resource-loader` (and slf4j on JVM). On
+  Android that means bundling native `.so` per ABI — APK size and packaging work.
+- Mandatory async `LibsodiumInitializer.initialize()` before any call.
+- Built on Kotlin 1.9.23; the least actively tracked of the options.
+
+#### Per-platform implementations
+
+Bouncy Castle's *lightweight* API (`Ed25519Signer`, `Ed25519PrivateKeyParameters`) is pure Java,
+needs no JCE provider registration, and works at API 26 — so **Android and desktop share one
+implementation**, and only iOS needs a second (CryptoKit `Curve25519.Signing`). That is two
+implementations, not three.
+
+#### Decision
+
+**Ship Bouncy Castle (Android + desktop) now; add the iOS CryptoKit implementation with the rest of
+the Mac-only iOS work; migrate all of it to cryptography-kotlin 0.6.0 once the toolchain reaches
+Kotlin 2.3.20.**
+
+This is safe to reverse because **§4.2 fixes the wire format, not the library**: raw 32-byte
+Ed25519 public keys and 64-byte signatures, base64url-encoded. Raw Ed25519 encoding is canonical,
+so swapping the implementation later changes no bytes on the wire, no stored seed, and no server
+code. The library is an implementation detail behind `Signer`, exactly as `KeyStore` hides key
+storage.
+
+Rejected for now: libsodium bindings — dragging JNA and per-ABI native libraries into the Android
+build to obtain a primitive Bouncy Castle already provides in pure Java is a bad trade, and it would
+be thrown away at the same toolchain upgrade anyway.
 
 Server side: `pynacl`.
 
@@ -350,7 +392,7 @@ Each step is independently shippable; nothing user-visible changes before step 4
 
 | # | Step | Verification |
 |---|---|---|
-| 1 | `KeyStore` interface + three implementations; key generation; mnemonic derivation. Client-only, wired to nothing. | Unit tests in `desktopTest`: generate → sign → verify; seed → mnemonic → seed round-trip. |
+| 1 | `KeyStore` + `Signer` interfaces; Bouncy Castle implementation shared by Android and desktop; key generation; mnemonic derivation. iOS actual deferred (§3.2). Client-only, wired to nothing. | Unit tests in `desktopTest`: generate → sign → verify; seed → mnemonic → seed round-trip; a fixed test vector so a later library swap is provably byte-identical. |
 | 2 | Ktor signing plugin + server-side `user` / `user_key` / `seen_nonce` tables, `POST /api/users`, `GET /api/ping`. | `/api/ping` returns the right `user_id` from all three clients. Replay and skew both rejected. |
 | 3 | `GET`/`PATCH /api/users/me`, device add (§5.4) and revoke (§5.5), recovery-phrase entry. | Two installs resolve to one `user_id`. |
 | 4 | Point campaign ownership and membership at `user_id`; identity section in Settings incl. reset. | Separate spec. |
