@@ -1,0 +1,375 @@
+# Campaign Schema Spec — Multi-User Campaigns for ShareCenter (`cut.the.crap`)
+
+**Status:** Specification only — no code written.
+**Depends on:** `IDENTITY_SPEC.md` — every `user_id` here is the one that spec defines.
+**Scope:** Client (`:shared`, KMP) + the `cut.the.crap` Flask server + a small web authoring UI.
+**Last updated:** 2026-07-30
+
+---
+
+## 0. Why this exists
+
+Today the campaign feature serves **one hardcoded campaign to everyone**. `CampaignRepository`
+GETs a constant path (`CAMPAIGN_PATH = "/api/abu-safiya"`), the server generates that payload from
+a markdown file plus a country registry in `routes/abusafiya.py`, and every install receives the
+identical bytes.
+
+Three things should change:
+
+1. **Users author their own campaigns**, and several users join the same campaign.
+2. **Work is coordinated** — assignments and completions are tracked, so a group can see coverage
+   instead of everyone guessing.
+3. **The campaign entry screen becomes useful.** `CampaignCountryScreen` today is an inert list:
+   `CampaignCountryItem` has no `onClick` at all, and the payload fields `CampaignCountry.url`,
+   `hasParliamentAction` and `Campaign.locateUrl` are parsed and then never used. Once campaigns
+   are plural, that screen has an obvious job — it becomes the campaign list.
+
+---
+
+## 1. Design decisions
+
+| # | Decision | Rationale |
+|---|---|---|
+| C1 | **Invite-only by default. No public directory, no discovery, no browse.** | "Coordinate N people onto a target list" is mechanically the same as brigading. Without discovery it is a tool for a group that already knows each other, not a recruitment surface for strangers. Public campaigns are a separate, later decision (§9). |
+| C2 | **Author on the web, act in the app.** | Campaign CRUD is the most screen-heavy, least reusable UI in the system, and would be built three times over Android/desktop/iOS. Authoring is a desk activity; the Flask site already exists and can be iterated without a release. |
+| C3 | **Assignment policy differs per item kind.** Amplification overlaps; contact actions are disjoint. | Ten people replying to the same post is the desired outcome. Ten identical letters to the same MP get filtered as spam. One policy cannot serve both. |
+| C4 | **Claims expire.** Unacted claims return to the pool. | Static sharding ("user1 gets A–R") silently fails when user1 never opens the app, and nothing detects it. A TTL makes coverage self-healing. |
+| C5 | **`claim` is atomic and may grant less than requested.** | Two users opening the app simultaneously must not both be assigned the same contact action. The response states what was actually granted; the client renders that, never its own request. |
+| C6 | **Server-side kill switch from day one.** | It will be needed exactly once, at an inconvenient hour, and retrofitting it under pressure is miserable. |
+| C7 | **`/api/abu-safiya` stays alive as an alias.** | Its path is a hardcoded constant in shipped clients (`CampaignRepository.kt:32`). Breaking it strands every install that has not updated. |
+
+---
+
+## 2. Data model (server)
+
+```sql
+campaign (
+  id            TEXT PRIMARY KEY,
+  owner_id      TEXT NOT NULL REFERENCES user(id),
+  slug          TEXT UNIQUE,            -- optional, for the web authoring URL
+  title         TEXT NOT NULL,
+  description   TEXT,
+  locate_url    TEXT,                   -- geolocating entry point, optional
+  visibility    TEXT NOT NULL,          -- 'invite' | 'link' | 'public'   (C1: default 'invite')
+  state         TEXT NOT NULL,          -- 'draft' | 'active' | 'archived' | 'disabled'
+  version       INTEGER NOT NULL,       -- bumped on any item change; drives client cache
+  created_at    INTEGER NOT NULL,
+  updated_at    INTEGER NOT NULL
+)
+
+campaign_member (
+  campaign_id   TEXT NOT NULL REFERENCES campaign(id),
+  user_id       TEXT NOT NULL REFERENCES user(id),
+  role          TEXT NOT NULL,          -- 'owner' | 'editor' | 'member'
+  joined_at     INTEGER NOT NULL,
+  PRIMARY KEY (campaign_id, user_id)
+)
+
+invite (
+  code          TEXT PRIMARY KEY,       -- short, human-typeable; see §4.2
+  campaign_id   TEXT NOT NULL REFERENCES campaign(id),
+  role          TEXT NOT NULL,
+  created_by    TEXT NOT NULL REFERENCES user(id),
+  expires_at    INTEGER,
+  max_uses      INTEGER,
+  uses          INTEGER NOT NULL DEFAULT 0
+)
+
+campaign_item (
+  id            TEXT PRIMARY KEY,
+  campaign_id   TEXT NOT NULL REFERENCES campaign(id),
+  kind          TEXT NOT NULL,          -- 'post' | 'target' | 'contact'   (§3)
+  country       TEXT,                   -- routing code, lower-case; NULL = not country-scoped
+  lang          TEXT,
+  label         TEXT,                   -- variant label, e.g. "IT-2 (breve)"
+  text          TEXT,                   -- outbound copy, for kind='post'
+  url           TEXT,                   -- target/contact URL
+  author        TEXT,                   -- target's author handle, for kind='target'
+  posted_at     INTEGER,                -- target's own timestamp
+  note          TEXT,                   -- organizer's note to members
+  sort_order    INTEGER NOT NULL DEFAULT 0,
+  created_at    INTEGER NOT NULL
+)
+
+assignment (
+  campaign_id   TEXT NOT NULL REFERENCES campaign(id),
+  item_id       TEXT NOT NULL REFERENCES campaign_item(id),
+  user_id       TEXT NOT NULL REFERENCES user(id),
+  state         TEXT NOT NULL,          -- 'claimed' | 'done' | 'released'
+  claimed_at    INTEGER NOT NULL,
+  expires_at    INTEGER,                -- NULL once done (C4)
+  PRIMARY KEY (campaign_id, item_id, user_id)
+)
+
+completion_count (
+  campaign_id   TEXT NOT NULL REFERENCES campaign(id),
+  item_id       TEXT NOT NULL REFERENCES campaign_item(id),
+  count         INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (campaign_id, item_id)
+)
+```
+
+Indexes: `campaign(owner_id)`, `campaign_member(user_id)`, `campaign_item(campaign_id, kind)`,
+`assignment(user_id)`, `assignment(expires_at)` for the sweep.
+
+### 2.1 Why completions are counters
+
+`assignment` rows carry `user_id` and are the working state. `completion_count` is the *durable*
+record and holds no user reference. When a claim closes, the counter is incremented and the
+assignment row may be pruned on a retention schedule.
+
+This implements the privacy position in `IDENTITY_SPEC.md` §7: a long-lived per-user log of
+"who acted on what, where, when" is not a neutral dataset for activism tooling, and the aggregate
+is what coverage actually needs.
+
+### 2.2 Countries
+
+Countries are **derived**, not a table: the distinct `campaign_item.country` values plus their
+languages. This keeps the existing `CampaignCountryDto` shape (§6.1) computable without a second
+registry to keep in sync. `hasParliamentAction` becomes "this country has at least one item with
+`kind='contact'`" — which finally gives that flag a behaviour instead of an inert chip.
+
+---
+
+## 3. Item kinds and assignment policy
+
+| `kind` | What it is | Assignment policy (C3) | Client action |
+|---|---|---|---|
+| `post` | Ready-to-publish outbound copy. What the campaign ships today. | **Unassigned.** Anyone may use any post; overlap is harmless. | Create draft (existing composer), copy. |
+| `target` | A specific post worth replying to, quoting or amplifying. | **Overlapping.** Many users may claim the same target — that is the goal. Claims stagger *order*, not exclusivity. | Open in X; copy reply; quote via `x.com/intent/post?…`. |
+| `contact` | Write to an MP / office / ministry. | **Exclusive.** At most one active claim per item. | Open the contact URL; mark done. |
+
+Only `contact` requires the atomic single-grant path (C5). `target` claims are recorded for
+coverage and ordering but never refused for contention. `post` items bypass assignment entirely,
+which keeps the existing composer flow working unchanged.
+
+### 3.1 Staggering targets
+
+For `kind='target'`, the server returns each user a **rotated** ordering of the target list, seeded
+by `user_id`. Everyone sees every target, but they start in different places — so a group of
+twenty does not produce twenty near-simultaneous replies on the same post, which is both the
+signature that gets accounts flagged and a waste of reach.
+
+---
+
+## 4. Endpoints
+
+All signed per `IDENTITY_SPEC.md` §4, except §4.6.
+
+### 4.1 Campaign lifecycle
+
+```
+POST   /api/campaigns                    create (owner = caller)         → 201 {campaign}
+GET    /api/campaigns/mine               owned + joined                  → 200 {campaigns:[…]}
+GET    /api/campaigns/{id}               full payload (§6)               → 200 {campaign}
+PATCH  /api/campaigns/{id}               title/description/state/visibility (owner|editor)
+POST   /api/campaigns/{id}/items         add item (owner|editor)
+PATCH  /api/campaigns/{id}/items/{itemId}
+DELETE /api/campaigns/{id}/items/{itemId}
+```
+
+`GET /api/campaigns/mine` returns summaries only — id, title, counts, `version`, the caller's role
+— so the campaign list screen is one cheap request.
+
+`GET /api/campaigns/{id}` requires membership unless `visibility` is `link` or `public`.
+A campaign in state `disabled` returns **`451`** to members with a `detail` explaining it was
+disabled by the operator (C6), and is invisible in `mine`.
+
+### 4.2 Membership
+
+```
+POST   /api/campaigns/{id}/invite        {role, expires_at?, max_uses?}  → 201 {code}
+POST   /api/campaigns/join               {code}                          → 200 {campaign summary}
+DELETE /api/campaigns/{id}/members/me    leave
+DELETE /api/campaigns/{id}/members/{userId}   remove (owner only)
+```
+
+Invite codes are short and typeable — 8 characters from an unambiguous alphabet (no `0/O`, `1/l/I`).
+They are **capability tokens**: possession grants membership, so they are rate limited per IP
+(`IDENTITY_SPEC.md` D5), attempt-throttled per code, and expire by default in 7 days.
+
+An owner cannot leave their own campaign; ownership must be transferred first (`PATCH` with a new
+`owner_id`, which must already be a member).
+
+### 4.3 Assignment
+
+```
+POST   /api/campaigns/{id}/claim    {item_ids:[…]}  → 200 {granted:[…], refused:[{id, reason}]}
+POST   /api/campaigns/{id}/release  {item_ids:[…]}  → 200
+POST   /api/campaigns/{id}/done     {item_ids:[…]}  → 200 {accepted:[…]}
+GET    /api/campaigns/{id}/coverage                 → 200 (§4.4)
+```
+
+`claim` semantics (C5):
+
+- `contact` items are granted under a transaction that rejects any item with an active claim by
+  another user. Refused items come back with `reason: "claimed"`.
+- `target` items are always granted.
+- Granted claims get `expires_at = now + 48h` (C4). A sweep sets expired `claimed` rows to
+  `released`, returning the work to the pool.
+- `done` is idempotent per (item, user): it closes the assignment, clears `expires_at`, and
+  increments `completion_count`. Re-sending the same completion does not double-count.
+
+### 4.4 Coverage
+
+```jsonc
+{ "campaign_id": "…", "version": 12,
+  "items": [ { "item_id": "…", "kind": "contact", "country": "it",
+               "claimed": 1, "done": 0, "state": "claimed" } ],
+  "by_country": [ { "country": "it", "contact_total": 4, "contact_done": 1, "target_done": 17 } ] }
+```
+
+No `user_id` appears in the response (§2.1). This backs both the in-app progress display and the
+organizer's web view — the thing that turns sharding into coordination, because it is what makes an
+uncovered country visible.
+
+### 4.5 Abuse
+
+```
+POST   /api/campaigns/{id}/report   {reason, detail}     → 202     (any authenticated user)
+```
+
+Mails the operator. Server-side, an operator flag sets `campaign.state = 'disabled'` (C6); there is
+no API for it — it is a database/CLI action, deliberately.
+
+### 4.6 Legacy alias — unsigned
+
+```
+GET    /api/abu-safiya      → the Abu-Safiya campaign in the exact current payload shape
+```
+
+Unauthenticated, unchanged bytes, indefinite (C7).
+
+---
+
+## 5. Rate limits and abuse controls
+
+Keyed on **IP and install id, never on `user_id` or public key** — keys are free
+(`IDENTITY_SPEC.md` §7).
+
+| Action | Limit |
+|---|---|
+| Campaign creation | 3 / day / IP |
+| Invite creation | 20 / day / campaign |
+| Invite redemption attempts | 10 / hour / IP, plus per-code throttle |
+| `claim` | 200 items / hour / user |
+
+Plus, from C1: no public listing endpoint exists at all in v1 — `visibility: 'public'` is reserved
+in the schema but not served. Adding it is §9.
+
+**Terms line**, shown at campaign creation: campaigns must not target private individuals.
+
+---
+
+## 6. Client changes
+
+### 6.1 Payload compatibility
+
+`GET /api/campaigns/{id}` returns the **existing `CampaignDto` shape** — `campaign`, `version`,
+`locateUrl`, `countries[]` with `posts[]` — plus new fields. Since the client is configured with
+`ignoreUnknownKeys = true`, the additions are invisible to older builds:
+
+```jsonc
+{
+  "campaign": "…", "version": 12, "locateUrl": "…",
+  "id": "…", "title": "…", "description": "…", "role": "member", "state": "active",
+  "countries": [ { "code": "it", "name": "…", "flag": "🇮🇹", "defaultLang": "it",
+                   "langs": ["it"], "url": "…", "parliament": true,
+                   "posts": [ { "id": "IT-2 (breve)", "lang": "it", "text": "…" } ],
+                   "targets":  [ { "id": "…", "url": "…", "author": "@…", "text": "…",
+                                   "postedAt": …, "note": "…" } ],
+                   "contacts": [ { "id": "…", "url": "…", "label": "…" } ] } ]
+}
+```
+
+`CampaignModels.toCampaign()` therefore needs additions, not a rewrite: two new lists on
+`CampaignCountry`, and `Campaign` gains `id`, `title`, `role`.
+
+### 6.2 Repository
+
+```kotlin
+interface CampaignRepository {
+    suspend fun list(): Result<List<CampaignSummary>>
+    suspend fun get(id: String): Result<Campaign>
+    suspend fun join(code: String): Result<CampaignSummary>
+    suspend fun claim(id: String, itemIds: List<String>): Result<ClaimOutcome>
+    suspend fun markDone(id: String, itemIds: List<String>): Result<Unit>
+}
+```
+
+The existing `getCampaign()` becomes `get(abuSafiyaId)`. All the status-classification logic in
+`CampaignRepositoryImpl` (the deliberate 404/5xx/non-2xx branches, since the shared client is built
+without `expectSuccess`) is reused verbatim — extract it to a private helper rather than copying it
+five times.
+
+Request signing is a Ktor plugin (`IDENTITY_SPEC.md` §4.4), so none of these methods reference auth.
+
+### 6.3 Navigation
+
+| Route | Now | After |
+|---|---|---|
+| `campaign_countries` | Inert country list, the dead screen | **`campaign_list`** — owned + joined campaigns, plus *Join with code* |
+| — | | `campaign_detail/{id}` — the hub: three lanes (Publish / Act / Reach out) + progress |
+| `campaign_composer` | Unchanged | Unchanged, reached from the Publish lane, scoped to one campaign |
+
+The top-bar campaign button on `PostsScreen` (`Screen.Home.route`) navigates to `campaign_list`
+instead of loading one hardcoded campaign, so `PostsViewModel.loadCampaign()` and
+`CampaignUiEvent.NavigateToCountries` are replaced by a plain navigation with the list screen
+loading its own data.
+
+The country list survives as a *section of the detail screen* — this time with working
+`onClick`s: a country row opens `CampaignCountry.url`, and the parliament chip opens the contact
+action, both via the existing `platform/UrlOpener`. `Campaign.locateUrl` becomes a
+"find my country" affordance. These three fields are already parsed and currently unused.
+
+### 6.4 Offline
+
+Campaigns and their items are cached locally (SQLDelight, alongside the existing tables), keyed by
+`campaign.version` so a refresh is a cheap version check. Completions recorded while offline go to
+a local outbox table and are flushed to `POST /done` on next connect — `done` is idempotent per
+(item, user) precisely so this replay is safe.
+
+Claims are **not** made offline: an exclusive `contact` claim cannot be granted without the server,
+and pretending otherwise produces exactly the duplicate contact actions C3 exists to prevent.
+
+---
+
+## 7. Migrating Abu-Safiya
+
+1. Write an importer that turns `social/abu_safiya_x_posts.md` + the country registry in
+   `routes/abusafiya.py` into one `campaign` row, its `campaign_item` rows (`kind='post'`), and
+   `kind='contact'` items for the countries currently flagged `parliament: true`.
+2. Owner is an operator-held identity.
+3. Re-point `/api/abu-safiya` at the generic serializer for that campaign id, and diff the output
+   against `shared/src/desktopTest/resources/campaign_abu_safiya_slice.json`.
+
+That fixture already exists as a verbatim capture from the live endpoint, and
+`CampaignRepositoryTest` parses it as a contract test — so **the migration is verified byte-shape
+by a test that is already written**. Do not modify the fixture to make the new server pass.
+
+---
+
+## 8. Build order
+
+| # | Step | Verification | User-visible |
+|---|---|---|---|
+| 1 | Schema + generic `GET /api/campaigns/{id}`; Abu-Safiya imported; `/api/abu-safiya` re-pointed at it. | `CampaignRepositoryTest` still green against the existing fixture. | No |
+| 2 | `mine` + `list()` + `campaign_list` screen replacing the dead country screen; detail screen with working country/parliament/locate links. | Desktop + Android runtime check. | **Yes — this alone fixes the original complaint** |
+| 3 | Web authoring + invites + `join`. | Second identity joins a campaign authored by the first. | Yes |
+| 4 | `target`/`contact` items, claim/done/coverage, offline outbox. | Two clients contend for one `contact` item; exactly one is granted. | Yes |
+
+Step 1 changes nothing observable and de-risks everything after it. Step 2 needs
+`IDENTITY_SPEC.md` steps 1–2 (a working signed request) to have landed first.
+
+---
+
+## 9. Deferred — public campaigns
+
+`visibility: 'public'` is reserved in the schema and **not served**. Turning it on means a
+discovery surface, which means hosting user-generated content that recruits strangers into
+coordinated action against named accounts. That needs a review queue, a notice-and-action process
+(DSA obligations apply — the operator is EU-based), and a moderation policy with someone to operate
+it.
+
+That is a product decision, not a schema change, and should be taken deliberately rather than
+arrived at by adding a `GET /api/campaigns/public`. Invite-only (C1) is the shipping design.

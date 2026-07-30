@@ -337,9 +337,10 @@ dataset. Accordingly:
 
 ## 8. What this does *not* decide
 
-Specified elsewhere: the campaign schema itself, invite codes and membership roles, the
-claim/done/coverage assignment protocol, web-based campaign authoring, and the abuse kill switch.
-This document fixes only the identity primitive and the `user_id` those systems reference.
+Specified in `CAMPAIGN_SCHEMA_SPEC.md`: the campaign schema itself, invite codes and membership
+roles, the claim/done/coverage assignment protocol, web-based campaign authoring, and the abuse
+kill switch. This document fixes only the identity primitive and the `user_id` those systems
+reference.
 
 ---
 
