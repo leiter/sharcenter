@@ -1,6 +1,7 @@
 package cut.the.crap.data.rest.identity
 
 import cut.the.crap.data.rest.AppConfig
+import cut.the.crap.data.rest.AppError
 import cut.the.crap.data.rest.CtcSignature
 import cut.the.crap.data.rest.Result
 import cut.the.crap.fake.FakeIdentityKeyStore
@@ -16,6 +17,7 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -90,6 +92,61 @@ class IdentityIntegrationTest {
         restoredManager.restore(seed.joinToString(" "))
         val ping = restored.ping()
         assertEquals(firstUser.userId, assertIs<Result.Success<String>>(ping).data)
+    }
+
+    @Test
+    fun `a second install joins the first identity and can be locked out again`() = runTest {
+        if (baseUrl == null) return@runTest
+
+        // Install A registers; install B is a fresh device that has never seen the server.
+        val (phone, phoneManager) = repository()
+        val user = assertIs<Result.Success<RegisteredUser>>(
+            phone.register(displayName = "Two devices", keyLabel = "Phone")
+        ).data
+
+        val (laptop, laptopManager) = repository()
+        laptopManager.getOrCreate()
+        val claim = requireNotNull(laptopManager.addKeyProof(user.userId))
+
+        // The already-registered device signs the request; the claim proves B holds its own key.
+        val added = assertIs<Result.Success<DeviceKey>>(
+            phone.addKey(claim.pubkey, claim.proof, label = "Laptop")
+        ).data
+        assertEquals(claim.pubkey, added.pubkey)
+        assertTrue(added.isActive)
+
+        // The step-3 verification: two installs, two keys, one user_id.
+        assertEquals(user.userId, assertIs<Result.Success<String>>(laptop.ping()).data)
+
+        val profile = assertIs<Result.Success<UserProfile>>(phone.me()).data
+        assertEquals(user.userId, profile.userId)
+        assertEquals(2, profile.keys.count { it.isActive }, "both devices must be listed as active")
+        // Not first-by-position: both keys land in the same second, so the list order falls back
+        // to the pubkey tiebreak.
+        assertTrue(profile.keys.any { it.pubkey == requireNotNull(phoneManager.current()).keyId })
+        assertEquals("Laptop", profile.keys.single { it.pubkey == claim.pubkey }.label)
+
+        // Losing the laptop: revoke it from the phone and it stops being this user.
+        assertIs<Result.Success<DeviceKey>>(phone.revokeKey(claim.pubkey))
+        val afterRevoke = assertIs<Result.Error>(laptop.ping())
+        assertEquals(AppError.Client(401, "key_revoked"), afterRevoke.error)
+
+        // And the phone cannot revoke itself into an unreachable identity.
+        val lastKey = assertIs<Result.Error>(phone.revokeKey(requireNotNull(phoneManager.current()).keyId))
+        assertEquals(AppError.Client(409, "last_key"), lastKey.error)
+        assertIs<Result.Success<String>>(phone.ping())
+    }
+
+    @Test
+    fun `the display name round-trips`() = runTest {
+        if (baseUrl == null) return@runTest
+
+        val (repository, _) = repository()
+        repository.register(displayName = "Before")
+
+        assertEquals("After", assertIs<Result.Success<UserProfile>>(repository.setDisplayName("After")).data.displayName)
+        assertEquals("After", assertIs<Result.Success<UserProfile>>(repository.me()).data.displayName)
+        assertNull(assertIs<Result.Success<UserProfile>>(repository.setDisplayName(null)).data.displayName)
     }
 
     @Test

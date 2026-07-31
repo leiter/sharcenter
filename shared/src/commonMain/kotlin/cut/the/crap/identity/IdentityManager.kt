@@ -100,9 +100,44 @@ class IdentityManager(
     }
 
     /**
+     * What this install must hand to an already-registered device so that device can add it as a
+     * second key, or null when this install has no identity yet.
+     *
+     * Run on the **new** device, for the user id its owner reads off the old one. The proof is
+     * this key's own signature over `add-key:<userId>:<pubkey>`, which is what stops the old
+     * device from binding some third party's public key to the identity. The `userId` is inside
+     * the signed string on purpose: without it, a proof captured anywhere else would be
+     * replayable against a different identity.
+     *
+     * Transferring the result is the UI's problem (QR code, or typing it) — it is public
+     * material, so it may be shown and copied freely.
+     */
+    suspend fun addKeyProof(userId: String): AddKeyProof? {
+        val seed = keyStore.loadSeed() ?: return null
+        val pubkey = crypto.ed25519PublicKey(seed).encodeBase64Url()
+        val challenge = addKeyChallenge(userId, pubkey)
+        return AddKeyProof(
+            pubkey = pubkey,
+            proof = crypto.ed25519Sign(seed, challenge.encodeToByteArray()).encodeBase64Url(),
+        )
+    }
+
+    /**
      * Erases this install's identity. The server-side user is not deleted and its campaigns still
      * exist — they simply become unmanageable, which the UI must say plainly
      * (`doc/IDENTITY_SPEC.md` §6.3).
      */
     suspend fun reset() = mutex.withLock { keyStore.clear() }
+
+    companion object {
+        /** The exact string §5.4 signs. Shared with the server's `routes/identity.py`. */
+        internal fun addKeyChallenge(userId: String, pubkey: String): String =
+            "add-key:$userId:$pubkey"
+    }
+}
+
+/** A new device's claim on an existing identity: its public key, and proof it holds the private half. */
+class AddKeyProof internal constructor(val pubkey: String, val proof: String) {
+    /** Public material only, but be explicit that nothing secret is in here. */
+    override fun toString(): String = "AddKeyProof(pubkey=$pubkey)"
 }

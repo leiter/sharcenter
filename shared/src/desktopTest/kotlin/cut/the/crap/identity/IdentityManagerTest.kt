@@ -2,6 +2,7 @@ package cut.the.crap.identity
 
 import cut.the.crap.fake.FakeIdentityKeyStore
 import cut.the.crap.platform.JvmCryptoProvider
+import cut.the.crap.tools.decodeBase64Url
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
@@ -106,6 +107,56 @@ class IdentityManagerTest {
         assertNull(manager.current())
         assertEquals(1, keyStore.clears)
         assertNotEquals(original.keyId, manager.getOrCreate().keyId)
+    }
+
+    @Test
+    fun `addKeyProof signs the exact challenge the server rebuilds`() = runTest {
+        val (manager, _) = manager()
+        val identity = manager.getOrCreate()
+
+        val claim = manager.addKeyProof("user-42")!!
+
+        assertEquals(identity.keyId, claim.pubkey)
+        assertTrue(
+            crypto.ed25519Verify(
+                publicKey = identity.publicKey,
+                // The server builds this string itself from the authenticated user_id and the
+                // pubkey in the body; if either side's format drifts, the proof stops verifying.
+                message = "add-key:user-42:${identity.keyId}".encodeToByteArray(),
+                signature = claim.proof.decodeBase64Url(),
+            ),
+            "proof must verify against add-key:<user_id>:<pubkey>",
+        )
+    }
+
+    @Test
+    fun `a proof is bound to one user id and one key`() = runTest {
+        val (device, _) = manager()
+        device.getOrCreate()
+        val identity = device.current()!!
+
+        // Same device, different identity to join: a different signature. This is what stops a
+        // proof captured elsewhere from being replayed against another user.
+        assertNotEquals(device.addKeyProof("user-a")!!.proof, device.addKeyProof("user-b")!!.proof)
+
+        val (other, _) = manager()
+        other.getOrCreate()
+        val otherClaim = other.addKeyProof("user-a")!!
+        assertNotEquals(identity.keyId, otherClaim.pubkey)
+        assertTrue(
+            !crypto.ed25519Verify(
+                publicKey = identity.publicKey,
+                message = "add-key:user-a:${otherClaim.pubkey}".encodeToByteArray(),
+                signature = otherClaim.proof.decodeBase64Url(),
+            ),
+            "one device's proof must not verify as another's",
+        )
+    }
+
+    @Test
+    fun `a fresh install cannot produce a proof`() = runTest {
+        val (manager, _) = manager()
+        assertNull(manager.addKeyProof("user-42"))
     }
 
     @Test

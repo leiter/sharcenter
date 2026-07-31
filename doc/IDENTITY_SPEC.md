@@ -1,9 +1,9 @@
 # Identity Spec — Keypair Identity for ShareCenter (`cut.the.crap`)
 
-**Status:** §9 **steps 1–2 implemented** — key material, the `CTC-Sig` signing plugin, and the
-server's `user`/`user_key`/`seen_nonce` store with `POST /api/users` and `GET /api/ping`, verified
-end to end against a live Flask server. Steps 3–4 still specification only. Crypto library decided
-in §3.2, verified against published klib ABIs.
+**Status:** §9 **steps 1–3 implemented** — key material, the `CTC-Sig` signing plugin, and the whole
+of §5 (register, ping, profile, device add and revoke), verified end to end against a live Flask
+server. Step 4 still specification only, and **nothing is user-visible yet**: there is no UI on any
+of this, by design (§9). Crypto library decided in §3.2, verified against published klib ABIs.
 **Scope:** Client (`:shared`, KMP) + the `cut.the.crap` Flask server.
 **Motivates:** per-user campaigns, campaign ownership, membership, and per-user work assignment.
 **Last updated:** 2026-07-30
@@ -271,13 +271,18 @@ Rate limited **per IP** (D5).
 ### 5.2 `GET /api/users/me`
 
 ```jsonc
-{ "user_id": "…", "display_name": "…",
+{ "user_id": "…", "display_name": "…", "created_at": 1753…,
   "keys": [ { "pubkey": "…", "label": "Pixel 8", "added_at": …, "revoked_at": null } ] }
 ```
 
+Revoked keys stay in the list. A device list that silently drops them could not show the user that
+a lost phone was actually locked out, which is the one thing they want to see after revoking it.
+
 ### 5.3 `PATCH /api/users/me`
 
-`{ "display_name": "…" }`
+`{ "display_name": "…" }`, returning the §5.2 body. An empty string clears the name — a user is
+allowed to be nameless. A body without the field at all is `400`, so "clear it" and "I forgot to
+send it" cannot be confused.
 
 ### 5.4 `POST /api/users/keys` — add a device
 
@@ -289,13 +294,25 @@ Signed by an **existing, non-revoked** key. The new device's key is vouched for 
 
 `proof` is the new key's own signature over the ASCII string
 `add-key:<user_id>:<new-pubkey-b64url>`, proving the requester actually holds the new private key
-rather than binding an arbitrary third-party key.
+rather than binding an arbitrary third-party key. The `user_id` is inside the signed string so a
+proof captured elsewhere cannot be replayed against a different identity.
+
+`201` on success, `200` if that key is already active on this user (idempotent), `400`
+`invalid_proof` if the proof does not verify, `409` `key_taken` if the key belongs to someone else.
+A **revoked key is never revived** (`409` `key_revoked`): otherwise a revocation would only hold
+until someone re-added the same key.
 
 ### 5.5 `DELETE /api/users/keys/{pubkey}` — revoke
 
 Signed by any non-revoked key of the same user. Sets `revoked_at`. **A user may not revoke their
-last active key** — that would orphan the identity and every campaign it owns; the client must use
-"reset identity" (§6.3) instead.
+last active key** (`409` `last_key`) — that would orphan the identity and every campaign it owns;
+the client must use "reset identity" (§6.3) instead. The "one must remain" condition lives in the
+`UPDATE` statement rather than a preceding `SELECT`, so two concurrent revokes cannot both see two
+active keys and between them take the last one.
+
+Revoking a key that is already revoked is `200`: the desired state holds, and an error would only
+make the app report a successful lockout as a failure. A key belonging to another user is `404` —
+not `403`, which would confirm that the key exists.
 
 ### 5.6 `GET /api/ping` — signed no-op
 
@@ -397,7 +414,7 @@ Each step is independently shippable; nothing user-visible changes before step 4
 |---|---|---|
 | 1 ✅ | `IdentityKeyStore` + `CryptoProvider` interfaces; Bouncy Castle implementation shared by Android and desktop via the `jvmShared` source-set group; `IdentityManager`; BIP-39. iOS implementation deferred (§3.2). Client-only, wired to nothing. | **Done.** 32 tests in `desktopTest`: RFC 8032 §7.1 Ed25519 vectors, the published BIP-39 256-bit vectors, seed → phrase → seed round-trips, concurrent create. Whole suite 255/0. All three iOS targets, Android and desktop still compile. |
 | 2 ✅ | Ktor signing plugin (`CtcSignature`, installed on the shared client for the campaign host only) + server `routes/identity.py`, `utils/ctc_sig.py`, `utils/identity_store.py`. | **Done.** Server suite 27/27 (replay, skew both directions, unknown key, forged signature, swapped body, malformed headers, 503 when the store or PyNaCl is missing). Client 9 plugin tests. **Three fixed contract vectors are asserted in both languages** so a canonicalisation drift turns one suite red instead of 401-ing in production. `IdentityIntegrationTest` runs the real Ktor client against a live Flask server — register, ping, restore-by-phrase, 401 for an unregistered key — and skips unless `CTC_SERVER` is set. |
-| 3 | `GET`/`PATCH /api/users/me`, device add (§5.4) and revoke (§5.5), recovery-phrase entry. | Two installs resolve to one `user_id`. |
+| 3 ✅ | `GET`/`PATCH /api/users/me`, device add (§5.4) and revoke (§5.5), recovery-phrase entry. | **Done.** Server suite 57/57. `IdentityIntegrationTest` runs the whole device flow against a live Flask server: register a phone, produce the laptop's `AddKeyProof`, add it from the phone, **and the laptop's `/api/ping` returns the phone's `user_id`** — two installs, one identity. Then revoke the laptop (it 401s `key_revoked`) and fail to revoke the last key (409 `last_key`). Client 10 repository tests + 3 proof tests; suite 282/0. The proof is bound to both the key and the `user_id`, and both bindings are tested by making one of them wrong. **Recovery-phrase entry is covered at the API level only** — `IdentityManager.restore()` plus a live-server test that a restored seed resolves to the original `user_id`; the screen to type the phrase into belongs to the Settings work in step 4. |
 | 4 | Point campaign ownership and membership at `user_id`; identity section in Settings incl. reset. | Separate spec. |
 
 Step 1 lands entirely inside `:shared` and is testable without touching the server.
