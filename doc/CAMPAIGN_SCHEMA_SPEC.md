@@ -1,6 +1,8 @@
 # Campaign Schema Spec — Multi-User Campaigns for ShareCenter (`cut.the.crap`)
 
-**Status:** Specification only — no code written.
+**Status:** §8 **step 1 implemented** — schema, the generic `GET /api/campaigns/{id}`, the
+Abu-Safiya import, and `/api/abu-safiya` re-pointed at the store. Verified byte-identical against
+the payload the code at the previous commit produced. Steps 2–4 still specification only.
 **Depends on:** `IDENTITY_SPEC.md` — every `user_id` here is the one that spec defines.
 **Scope:** Client (`:shared`, KMP) + the `cut.the.crap` Flask server + a small web authoring UI.
 **Last updated:** 2026-07-30
@@ -50,6 +52,7 @@ campaign (
   title         TEXT NOT NULL,
   description   TEXT,
   locate_url    TEXT,                   -- geolocating entry point, optional
+  site_url_template TEXT,               -- per-country web page, e.g. '…/{country}/abu-safiya' (§2.2)
   visibility    TEXT NOT NULL,          -- 'invite' | 'link' | 'public'   (C1: default 'invite')
   state         TEXT NOT NULL,          -- 'draft' | 'active' | 'archived' | 'disabled'
   version       INTEGER NOT NULL,       -- bumped on any item change; drives client cache
@@ -128,6 +131,25 @@ Countries are **derived**, not a table: the distinct `campaign_item.country` val
 languages. This keeps the existing `CampaignCountryDto` shape (§6.1) computable without a second
 registry to keep in sync. `hasParliamentAction` becomes "this country has at least one item with
 `kind='contact'`" — which finally gives that flag a behaviour instead of an inert chip.
+
+Implementing step 1 pinned down what "plus their languages" has to mean, and turned up one field
+that does not derive:
+
+| Field | Derivation |
+|---|---|
+| `langs` | the post languages **in order of first appearance**, not sorted — `lu` must stay `["fr","de"]`, and sorting would silently make it `["de","fr"]` and change which language the app defaults to |
+| `defaultLang` | the language of the country's first post |
+| `parliament` | the country has at least one `kind='contact'` item |
+| `name`, `flag` | `utils/countries.py`, the one registry, shared with `routes/abusafiya.py` |
+| `url` | **does not derive** |
+
+`url` is the country's page on the campaign *website* — a property of the site, not of the work
+items, and nothing in `campaign_item` implies it. It therefore lives on the campaign as
+`site_url_template`, with `{country}` substituted. A campaign with no website leaves it null and
+its countries report an empty `url`, which is the honest answer rather than a fabricated link.
+
+These rules were checked against all 42 countries of the live payload **before** being written
+down, not asserted and hoped for. The check that they hold is the byte comparison in §7.
 
 ---
 
@@ -343,6 +365,14 @@ and pretending otherwise produces exactly the duplicate contact actions C3 exist
 3. Re-point `/api/abu-safiya` at the generic serializer for that campaign id, and diff the output
    against `shared/src/desktopTest/resources/campaign_abu_safiya_slice.json`.
 
+**As built:** the importer's source is `_campaign_payload()` itself, not the markdown — so the
+import cannot disagree with what shipped clients already receive, and the comparison is a real
+check instead of two parsers agreeing with each other. The alias falls back to the markdown when
+the store is missing or the campaign is not yet imported, so deploying the code and running the
+import are independent steps and neither one alone can take the endpoint down. Imported with
+`visibility='link'`: the campaign has always been publicly readable, and requiring an invite would
+have been a tightening nobody asked for.
+
 That fixture already exists as a verbatim capture from the live endpoint, and
 `CampaignRepositoryTest` parses it as a contract test — so **the migration is verified byte-shape
 by a test that is already written**. Do not modify the fixture to make the new server pass.
@@ -353,7 +383,7 @@ by a test that is already written**. Do not modify the fixture to make the new s
 
 | # | Step | Verification | User-visible |
 |---|---|---|---|
-| 1 | Schema + generic `GET /api/campaigns/{id}`; Abu-Safiya imported; `/api/abu-safiya` re-pointed at it. | `CampaignRepositoryTest` still green against the existing fixture. | No |
+| 1 ✅ | Schema + generic `GET /api/campaigns/{id}`; Abu-Safiya imported; `/api/abu-safiya` re-pointed at it. | **Done.** 26 checks in `test_campaigns.py`, the two that matter being byte comparisons: the store-served payload and the legacy alias are both **character-for-character identical** to what the code at the previous commit produced — checked against a payload rendered from `git archive HEAD`, so the old implementation is the reference rather than a re-description of the new one. Plus access control (unsigned → 401, invite-only non-member → 404 not 403, disabled → 451), a repeatable import, and 503 when the store is missing. `CampaignRepositoryTest` untouched and green. | No |
 | 2 | `mine` + `list()` + `campaign_list` screen replacing the dead country screen; detail screen with working country/parliament/locate links. | Desktop + Android runtime check. | **Yes — this alone fixes the original complaint** |
 | 3 | Web authoring + invites + `join`. | Second identity joins a campaign authored by the first. | Yes |
 | 4 | `target`/`contact` items, claim/done/coverage, offline outbox. | Two clients contend for one `contact` item; exactly one is granted. | Yes |
