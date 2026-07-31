@@ -1,8 +1,8 @@
 # Campaign Schema Spec — Multi-User Campaigns for ShareCenter (`cut.the.crap`)
 
-**Status:** §8 **step 1 implemented** — schema, the generic `GET /api/campaigns/{id}`, the
-Abu-Safiya import, and `/api/abu-safiya` re-pointed at the store. Verified byte-identical against
-the payload the code at the previous commit produced. Steps 2–4 still specification only.
+**Status:** §8 **steps 1–2 implemented** — schema, `GET /api/campaigns/{id}` and
+`GET /api/campaigns/mine`, the Abu-Safiya import, and the campaign list and detail screens that
+replace the dead country screen. Steps 3–4 still specification only.
 **Depends on:** `IDENTITY_SPEC.md` — every `user_id` here is the one that spec defines.
 **Scope:** Client (`:shared`, KMP) + the `cut.the.crap` Flask server + a small web authoring UI.
 **Last updated:** 2026-07-30
@@ -53,6 +53,7 @@ campaign (
   description   TEXT,
   locate_url    TEXT,                   -- geolocating entry point, optional
   site_url_template TEXT,               -- per-country web page, e.g. '…/{country}/abu-safiya' (§2.2)
+  featured      INTEGER NOT NULL DEFAULT 0,  -- operator-curated; appears in `mine` (§4.1)
   visibility    TEXT NOT NULL,          -- 'invite' | 'link' | 'public'   (C1: default 'invite')
   state         TEXT NOT NULL,          -- 'draft' | 'active' | 'archived' | 'disabled'
   version       INTEGER NOT NULL,       -- bumped on any item change; drives client cache
@@ -192,6 +193,13 @@ DELETE /api/campaigns/{id}/items/{itemId}
 
 `GET /api/campaigns/mine` returns summaries only — id, title, counts, `version`, the caller's role
 — so the campaign list screen is one cheap request.
+
+**As built, `mine` also returns campaigns flagged `featured`.** Owned-and-joined alone would have
+given a brand-new install an empty campaign screen, because the campaign the app has always shipped
+with is one nobody was ever invited to. `featured` is set by the operator (import or CLI), and C1
+still holds: there is no browse, no search, and no endpoint that lists other people's campaigns.
+It is how the app finds its own bundled campaign, not a directory. `role` is null for it, and the
+client shows that as "Included" rather than "Joined".
 
 `GET /api/campaigns/{id}` requires membership unless `visibility` is `link` or `public`.
 A campaign in state `disabled` returns **`451`** to members with a `detail` explaining it was
@@ -344,6 +352,16 @@ The country list survives as a *section of the detail screen* — this time with
 action, both via the existing `platform/UrlOpener`. `Campaign.locateUrl` becomes a
 "find my country" affordance. These three fields are already parsed and currently unused.
 
+**As built:** the filter and sort chips moved across with the country list rather than being
+deleted with the screen — forty-two countries is too many to scan, and "parliament action" as a
+filter now selects for something a user can act on. `CampaignCountryScreen.kt` is gone;
+`CampaignCountryList.kt` (the chips and the subtitle) is kept and reused. `PostsViewModel` loses
+`loadCampaign()`, `campaign`, `campaignLoading` and `CampaignUiEvent` entirely: the button is now
+plain navigation, and the list screen loads its own data.
+
+Serving the parliament chip needed `contacts` on the country block, so the serializer emits it —
+`legacy_payload` strips it again, and the byte comparison from step 1 is what keeps that honest.
+
 ### 6.4 Offline
 
 Campaigns and their items are cached locally (SQLDelight, alongside the existing tables), keyed by
@@ -384,7 +402,7 @@ by a test that is already written**. Do not modify the fixture to make the new s
 | # | Step | Verification | User-visible |
 |---|---|---|---|
 | 1 ✅ | Schema + generic `GET /api/campaigns/{id}`; Abu-Safiya imported; `/api/abu-safiya` re-pointed at it. | **Done.** 26 checks in `test_campaigns.py`, the two that matter being byte comparisons: the store-served payload and the legacy alias are both **character-for-character identical** to what the code at the previous commit produced — checked against a payload rendered from `git archive HEAD`, so the old implementation is the reference rather than a re-description of the new one. Plus access control (unsigned → 401, invite-only non-member → 404 not 403, disabled → 451), a repeatable import, and 503 when the store is missing. `CampaignRepositoryTest` untouched and green. | No |
-| 2 | `mine` + `list()` + `campaign_list` screen replacing the dead country screen; detail screen with working country/parliament/locate links. | Desktop + Android runtime check. | **Yes — this alone fixes the original complaint** |
+| 2 ✅ | `mine` + `list()` + `campaign_list` screen replacing the dead country screen; detail screen with working country/parliament/locate links. | **Done.** 9 new server checks; 11 client unit tests; **6 headless render tests**, three of which assert that a tap actually opens a URL — the country row, the parliament chip and "find my country", i.e. exactly the three payload fields that were parsed and ignored. `CampaignIntegrationTest` runs the real client against a live server: `mine` from a fresh install, the detail payload, and the unsigned legacy alias side by side with the same campaign fetched by id. | **Yes — this alone fixes the original complaint** |
 | 3 | Web authoring + invites + `join`. | Second identity joins a campaign authored by the first. | Yes |
 | 4 | `target`/`contact` items, claim/done/coverage, offline outbox. | Two clients contend for one `contact` item; exactly one is granted. | Yes |
 

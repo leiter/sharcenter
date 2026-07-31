@@ -14,8 +14,15 @@ import cut.the.crap.ui.content.links.LinkScreen
 import cut.the.crap.ui.content.settings.BackupManagementScreen
 import cut.the.crap.ui.content.settings.ImportExportScreen
 import cut.the.crap.ui.content.settings.identity.IdentityScreen
-import cut.the.crap.ui.content.campaign.CampaignCountryScreen
+import androidx.navigation.NavType
+import androidx.savedstate.read
+import androidx.navigation.navArgument
+import cut.the.crap.ui.content.campaign.CampaignDetailScreen
+import cut.the.crap.ui.content.campaign.CampaignDetailViewModel
+import cut.the.crap.ui.content.campaign.CampaignListScreen
 import cut.the.crap.ui.content.campaign.CampaignPostComposerScreen
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import cut.the.crap.ui.content.settings.SettingsScreen
 import cut.the.crap.ui.content.settings.SettingsViewModel
 
@@ -39,10 +46,7 @@ fun NavigationGraph(
                 onContentItemsReordered = { items ->
                     postsViewModel.updateContentItemSortOrders(items)
                 },
-                snackBarEvents = postsViewModel.snackBarEvents,
-                campaignLoading = postsViewModel.campaignLoading,
-                campaignEvents = postsViewModel.campaignEvents,
-                onLoadCampaign = postsViewModel::loadCampaign
+                snackBarEvents = postsViewModel.snackBarEvents
             )
         }
         composable(Screen.Search.route) {
@@ -81,16 +85,31 @@ fun NavigationGraph(
                 navController = navController
             )
         }
-        composable("campaign_countries") {
-            CampaignCountryScreen(
+        composable("campaign_list") {
+            CampaignListScreen(navController = navController)
+        }
+        composable(
+            "campaign_detail/{campaignId}",
+            arguments = listOf(navArgument("campaignId") { type = NavType.StringType }),
+        ) { entry ->
+            val campaignId = entry.arguments?.read { getStringOrNull("campaignId") }.orEmpty()
+            CampaignDetailScreen(
                 navController = navController,
-                campaign = postsViewModel.campaign.collectAsState().value
+                campaignId = campaignId,
+                viewModel = koinViewModel { parametersOf(campaignId) },
             )
         }
-        composable("campaign_composer") {
+        composable(
+            "campaign_composer/{campaignId}",
+            arguments = listOf(navArgument("campaignId") { type = NavType.StringType }),
+        ) { entry ->
+            val campaignId = entry.arguments?.read { getStringOrNull("campaignId") }.orEmpty()
+            // Its own view model instance, but the repository serves the campaign from memory —
+            // arriving here always follows a load on the detail screen, so this costs no request.
+            val detailViewModel: CampaignDetailViewModel = koinViewModel { parametersOf(campaignId) }
             CampaignPostComposerScreen(
                 navController = navController,
-                campaign = postsViewModel.campaign.collectAsState().value,
+                campaign = detailViewModel.state.collectAsState().value.campaign,
                 onCreateDrafts = { texts -> postsViewModel.createDraftPosts(texts) }
             )
         }

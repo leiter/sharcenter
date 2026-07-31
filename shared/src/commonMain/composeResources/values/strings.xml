@@ -243,6 +243,28 @@
     <string name="action_back">Back</string>
 
     <!-- Action campaign: country picker -->
+    <!-- Campaign list and detail (doc/CAMPAIGN_SCHEMA_SPEC.md §6.3). -->
+    <string name="campaign_list_title">Campaigns</string>
+    <string name="campaign_list_empty_title">No campaigns yet</string>
+    <string name="campaign_list_empty_body">Campaigns you own or have been invited to appear here.</string>
+    <string name="campaign_list_failed">Could not load your campaigns.</string>
+    <string name="campaign_list_retry">Try again</string>
+    <string name="campaign_badge_featured">Included</string>
+    <string name="campaign_badge_owner">You own this</string>
+    <string name="campaign_badge_member">Joined</string>
+    <string name="campaign_list_counts">%1$d countries · %2$d posts</string>
+    <string name="campaign_list_contacts">%1$d contact actions</string>
+    <string name="campaign_detail_locate">Find my country</string>
+    <string name="campaign_detail_publish">Publish</string>
+    <string name="campaign_detail_publish_desc">Ready-to-post copy in your language.</string>
+    <string name="campaign_detail_reach_out">Reach out</string>
+    <string name="campaign_detail_reach_out_desc">Write to the people who can act on this.</string>
+    <string name="campaign_detail_countries">Countries</string>
+    <string name="campaign_detail_open_country">Open the campaign page for %1$s</string>
+    <string name="campaign_detail_disabled_title">This campaign was switched off</string>
+    <string name="campaign_detail_disabled_body">The operator disabled it. There is nothing to do here for now.</string>
+    <string name="campaign_detail_failed">Could not load this campaign.</string>
+
     <string name="campaign_countries_title">Campaign countries</string>
     <string name="campaign_no_data">No campaign data available.</string>
     <string name="campaign_create_posts_cd">Create campaign posts</string>

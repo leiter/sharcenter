@@ -221,4 +221,108 @@ class CampaignRepositoryTest {
         assertEquals(false, error.retryable)
         assertEquals(AppError.NotFound(Source.CAMPAIGN), error.error)
     }
+
+    // --- The list and the per-campaign endpoint (step 2) ---------------------
+
+    @Test
+    fun `list maps the summaries`() = runTest {
+        var requested = ""
+        val result = jsonRepository(
+            """
+            {"campaigns":[
+              {"id":"abu-safiya","title":"Abu Safiya","description":null,"state":"active",
+               "version":3,"role":null,"featured":true,
+               "countryCount":42,"postCount":120,"contactCount":1},
+              {"id":"mine","title":"Mine","state":"draft","version":1,"role":"owner",
+               "featured":false,"countryCount":0,"postCount":0,"contactCount":0}
+            ]}
+            """.trimIndent()
+        ) { requested = it }.list()
+
+        assertEquals("https://campaign.invalid/api/campaigns/mine", requested)
+        val campaigns = (result as Result.Success).data
+        assertEquals(listOf("abu-safiya", "mine"), campaigns.map { it.id })
+        assertEquals(42, campaigns[0].countryCount)
+        assertTrue(campaigns[0].featured && !campaigns[0].isMine)
+        assertTrue(campaigns[1].isMine)
+    }
+
+    @Test
+    fun `get requests the campaign by id and keeps the new fields`() = runTest {
+        var requested = ""
+        val result = jsonRepository(
+            payload.replace(
+                "\"campaign\": \"abu-safiya\",",
+                "\"campaign\": \"abu-safiya\", \"id\": \"abu-safiya\", " +
+                    "\"title\": \"Freiheit\", \"role\": \"member\",",
+            )
+        ) { requested = it }.get("abu-safiya")
+
+        assertEquals("https://campaign.invalid/api/campaigns/abu-safiya", requested)
+        val campaign = (result as Result.Success).data
+        assertEquals("abu-safiya", campaign.id)
+        assertEquals("Freiheit", campaign.displayTitle)
+        assertEquals("member", campaign.role)
+    }
+
+    @Test
+    fun `contacts are parsed and blank urls dropped`() = runTest {
+        val campaign = (jsonRepository(
+            """
+            {"campaign":"c","id":"c","version":1,"countries":[
+              {"code":"de","name":"Deutschland","flag":"DE","defaultLang":"de","langs":["de"],
+               "url":"https://x.test/de","parliament":true,
+               "posts":[{"id":"A","lang":"de","text":"Text"}],
+               "contacts":[{"id":"c1","url":"https://x.test/mdb","label":"MP","note":"n"},
+                           {"id":"c2","url":""}]},
+              {"code":"it","name":"Italia","flag":"IT","defaultLang":"it","langs":["it"],
+               "url":"https://x.test/it","parliament":false,
+               "posts":[{"id":"IT","lang":"it","text":"Testo"}]}
+            ]}
+            """.trimIndent()
+        ).get("c") as Result.Success).data
+
+        val de = campaign.countries.single { it.countryCode == "de" }
+        assertEquals("a contact with no url has nothing to open", 1, de.contacts.size)
+        assertEquals("https://x.test/mdb", de.contacts.single().url)
+        assertEquals("MP", de.contacts.single().label)
+        assertEquals(listOf("de"), campaign.countriesWithContacts.map { it.countryCode })
+    }
+
+    @Test
+    fun `a second get is served from memory`() = runTest {
+        var calls = 0
+        val repository = jsonRepository(payload) { calls++ }
+
+        repository.get("abu-safiya")
+        repository.get("abu-safiya")
+
+        // Moving from the detail screen to the composer must not re-download ~47 kB.
+        assertEquals(1, calls)
+
+        repository.get("abu-safiya", forceRefresh = true)
+        assertEquals("an explicit refresh must actually go to the server", 2, calls)
+    }
+
+    @Test
+    fun `a disabled campaign is permanent, not something to retry`() = runTest {
+        val result = repository(
+            engine = MockEngine { respondError(HttpStatusCode(451, "Unavailable For Legal Reasons")) }
+        ).get("secret")
+
+        val error = result as Result.Error
+        assertEquals("the operator switched it off; retrying cannot help", false, error.retryable)
+        assertEquals(451, (error.error as AppError.Client).status)
+    }
+
+    private fun jsonRepository(body: String, onRequest: (String) -> Unit = {}) = repository(
+        engine = MockEngine { request ->
+            onRequest(request.url.toString())
+            respond(
+                content = body,
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+            )
+        }
+    )
 }

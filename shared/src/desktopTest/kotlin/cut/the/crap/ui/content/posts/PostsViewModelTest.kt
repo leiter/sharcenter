@@ -20,7 +20,6 @@ import cut.the.crap.ui.content.settings.DateRangePreset
 import cut.the.crap.ui.content.settings.FavoriteFilterPreset
 import cut.the.crap.ui.content.settings.SortOrderPreset
 import com.google.common.truth.Truth.assertThat
-import cut.the.crap.fake.FakeCampaignRepository
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -42,7 +41,6 @@ class PostsViewModelTest {
     private lateinit var contentItemRepository: FakeContentItemRepository
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var jobQueueRepository: FakeJobQueueRepository
-    private lateinit var campaignRepository: FakeCampaignRepository
     private lateinit var viewModel: PostsViewModel
 
     private val settingsFlow = MutableStateFlow(AppSettings())
@@ -52,7 +50,6 @@ class PostsViewModelTest {
         keywordRepository = FakeKeywordRepository()
         contentItemRepository = FakeContentItemRepository()
         jobQueueRepository = FakeJobQueueRepository()
-        campaignRepository = FakeCampaignRepository()
 
         settingsRepository = mockk(relaxed = true)
         coEvery { settingsRepository.settingsFlow } returns settingsFlow
@@ -62,7 +59,6 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            campaignRepository = campaignRepository,
             fileAccess = FakeFileAccess()
         )
     }
@@ -92,7 +88,6 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            campaignRepository = campaignRepository,
             fileAccess = FakeFileAccess()
         )
         advanceUntilIdle()
@@ -114,7 +109,6 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            campaignRepository = campaignRepository,
             fileAccess = FakeFileAccess()
         )
         advanceUntilIdle()
@@ -161,7 +155,6 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            campaignRepository = campaignRepository,
             fileAccess = FakeFileAccess()
         )
         advanceUntilIdle()
@@ -185,7 +178,6 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            campaignRepository = campaignRepository,
             fileAccess = FakeFileAccess()
         )
         advanceUntilIdle()
@@ -227,7 +219,6 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            campaignRepository = campaignRepository,
             fileAccess = FakeFileAccess()
         )
         advanceUntilIdle()
@@ -292,7 +283,6 @@ class PostsViewModelTest {
             contentItemRepository = contentItemRepository,
             settingsRepository = settingsRepository,
             jobQueueRepository = jobQueueRepository,
-            campaignRepository = campaignRepository,
             fileAccess = FakeFileAccess()
         )
         advanceUntilIdle()

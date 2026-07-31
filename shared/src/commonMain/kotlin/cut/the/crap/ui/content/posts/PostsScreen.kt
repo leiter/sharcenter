@@ -103,24 +103,14 @@ fun PostsScreen(
     contentItems: StateFlow<List<ContentItem>>,
     onContentItemsReordered: (List<ContentItem>) -> Unit,
     snackBarEvents: SharedFlow<PostsSnackbarEvent> = MutableSharedFlow(),
-    campaignLoading: StateFlow<Boolean> = MutableStateFlow(false),
-    campaignEvents: SharedFlow<CampaignUiEvent> = MutableSharedFlow(),
-    onLoadCampaign: () -> Unit = {},
     ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val notifier: Notifier = koinInject()
-    val isCampaignLoading by campaignLoading.collectAsState()
 
-    // Navigate to the campaign country list on success, or toast the error.
-    LaunchedEffect(Unit) {
-        campaignEvents.collect { event ->
-            when (event) {
-                CampaignUiEvent.NavigateToCountries -> navController.navigate("campaign_countries")
-                is CampaignUiEvent.ShowError ->
-                    notifier.show(event.error.localizedText(), NotificationDuration.Long)
-            }
-        }
-    }
+    // The campaign button is now plain navigation: the list screen loads its own data, so there
+    // is nothing to wait for and nothing that can fail before the user sees a screen. What used to
+    // happen here — fetch one hardcoded campaign, then navigate, or toast an error and stay put —
+    // is why a tap could look like it did nothing at all.
 
     // Snackbar strings resolved here since showSnackbar runs outside composable scope.
     val postClearedMessage = stringResource(Res.string.posts_snackbar_cleared)
@@ -340,25 +330,13 @@ fun PostsScreen(
                             showBadge = hasActiveFilters && !filterExpanded
                         )
 
-                        if (isCampaignLoading) {
-                            Box(
-                                modifier = Modifier.size(48.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    strokeWidth = 2.dp
-                                )
-                            }
-                        } else {
-                            MyIconAction(
-                                iconPainter = rememberVectorPainter(
-                                    Icons.Filled.Campaign
-                                ),
-                                onClick = { onLoadCampaign() },
-                                contentDescription = stringResource(Res.string.posts_cd_load_campaign)
-                            )
-                        }
+                        MyIconAction(
+                            iconPainter = rememberVectorPainter(
+                                Icons.Filled.Campaign
+                            ),
+                            onClick = { navController.navigate("campaign_list") },
+                            contentDescription = stringResource(Res.string.posts_cd_load_campaign)
+                        )
                     },
                     navigationIcon = {
 //                    FilledTonalIconButton(

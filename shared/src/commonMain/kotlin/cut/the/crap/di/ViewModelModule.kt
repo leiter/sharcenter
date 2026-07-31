@@ -2,6 +2,8 @@ package cut.the.crap.di
 
 import cut.the.crap.data.rest.YouTubePreviewViewModel
 import cut.the.crap.ui.components.ColorHistoryViewModel
+import cut.the.crap.ui.content.campaign.CampaignDetailViewModel
+import cut.the.crap.ui.content.campaign.CampaignListViewModel
 import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.posts.PostsViewModel
 import cut.the.crap.ui.content.settings.BackupViewModel
@@ -38,4 +40,8 @@ val viewModelModule = module {
     viewModelOf(::BackupViewModel)
     viewModelOf(::ColorHistoryViewModel)
     viewModelOf(::YouTubePreviewViewModel)
+    viewModelOf(::CampaignListViewModel)
+    // The campaign id comes from the navigation route, not from the graph, so it is passed in
+    // rather than resolved — hence the explicit factory over viewModelOf.
+    viewModel { (campaignId: String) -> CampaignDetailViewModel(get(), campaignId) }
 }

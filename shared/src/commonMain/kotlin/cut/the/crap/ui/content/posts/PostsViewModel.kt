@@ -12,8 +12,6 @@ import cut.the.crap.tools.TextValueWrapper
 import cut.the.crap.ui.components.FilterState
 import cut.the.crap.data.rest.AppError
 import cut.the.crap.data.rest.Result
-import cut.the.crap.data.rest.campaign.Campaign
-import cut.the.crap.data.rest.campaign.CampaignRepository
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.components.api.ContentItemAction
@@ -47,23 +45,11 @@ sealed interface PostsSnackbarEvent {
     data class OfferDeleteClearedItem(val itemId: Int) : PostsSnackbarEvent
 }
 
-/**
- * One-shot events emitted while loading the action campaign from the top bar's campaign button.
- */
-sealed interface CampaignUiEvent {
-    /** Campaign loaded successfully — navigate to the country list. */
-    data object NavigateToCountries : CampaignUiEvent
-
-    /** Loading failed — show [error] in a toast. */
-    data class ShowError(val error: AppError) : CampaignUiEvent
-}
-
 class PostsViewModel constructor(
     internal val keywordRepository: KeywordRepository,
     internal val contentItemRepository: ContentItemRepository,
     private val settingsRepository: cut.the.crap.data.preferences.SettingsRepository,
     internal val jobQueueRepository: JobQueueRepository,
-    private val campaignRepository: CampaignRepository,
     internal val fileAccess: FileAccess
 ) : ViewModel() {
 
@@ -96,38 +82,6 @@ class PostsViewModel constructor(
     // Helper for action handlers (in other files) to emit snackbar events
     internal suspend fun emitSnackBarEvent(event: PostsSnackbarEvent) {
         _snackBarEvents.emit(event)
-    }
-
-    // Action campaign: loading flag, last loaded result, and one-shot nav/error events.
-    private val _campaignLoading = MutableStateFlow(false)
-    val campaignLoading: StateFlow<Boolean> = _campaignLoading
-
-    private val _campaign = MutableStateFlow<Campaign?>(null)
-    val campaign: StateFlow<Campaign?> = _campaign
-
-    private val _campaignEvents = MutableSharedFlow<CampaignUiEvent>()
-    val campaignEvents: SharedFlow<CampaignUiEvent> = _campaignEvents.asSharedFlow()
-
-    /**
-     * Loads the action campaign. Toggles [campaignLoading] for the button's spinner, then emits
-     * [CampaignUiEvent.NavigateToCountries] on success or [CampaignUiEvent.ShowError] on failure.
-     * Ignores taps while a load is in flight.
-     */
-    fun loadCampaign() {
-        if (_campaignLoading.value) return
-        _campaignLoading.value = true
-        viewModelScope.launch {
-            when (val result = campaignRepository.getCampaign()) {
-                is Result.Success -> {
-                    _campaign.value = result.data
-                    _campaignEvents.emit(CampaignUiEvent.NavigateToCountries)
-                }
-                is Result.Error -> {
-                    _campaignEvents.emit(CampaignUiEvent.ShowError(result.error))
-                }
-            }
-            _campaignLoading.value = false
-        }
     }
 
     /**

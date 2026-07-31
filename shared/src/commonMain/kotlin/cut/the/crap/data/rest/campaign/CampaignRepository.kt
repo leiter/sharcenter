@@ -8,18 +8,37 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.request.get
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.encodeURLPathPart
 import io.ktor.http.isSuccess
 import io.ktor.serialization.ContentConvertException
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerializationException
 import okio.IOException
 
 /**
- * Loads the action campaign — its countries, their languages and the posts written for them —
- * from the campaign site's JSON endpoint.
+ * Loads campaigns — the list this install can act on, and the full payload of one of them.
+ *
+ * Requests are signed by the `CtcSignature` plugin, so nothing here mentions identity.
  */
 interface CampaignRepository {
 
-    /** Loads the campaign currently served at [AppConfig.campaignBaseUrl]. */
+    /**
+     * The campaigns this install can act on: owned, joined, and the operator-curated one the app
+     * ships with. Summaries only — one cheap request for the list screen.
+     */
+    suspend fun list(): Result<List<CampaignSummary>>
+
+    /** The full payload of one campaign: countries, posts and contact actions. */
+    suspend fun get(id: String, forceRefresh: Boolean = false): Result<Campaign>
+
+    /**
+     * The bundled campaign via the unsigned legacy alias.
+     *
+     * Kept because it is the one path that works with no identity at all, and because its path is
+     * a hardcoded constant in shipped clients (`CAMPAIGN_SCHEMA_SPEC.md` C7).
+     */
     suspend fun getCampaign(): Result<Campaign>
 }
 
@@ -29,47 +48,102 @@ class CampaignRepositoryImpl constructor(
 ) : CampaignRepository {
 
     companion object {
-        private const val CAMPAIGN_PATH = "/api/abu-safiya"
+        private const val LEGACY_PATH = "/api/abu-safiya"
+        private const val LIST_PATH = "/api/campaigns/mine"
+        private const val CAMPAIGN_PATH = "/api/campaigns"
+
+        /** The campaign the app has always shipped with. */
+        const val BUNDLED_CAMPAIGN_ID = "abu-safiya"
     }
 
-    override suspend fun getCampaign(): Result<Campaign> {
-        // The shared client defaults to the job-queue backend, which is a different host; an
-        // absolute URL overrides that default.
-        val url = config.campaignBaseUrl.trimEnd('/') + CAMPAIGN_PATH
+    // Loaded campaigns, kept in memory so moving between the detail screen and the composer does
+    // not re-download ~47 kB. Deliberately not persistent: CAMPAIGN_SCHEMA_SPEC §6.4 puts the
+    // durable cache in SQLDelight keyed by `version`, and that belongs with the offline outbox
+    // rather than half-built here.
+    private val cache = mutableMapOf<String, Campaign>()
+    private val cacheLock = Mutex()
 
-        return try {
-            val response = client.get(url)
-            val status = response.status
+    override suspend fun list(): Result<List<CampaignSummary>> =
+        call { client.get(url(LIST_PATH)) }
+            .map { response -> response.body<CampaignListDto>().campaigns.map { it.toDomain() } }
 
-            // The shared client is built without `expectSuccess`, so Ktor raises no
-            // Client/ServerResponseException on a 4xx/5xx — it just hands back the error body and
-            // `body<CampaignDto>()` fails with a confusing transformation error. Classify the
-            // status ourselves instead.
-            when {
-                status.value == 404 ->
-                    Result.Error(AppError.NotFound(Source.CAMPAIGN), retryable = false)
-                status.value >= 500 ->
-                    Result.Error(AppError.SourceServer(Source.CAMPAIGN, status.value))
-                !status.isSuccess() -> Result.Error(
-                    AppError.Client(status.value, status.description),
-                    retryable = false
-                )
-                else -> Result.Success(response.body<CampaignDto>().toCampaign())
-            }
-        } catch (e: SocketTimeoutException) {
-            Result.Error(AppError.SourceTimeout(Source.CAMPAIGN), e)
-        } catch (e: ContentConvertException) {
-            // A 2xx with a non-JSON/unexpected body (e.g. an error HTML page) — permanent.
-            Result.Error(AppError.Unavailable(Source.CAMPAIGN), e, retryable = false)
-        } catch (e: SerializationException) {
-            Result.Error(AppError.ParseError, e, retryable = false)
-        } catch (e: IOException) {
-            Result.Error(AppError.Network(e.message), e)
-        } catch (e: Exception) {
-            Result.Error(AppError.FetchFailed(Source.CAMPAIGN, e.message), e)
+    override suspend fun get(id: String, forceRefresh: Boolean): Result<Campaign> {
+        if (!forceRefresh) {
+            cacheLock.withLock { cache[id] }?.let { return Result.Success(it) }
         }
+        val result = call { client.get(url("$CAMPAIGN_PATH/${id.encodeURLPathPart()}")) }
+            .map { response -> response.body<CampaignDto>().toCampaign() }
+        if (result is Result.Success) cacheLock.withLock { cache[id] = result.data }
+        return result
+    }
+
+    override suspend fun getCampaign(): Result<Campaign> =
+        call { client.get(url(LEGACY_PATH)) }
+            .map { response -> response.body<CampaignDto>().toCampaign() }
+
+    private fun url(path: String) = config.campaignBaseUrl.trimEnd('/') + path
+
+    /**
+     * Runs [block] and classifies the outcome.
+     *
+     * The shared client is built without `expectSuccess`, so Ktor raises no
+     * Client/ServerResponseException on a 4xx/5xx — it just hands back the error body and
+     * `body<CampaignDto>()` fails with a confusing transformation error. Classify the status here
+     * instead, once, rather than in each call above.
+     */
+    private suspend inline fun call(block: () -> HttpResponse): Result<HttpResponse> = try {
+        val response = block()
+        val status = response.status
+        when {
+            status.value == 404 ->
+                Result.Error(AppError.NotFound(Source.CAMPAIGN), retryable = false)
+            // 451: the operator disabled this campaign (C6). Permanent from the client's side —
+            // retrying will not bring it back, and the UI must say so rather than spin.
+            status.value == 451 ->
+                Result.Error(AppError.Client(451, status.description), retryable = false)
+            status.value >= 500 ->
+                Result.Error(AppError.SourceServer(Source.CAMPAIGN, status.value))
+            !status.isSuccess() ->
+                Result.Error(AppError.Client(status.value, status.description), retryable = false)
+            else -> Result.Success(response)
+        }
+    } catch (e: SocketTimeoutException) {
+        Result.Error(AppError.SourceTimeout(Source.CAMPAIGN), e)
+    } catch (e: ContentConvertException) {
+        // A 2xx with a non-JSON/unexpected body (e.g. an error HTML page) — permanent.
+        Result.Error(AppError.Unavailable(Source.CAMPAIGN), e, retryable = false)
+    } catch (e: SerializationException) {
+        Result.Error(AppError.ParseError, e, retryable = false)
+    } catch (e: IOException) {
+        Result.Error(AppError.Network(e.message), e)
+    } catch (e: Exception) {
+        Result.Error(AppError.FetchFailed(Source.CAMPAIGN, e.message), e)
     }
 }
+
+private inline fun <T, R> Result<T>.map(transform: (T) -> R): Result<R> = when (this) {
+    is Result.Success -> try {
+        Result.Success(transform(data))
+    } catch (e: SerializationException) {
+        Result.Error(AppError.ParseError, e, retryable = false)
+    } catch (e: ContentConvertException) {
+        Result.Error(AppError.Unavailable(Source.CAMPAIGN), e, retryable = false)
+    }
+    is Result.Error -> this
+}
+
+private fun CampaignSummaryDto.toDomain() = CampaignSummary(
+    id = id,
+    title = title,
+    description = description,
+    state = state,
+    version = version,
+    role = role,
+    featured = featured,
+    countryCount = countryCount,
+    postCount = postCount,
+    contactCount = contactCount,
+)
 
 /**
  * Maps the raw payload into the domain model. Countries keep the server's registry order;
@@ -79,6 +153,10 @@ private fun CampaignDto.toCampaign(): Campaign = Campaign(
     name = campaign,
     version = version,
     locateUrl = locateUrl,
+    id = id,
+    title = title,
+    description = description,
+    role = role,
     countries = countries.map { country ->
         CampaignCountry(
             countryCode = country.code,
@@ -96,7 +174,17 @@ private fun CampaignDto.toCampaign(): Campaign = Campaign(
                         language = post.lang.ifBlank { country.defaultLang },
                         text = post.text
                     )
-                }
+                },
+            contacts = country.contacts
+                .filter { it.url.isNotBlank() }
+                .map { contact ->
+                    CampaignContact(
+                        id = contact.id,
+                        url = contact.url,
+                        label = contact.label,
+                        note = contact.note,
+                    )
+                },
         )
     }
 )
