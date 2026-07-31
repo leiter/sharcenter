@@ -1,8 +1,34 @@
 # TODO List - BasicStateCodelab
 
-> Last updated: 2026-07-07
+> Last updated: 2026-07-31
 
 ## Critical / High Priority
+
+### Campaign list 401s on a fresh install — release blocker
+Regression introduced with the campaign list screen (`CAMPAIGN_SCHEMA_SPEC.md` §8 step 2).
+
+`GET /api/campaigns/mine` is signed, but an identity is only ever created from the Settings
+identity screen — nothing on the campaign path creates one. So a fresh install taps the campaign
+button and gets *"Could not load your campaigns."* The **old** behaviour worked here, because the
+button fetched the unsigned `/api/abu-safiya` alias. Verified against a live server:
+
+```
+unsigned GET /api/campaigns/mine  -> 401
+unsigned GET /api/abu-safiya      -> 200
+```
+
+No test caught it because every campaign test registers an identity first. Nothing else is
+affected: the alias, shipped app versions and the server are all fine.
+
+- [ ] **Fix before any release.** Two options:
+  - *Preferred:* let `GET /api/campaigns/mine` answer **unsigned** with the `featured` campaigns
+    only; a signature additionally returns the caller's own. This is "user-agnostic campaigns" as
+    an endpoint and stays inside C1 — it never lists anyone else's campaigns.
+  - *Alternative:* create the identity on first campaign load. Cheaper, but it silently skips the
+    one moment `IDENTITY_SPEC.md` §6.1 says must not be silent — showing the recovery phrase with
+    an explicit "write this down" step.
+- [ ] **Add a test for the identity-less path**, whichever fix is taken. The gap was invisible
+      precisely because every existing test registers first.
 
 ### Production Deployment
 - [ ] **Update production API URL** - `app/build.gradle.kts:41`
