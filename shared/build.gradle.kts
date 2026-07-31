@@ -164,6 +164,11 @@ kotlin {
                 implementation(libs.truth)
                 implementation(libs.turbine)
                 implementation(libs.mockk)
+                // Renders composables headlessly. Added for IdentityScreenTest: the identity
+                // screen is the first substantial UI written without a device to try it on.
+                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+                implementation(compose.uiTest)
+                implementation(compose.desktop.currentOs)
             }
         }
     }

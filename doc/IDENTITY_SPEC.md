@@ -1,9 +1,10 @@
 # Identity Spec — Keypair Identity for ShareCenter (`cut.the.crap`)
 
-**Status:** §9 **steps 1–3 implemented** — key material, the `CTC-Sig` signing plugin, and the whole
-of §5 (register, ping, profile, device add and revoke), verified end to end against a live Flask
-server. Step 4 still specification only, and **nothing is user-visible yet**: there is no UI on any
-of this, by design (§9). Crypto library decided in §3.2, verified against published klib ABIs.
+**Status:** §9 **steps 1–3 implemented, step 4 half done** — key material, the `CTC-Sig` signing
+plugin, the whole of §5 (register, ping, profile, device add and revoke) verified end to end
+against a live Flask server, and the Settings identity section on top of it. What remains of step 4
+is pointing campaign ownership at `user_id`, which is `CAMPAIGN_SCHEMA_SPEC.md`'s own build order.
+Crypto library decided in §3.2, verified against published klib ABIs.
 **Scope:** Client (`:shared`, KMP) + the `cut.the.crap` Flask server.
 **Motivates:** per-user campaigns, campaign ownership, membership, and per-user work assignment.
 **Last updated:** 2026-07-30
@@ -415,7 +416,7 @@ Each step is independently shippable; nothing user-visible changes before step 4
 | 1 ✅ | `IdentityKeyStore` + `CryptoProvider` interfaces; Bouncy Castle implementation shared by Android and desktop via the `jvmShared` source-set group; `IdentityManager`; BIP-39. iOS implementation deferred (§3.2). Client-only, wired to nothing. | **Done.** 32 tests in `desktopTest`: RFC 8032 §7.1 Ed25519 vectors, the published BIP-39 256-bit vectors, seed → phrase → seed round-trips, concurrent create. Whole suite 255/0. All three iOS targets, Android and desktop still compile. |
 | 2 ✅ | Ktor signing plugin (`CtcSignature`, installed on the shared client for the campaign host only) + server `routes/identity.py`, `utils/ctc_sig.py`, `utils/identity_store.py`. | **Done.** Server suite 27/27 (replay, skew both directions, unknown key, forged signature, swapped body, malformed headers, 503 when the store or PyNaCl is missing). Client 9 plugin tests. **Three fixed contract vectors are asserted in both languages** so a canonicalisation drift turns one suite red instead of 401-ing in production. `IdentityIntegrationTest` runs the real Ktor client against a live Flask server — register, ping, restore-by-phrase, 401 for an unregistered key — and skips unless `CTC_SERVER` is set. |
 | 3 ✅ | `GET`/`PATCH /api/users/me`, device add (§5.4) and revoke (§5.5), recovery-phrase entry. | **Done.** Server suite 57/57. `IdentityIntegrationTest` runs the whole device flow against a live Flask server: register a phone, produce the laptop's `AddKeyProof`, add it from the phone, **and the laptop's `/api/ping` returns the phone's `user_id`** — two installs, one identity. Then revoke the laptop (it 401s `key_revoked`) and fail to revoke the last key (409 `last_key`). Client 10 repository tests + 3 proof tests; suite 282/0. The proof is bound to both the key and the `user_id`, and both bindings are tested by making one of them wrong. **Recovery-phrase entry is covered at the API level only** — `IdentityManager.restore()` plus a live-server test that a restored seed resolves to the original `user_id`; the screen to type the phrase into belongs to the Settings work in step 4. |
-| 4 | Point campaign ownership and membership at `user_id`; identity section in Settings incl. reset. | Separate spec. |
+| 4 ◑ | Point campaign ownership and membership at `user_id`; identity section in Settings incl. reset. | **Settings half done** — `IdentityScreen` behind a Settings entry that only appears where `identityModule` is loaded: create/register, display name, device list with revoke, pairing-code linking, recovery phrase (reveal behind a confirmation, and entry), and reset. 17 view-model tests over the states the screen must not confuse (no key / unknown key / revoked key / unreachable server), plus 4 tests that render the screen headlessly and check that neither the phrase nor a reset is one tap away. Suite 282 → 304. **The campaign half is `CAMPAIGN_SCHEMA_SPEC.md` §8**, which has its own four steps and is not started. |
 
 Step 1 lands entirely inside `:shared` and is testable without touching the server.
 

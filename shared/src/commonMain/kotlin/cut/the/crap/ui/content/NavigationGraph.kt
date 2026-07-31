@@ -13,6 +13,7 @@ import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.links.LinkScreen
 import cut.the.crap.ui.content.settings.BackupManagementScreen
 import cut.the.crap.ui.content.settings.ImportExportScreen
+import cut.the.crap.ui.content.settings.identity.IdentityScreen
 import cut.the.crap.ui.content.campaign.CampaignCountryScreen
 import cut.the.crap.ui.content.campaign.CampaignPostComposerScreen
 import cut.the.crap.ui.content.settings.SettingsScreen
@@ -70,6 +71,13 @@ fun NavigationGraph(
         }
         composable("backup_management") {
             BackupManagementScreen(
+                navController = navController
+            )
+        }
+        // Only reachable from Settings, which hides the entry where identityModule is not loaded
+        // (iOS — see rememberIdentitySupported).
+        composable("identity") {
+            IdentityScreen(
                 navController = navController
             )
         }

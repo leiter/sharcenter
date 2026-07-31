@@ -56,6 +56,8 @@ import cut.the.crap.shared.resources.settings_disable_developer_mode_desc
 import cut.the.crap.shared.resources.settings_display
 import cut.the.crap.shared.resources.settings_edit_shared_link
 import cut.the.crap.shared.resources.settings_edit_shared_link_desc
+import cut.the.crap.shared.resources.settings_identity
+import cut.the.crap.shared.resources.settings_identity_desc
 import cut.the.crap.shared.resources.settings_import_export
 import cut.the.crap.shared.resources.settings_import_export_desc
 import cut.the.crap.shared.resources.settings_links_screen
@@ -86,6 +88,7 @@ import cut.the.crap.shared.resources.settings_x_manual_credentials
 import cut.the.crap.shared.resources.settings_x_not_logged_in
 import androidx.compose.ui.graphics.Color
 import cut.the.crap.ui.components.BottomNavigationBar
+import cut.the.crap.ui.content.settings.identity.rememberIdentitySupported
 import org.koin.compose.viewmodel.koinViewModel
 import cut.the.crap.ui.components.ColorHistoryViewModel
 import cut.the.crap.ui.components.ColorPickerDialog
@@ -105,6 +108,7 @@ fun SettingsScreen(
     onSettingsChanged: (AppSettings) -> Unit
 ) {
     val currentSettings by settings.collectAsState()
+    val identitySupported = rememberIdentitySupported()
     val notifier: Notifier = koinInject()
     val loginFlow: LoginFlow = koinInject()
     var showPostsDateRangeDialog by remember { mutableStateOf(false) }
@@ -422,6 +426,23 @@ fun SettingsScreen(
                     subtitle = stringResource(currentSettings.timestampFormat.displayNameResId),
                     onClick = { showTimestampFormatDialog = true }
                 )
+            }
+
+            // Identity. Only shown where the platform can actually hold a private key: iOS has
+            // no CryptoProvider/IdentityKeyStore yet, so identityModule is not loaded there and
+            // the screen would fail to resolve its view model (doc/IDENTITY_SPEC.md §3.1).
+            if (identitySupported) {
+                item {
+                    SettingsSectionHeader(title = stringResource(Res.string.settings_identity))
+                }
+                item {
+                    SettingsItem(
+                        icon = Icons.Default.Key,
+                        title = stringResource(Res.string.settings_identity),
+                        subtitle = stringResource(Res.string.settings_identity_desc),
+                        onClick = { navController.navigate("identity") }
+                    )
+                }
             }
 
             // Data Management Section

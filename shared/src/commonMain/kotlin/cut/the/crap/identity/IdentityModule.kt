@@ -2,7 +2,9 @@ package cut.the.crap.identity
 
 import cut.the.crap.data.rest.identity.IdentityRepository
 import cut.the.crap.data.rest.identity.IdentityRepositoryImpl
+import cut.the.crap.ui.content.settings.identity.IdentityViewModel
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -20,4 +22,8 @@ val identityModule = module {
     singleOf(::IdentityManager)
     single<RequestSigner> { get<IdentityManager>() }
     singleOf(::IdentityRepositoryImpl) bind IdentityRepository::class
+
+    // Registered here rather than in the common ViewModelModule: it depends on the two bindings
+    // above, so on a platform without them it must not exist at all.
+    viewModelOf(::IdentityViewModel)
 }

@@ -545,4 +545,79 @@
         <item quantity="one">, %1$d failed</item>
         <item quantity="other">, %1$d failed</item>
     </plurals>
+
+    <!-- Identity (doc/IDENTITY_SPEC.md). Pseudonymous keypair identity, shown in Settings. -->
+    <string name="settings_identity">Identity</string>
+    <string name="settings_identity_desc">Your account key, devices and recovery phrase</string>
+    <string name="identity_none_title">No identity yet</string>
+    <string name="identity_none_body">An identity is a key pair created on this device. The private half never leaves it — there is no email, no password and no way for us to recover it for you.</string>
+    <string name="identity_create">Create identity</string>
+    <string name="identity_display_name">Display name (optional)</string>
+    <string name="identity_device_label">Device name (optional)</string>
+    <string name="identity_user_id">User ID</string>
+    <string name="identity_this_device">This device</string>
+    <string name="identity_key_id">Key</string>
+    <string name="identity_devices">Devices</string>
+    <string name="identity_device_added">Added %1$s</string>
+    <string name="identity_device_revoked">Revoked %1$s</string>
+    <string name="identity_revoke">Revoke</string>
+    <string name="identity_revoke_title">Revoke this device?</string>
+    <string name="identity_revoke_body">It will no longer be able to act as you. This cannot be undone — the same key can never be added back.</string>
+    <string name="identity_unregistered_title">Not registered</string>
+    <string name="identity_unregistered_body">This device has a key, but the server has not seen it. Register it, or link it to an identity you already have.</string>
+    <string name="identity_revoked_title">This device was revoked</string>
+    <string name="identity_revoked_body">Its key was locked out from another device. Enter your recovery phrase to restore your identity, or reset to start over.</string>
+    <string name="identity_unreachable">Could not reach the server. Your identity on this device is unchanged.</string>
+    <string name="identity_retry">Try again</string>
+    <string name="identity_rename">Rename</string>
+    <string name="identity_rename_title">Display name</string>
+
+    <string name="identity_link_section">Link another device</string>
+    <string name="identity_link_here_title">Add a device</string>
+    <string name="identity_link_here_body">On the other device, choose “Join an existing identity”, enter the User ID above, and paste the code it shows here.</string>
+    <string name="identity_link_code">Pairing code</string>
+    <string name="identity_link_submit">Link device</string>
+    <string name="identity_join_title">Join an existing identity</string>
+    <string name="identity_join_body">Enter the User ID from the device you already use. This device will show a code to paste there.</string>
+    <string name="identity_join_generate">Show pairing code</string>
+    <string name="identity_join_code_body">Paste this into “Add a device” on your other device. It contains no secret.</string>
+
+    <string name="identity_phrase_section">Recovery phrase</string>
+    <string name="identity_phrase_body">24 words that recreate this identity on another device. Write them down and keep them somewhere safe.</string>
+    <string name="identity_phrase_show">Show recovery phrase</string>
+    <string name="identity_phrase_reveal_title">Show your recovery phrase?</string>
+    <string name="identity_phrase_reveal_body">Anyone who sees these words can act as you. Make sure nobody is watching your screen.</string>
+    <string name="identity_phrase_hide">Hide</string>
+    <string name="identity_phrase_warning">Never share these words. They are your identity.</string>
+    <string name="identity_phrase_enter">Enter a recovery phrase</string>
+    <string name="identity_phrase_enter_hint">24 words separated by spaces</string>
+    <string name="identity_phrase_restore">Restore</string>
+    <string name="identity_phrase_replace_title">Replace this identity?</string>
+    <string name="identity_phrase_replace_body">The identity currently on this device will be erased and replaced by the one behind the phrase. If you have not written the current phrase down, it is gone for good.</string>
+
+    <string name="identity_reset_section">Reset identity</string>
+    <string name="identity_reset_body">Erases the key on this device and starts over with a new one.</string>
+    <string name="identity_reset">Reset</string>
+    <string name="identity_reset_title">Reset your identity?</string>
+    <string name="identity_reset_body_confirm">Any campaigns you own stay on the server but become permanently unmanageable — nobody, including us, can hand them back. Unless you have written down your recovery phrase, this cannot be undone.</string>
+
+    <string name="identity_copied">Copied</string>
+    <string name="identity_notice_registered">Identity registered</string>
+    <string name="identity_notice_renamed">Name updated</string>
+    <string name="identity_notice_device_linked">Device linked</string>
+    <string name="identity_notice_device_revoked">Device revoked</string>
+    <string name="identity_notice_last_key">This is your last device. Revoking it would leave your identity unreachable — reset it instead if that is what you want.</string>
+    <string name="identity_notice_key_taken">That key already belongs to another identity.</string>
+    <string name="identity_notice_key_already_revoked">That key was revoked earlier and cannot be added back.</string>
+    <string name="identity_notice_invalid_proof">That code does not match the User ID you entered. Check both and try again.</string>
+    <string name="identity_notice_invalid_code">That does not look like a pairing code.</string>
+    <string name="identity_notice_phrase_restored">Identity restored</string>
+    <string name="identity_notice_phrase_wrong_length">A recovery phrase is 24 words.</string>
+    <string name="identity_notice_phrase_unknown_word">That is not a word from the recovery word list.</string>
+    <string name="identity_notice_phrase_checksum">Those 24 words are not a valid phrase. Check the order and the spelling.</string>
+    <string name="identity_notice_reset">Identity reset</string>
+    <string name="identity_notice_no_identity">There is no identity on this device.</string>
+    <string name="identity_notice_not_authenticated">The server did not accept this device\'s key.</string>
+    <string name="identity_notice_network">Could not reach the server.</string>
+    <string name="identity_notice_server">The server could not handle that. Try again later.</string>
 </resources>

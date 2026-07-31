@@ -8,6 +8,7 @@ import cut.the.crap.data.domain.ContentLinkRepository
 import cut.the.crap.data.domain.KeywordRepository
 import cut.the.crap.data.rest.networkModule
 import cut.the.crap.data.rest.repositoryModule
+import cut.the.crap.identity.identityModule
 import cut.the.crap.share.SharedUrlProcessor
 import cut.the.crap.share.shareModule
 import io.ktor.client.HttpClientConfig
@@ -42,6 +43,10 @@ class KoinGraphTest {
                 repositoryModule,
                 shareModule,
                 viewModelModule,
+                // Loaded by MainActivity on Android and by Main.kt on desktop; not on iOS
+                // (doc/IDENTITY_SPEC.md §3.1). Verified here so a broken identity binding fails
+                // the build rather than the identity screen.
+                identityModule,
             )
         }.verify(
             extraTypes = listOf(
