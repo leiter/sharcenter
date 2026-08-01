@@ -32,7 +32,7 @@ Three things should change:
 
 | # | Decision | Rationale |
 |---|---|---|
-| C1 | **Invite-only by default. No public directory, no discovery, no browse.** | "Coordinate N people onto a target list" is mechanically the same as brigading. Without discovery it is a tool for a group that already knows each other, not a recruitment surface for strangers. Public campaigns are a separate, later decision (§9). |
+| C1 | **Invite-only by default. No public directory, no discovery, no browse.** | "Coordinate N people onto a target list" is mechanically the same as brigading. Without discovery it is a tool for a group that already knows each other, not a recruitment surface for strangers. Public campaigns are a separate, later decision (§9). Operator-`featured` campaigns are readable without an identity (§4.1) — that is the app finding its own bundled campaign, and it is still not a directory: nothing lists, searches or surfaces a campaign a user was not invited to. |
 | C2 | **Author on the web, act in the app.** | Campaign CRUD is the most screen-heavy, least reusable UI in the system, and would be built three times over Android/desktop/iOS. Authoring is a desk activity; the Flask site already exists and can be iterated without a release. |
 | C3 | **Assignment policy differs per item kind.** Amplification overlaps; contact actions are disjoint. | Ten people replying to the same post is the desired outcome. Ten identical letters to the same MP get filtered as spam. One policy cannot serve both. |
 | C4 | **Claims expire.** Unacted claims return to the pool. | Static sharding ("user1 gets A–R") silently fails when user1 never opens the app, and nothing detects it. A TTL makes coverage self-healing. |
@@ -177,7 +177,8 @@ signature that gets accounts flagged and a waste of reach.
 
 ## 4. Endpoints
 
-All signed per `IDENTITY_SPEC.md` §4, except §4.6.
+All signed per `IDENTITY_SPEC.md` §4, except §4.6 and the two read endpoints in §4.1, whose
+signature is **optional** — see there.
 
 ### 4.1 Campaign lifecycle
 
@@ -204,6 +205,27 @@ client shows that as "Included" rather than "Joined".
 `GET /api/campaigns/{id}` requires membership unless `visibility` is `link` or `public`.
 A campaign in state `disabled` returns **`451`** to members with a `detail` explaining it was
 disabled by the operator (C6), and is invisible in `mine`.
+
+**As built, both reads accept an unsigned request.** `mine` and `{id}` use `signed_user_optional`
+(`utils/ctc_auth.py`); with no `Authorization` header the caller is anonymous and sees exactly the
+`featured` campaigns — nothing else, in either endpoint. Three things make this narrow rather than
+a hole in C1:
+
+- The anonymous view is data the server already hands to anyone unsigned via §4.6. It is the same
+  campaign through a general endpoint instead of a hardcoded alias, not a new disclosure.
+- A **missing** header is anonymous; a **present but invalid** one is still `401`. A revoked device
+  must be told it is revoked, not quietly downgraded to the anonymous view.
+- `link` visibility is *not* enough on its own for an anonymous caller — only `featured` is.
+  Otherwise a guessed id would be a read key on other people's active campaigns. Widening that is
+  the `public` decision in §9, which is the owner's to make.
+
+Why it is this way: step 2 made both endpoints signature-only, and a fresh install creates an
+identity only from the Settings screen. So the campaign button — which had worked since the first
+release, via the unsigned alias — began answering *"Could not load your campaigns."* Both endpoints
+had to change; opening only the list would have produced a list nobody could tap through.
+
+The client needed no change at all: the requests the app already sends are the ones that now work,
+and the same calls return more once an identity exists.
 
 ### 4.2 Membership
 
@@ -401,8 +423,9 @@ by a test that is already written**. Do not modify the fixture to make the new s
 
 | # | Step | Verification | User-visible |
 |---|---|---|---|
-| 1 ✅ | Schema + generic `GET /api/campaigns/{id}`; Abu-Safiya imported; `/api/abu-safiya` re-pointed at it. | **Done.** 26 checks in `test_campaigns.py`, the two that matter being byte comparisons: the store-served payload and the legacy alias are both **character-for-character identical** to what the code at the previous commit produced — checked against a payload rendered from `git archive HEAD`, so the old implementation is the reference rather than a re-description of the new one. Plus access control (unsigned → 401, invite-only non-member → 404 not 403, disabled → 451), a repeatable import, and 503 when the store is missing. `CampaignRepositoryTest` untouched and green. | No |
+| 1 ✅ | Schema + generic `GET /api/campaigns/{id}`; Abu-Safiya imported; `/api/abu-safiya` re-pointed at it. | **Done.** 26 checks in `test_campaigns.py`, the two that matter being byte comparisons: the store-served payload and the legacy alias are both **character-for-character identical** to what the code at the previous commit produced — checked against a payload rendered from `git archive HEAD`, so the old implementation is the reference rather than a re-description of the new one. Plus access control (invite-only non-member → 404 not 403, disabled → 451; unsigned → 401 at the time, relaxed in step 2a), a repeatable import, and 503 when the store is missing. `CampaignRepositoryTest` untouched and green. | No |
 | 2 ✅ | `mine` + `list()` + `campaign_list` screen replacing the dead country screen; detail screen with working country/parliament/locate links. | **Done.** 9 new server checks; 11 client unit tests; **6 headless render tests**, three of which assert that a tap actually opens a URL — the country row, the parliament chip and "find my country", i.e. exactly the three payload fields that were parsed and ignored. `CampaignIntegrationTest` runs the real client against a live server: `mine` from a fresh install, the detail payload, and the unsigned legacy alias side by side with the same campaign fetched by id. | **Yes — this alone fixes the original complaint** |
+| 2a ✅ | Optional signature on both campaign reads (§4.1), fixing the fresh-install 401 step 2 introduced. | **Done.** 44 checks in `test_campaigns.py` (was 35): anonymous list and detail both 200 with `role: null` and full counts, a **bad** signature still 401, and a non-featured `link` campaign readable with an identity but 404 without one. Client-side, `CampaignIntegrationTest` gained a no-`register()` case — verified to *fail* against the pre-fix routes and pass after, so it is a regression test and not a decoration. No client code changed. | **Yes — a fresh install can open the campaign again** |
 | 3 | Web authoring + invites + `join`. | Second identity joins a campaign authored by the first. | Yes |
 | 4 | `target`/`contact` items, claim/done/coverage, offline outbox. | Two clients contend for one `contact` item; exactly one is granted. | Yes |
 

@@ -1,34 +1,31 @@
 # TODO List - BasicStateCodelab
 
-> Last updated: 2026-07-31
+> Last updated: 2026-08-01
 
 ## Critical / High Priority
 
-### Campaign list 401s on a fresh install — release blocker
-Regression introduced with the campaign list screen (`CAMPAIGN_SCHEMA_SPEC.md` §8 step 2).
+- [x] ~~**Campaign list 401s on a fresh install — release blocker**~~ — FIXED (step 2a).
+  Both campaign reads now use `signed_user_optional`, so an install with no identity sees the
+  `featured` campaigns and can open them; a **bad** signature is still 401. Spec:
+  `CAMPAIGN_SCHEMA_SPEC.md` §4.1 and `IDENTITY_SPEC.md` §4.5. No client code changed.
+  Covered by 9 new checks in `test_campaigns.py` plus a no-`register()` case in
+  `CampaignIntegrationTest` that was confirmed to fail against the pre-fix routes.
+  **Ships only once the server is deployed** — see below.
 
-`GET /api/campaigns/mine` is signed, but an identity is only ever created from the Settings
-identity screen — nothing on the campaign path creates one. So a fresh install taps the campaign
-button and gets *"Could not load your campaigns."* The **old** behaviour worked here, because the
-button fetched the unsigned `/api/abu-safiya` alias. Verified against a live server:
+### Deploy the campaign/identity server
+The app changes for identity and campaigns are all merged, but the server they talk to is not
+deployed. Until it is, a new build's campaign screen talks to routes that do not exist yet.
 
-```
-unsigned GET /api/campaigns/mine  -> 401
-unsigned GET /api/abu-safiya      -> 200
-```
+- [ ] `./deploy.sh` (PyNaCl is already installed on the host as `python3-nacl`).
+- [ ] `python3 scripts/import_abu_safiya.py --owner <user_id>` so the campaign exists in the store.
+- [ ] Verify with curl that the anonymous path works on the live host:
+      `GET /api/campaigns/mine` and `GET /api/campaigns/abu-safiya` both **200 without a signature**,
+      and `GET /api/abu-safiya` still byte-identical for shipped installs.
 
-No test caught it because every campaign test registers an identity first. Nothing else is
-affected: the alias, shipped app versions and the server are all fine.
-
-- [ ] **Fix before any release.** Two options:
-  - *Preferred:* let `GET /api/campaigns/mine` answer **unsigned** with the `featured` campaigns
-    only; a signature additionally returns the caller's own. This is "user-agnostic campaigns" as
-    an endpoint and stays inside C1 — it never lists anyone else's campaigns.
-  - *Alternative:* create the identity on first campaign load. Cheaper, but it silently skips the
-    one moment `IDENTITY_SPEC.md` §6.1 says must not be silent — showing the recovery phrase with
-    an explicit "write this down" step.
-- [ ] **Add a test for the identity-less path**, whichever fix is taken. The gap was invisible
-      precisely because every existing test registers first.
+### Campaign screens have never run on a device
+`campaign_list` and `campaign_detail` are covered by headless render tests only. The spec asks for a
+desktop + Android runtime check that has not happened.
+- [ ] Open both screens on Android and on the desktop app at least once.
 
 ### Production Deployment
 - [ ] **Update production API URL** - `app/build.gradle.kts:41`
@@ -143,8 +140,9 @@ Needs a Mac/Xcode; the Kotlin side is compile-verified but the Swift/Xcode side 
 
 ### Testing
 - [ ] **Add UI tests**
-  - No Compose UI tests exist
-  - Priority: Navigation tests, critical user flows
+  - Started: `IdentityScreenTest` (4) and `CampaignScreensTest` (6) render for real via
+    `runComposeUiTest` in `desktopTest`, and assert taps reach their destination
+  - Still missing: navigation tests, and the older Links/Posts screens have none
 
 ### Documentation
 - [ ] **Architecture decision records (ADRs)**
@@ -188,7 +186,7 @@ Needs a Mac/Xcode; the Kotlin side is compile-verified but the Swift/Xcode side 
 
 | Category | Count |
 |----------|-------|
-| Critical | 2 |
+| Critical | 5 |
 | Medium | 9 |
 | Low/Nice to Have | 15+ |
 

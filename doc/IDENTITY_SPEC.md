@@ -246,6 +246,32 @@ every future repository entirely unaware that auth exists — no changes to
 The plugin no-ops when no identity exists yet, so unauthenticated endpoints (including the legacy
 `/api/abu-safiya`) keep working.
 
+**As built, "no-op" means the `Authorization` header is not appended at all** (`CtcSignature.kt`,
+`if (signed != null)`). That is load-bearing rather than incidental: it lets the server tell an
+install with no identity apart from one presenting a bad signature, which is what makes the
+optional-signature decorator in §4.5 safe. A plugin that instead sent an empty or placeholder
+header would collapse the two cases together.
+
+### 4.5 Optional signature — `signed_user_optional`
+
+Some read endpoints have something to say to a caller with no identity. `utils/ctc_auth.py` offers
+a third decorator beside `signed` and `signed_user`:
+
+| Request | Result |
+|---|---|
+| No `Authorization` header | `user_id = None`; the view serves its anonymous view |
+| Valid signature | `user_id` resolved as in §4.3 |
+| Header present but skewed, replayed, unknown, revoked or badly signed | `401`, exactly as §4.3 |
+
+The third row is the whole point. Degrading a bad signature to the anonymous view would mean a user
+whose device has been revoked sees a working-but-emptier app instead of being told; and it would
+let anyone strip a header to bypass a revocation check the server had otherwise made. Anonymity is
+the absence of a claim, never a failed one.
+
+Used by both campaign reads (`CAMPAIGN_SCHEMA_SPEC.md` §4.1). It is only appropriate where the
+anonymous view is already public by other means — there, the same data was on the unsigned legacy
+alias all along.
+
 ---
 
 ## 5. Endpoints

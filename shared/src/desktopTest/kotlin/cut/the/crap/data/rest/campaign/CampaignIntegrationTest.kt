@@ -97,6 +97,29 @@ class CampaignIntegrationTest {
     }
 
     @Test
+    fun `an install with no identity can list and open the curated campaign`() = runTest {
+        if (baseUrl == null) return@runTest
+
+        // No register(): with no seed the CtcSignature plugin sends no Authorization header at
+        // all, so the server sees an anonymous caller. This is the regression that shipped with
+        // the campaign list screen — both endpoints were signature-only, and a fresh install got
+        // a 401 where the previous build had shown the campaign.
+        val (campaigns, _) = repositories()
+
+        val list = assertIs<Result.Success<List<CampaignSummary>>>(campaigns.list()).data
+        val bundled = list.single { it.id == "abu-safiya" }
+        assertTrue(bundled.featured)
+        assertEquals(null, bundled.role, "anonymous means no membership anywhere")
+        assertTrue(bundled.countryCount > 1, "the list screen renders in full, not degraded")
+
+        // Listing without being able to open it would be the half-fix: the detail endpoint had
+        // to lose its signature requirement too.
+        val campaign = assertIs<Result.Success<Campaign>>(campaigns.get("abu-safiya")).data
+        assertTrue(campaign.countries.isNotEmpty())
+        assertEquals(null, campaign.role)
+    }
+
+    @Test
     fun `the legacy alias still parses, unsigned and unchanged`() = runTest {
         if (baseUrl == null) return@runTest
 
