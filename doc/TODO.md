@@ -134,6 +134,11 @@ Needs a Mac/Xcode; the Kotlin side is compile-verified but the Swift/Xcode side 
   - `MainActivity.handleAction()` is large
   - Could extract into handler interfaces
 
+- [ ] **Client/server versioning** — see `doc/VERSIONING.md` for the findings and an ordered
+  checklist. Two items are cheap now and expensive later: the `X-CTC-Client` telemetry header
+  (nothing else is decidable without it) and `v=1` in the `CTC-Sig` params (inert today, but
+  a v2 signing string cannot be introduced safely without it).
+
 - [ ] **Add use case/interactor layer**
   - ViewModels directly access repositories
   - Could add intermediate layer for complex business logic
