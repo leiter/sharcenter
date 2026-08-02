@@ -7,8 +7,14 @@ import cut.the.crap.data.rest.Source
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.network.sockets.SocketTimeoutException
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.content.TextContent
+import io.ktor.http.contentType
 import io.ktor.http.encodeURLPathPart
 import io.ktor.http.isSuccess
 import io.ktor.serialization.ContentConvertException
@@ -40,6 +46,29 @@ interface CampaignRepository {
      * a hardcoded constant in shipped clients (`CAMPAIGN_SCHEMA_SPEC.md` C7).
      */
     suspend fun getCampaign(): Result<Campaign>
+
+    /**
+     * Creates a campaign from [rawJson] — the exact text a user pasted or picked from a file,
+     * built by the web campaign-builder page (`/campaign-builder`) to match `POST /api/campaigns`'s
+     * body shape. Sent as-is: the server validates it, so there is no second copy of that
+     * validation logic here. Returns the new campaign's summary, with the caller as `owner`.
+     */
+    suspend fun create(rawJson: String): Result<CampaignSummary>
+
+    /**
+     * Replaces every item of [campaignId] with [rawItemsJson] (an object with an `items` array,
+     * same shape as `create`'s `items`) — the "managed from the app" edit path (owner/editor only).
+     */
+    suspend fun replaceItems(campaignId: String, rawItemsJson: String): Result<Unit>
+
+    /** Creates an invite code for [campaignId] (owner/editor only). */
+    suspend fun invite(campaignId: String, role: String, expiresAt: Long? = null, maxUses: Int? = null): Result<String>
+
+    /** Redeems [code], joining the campaign it belongs to. */
+    suspend fun join(code: String): Result<CampaignSummary>
+
+    /** Leaves [campaignId]. The owner cannot leave their own campaign — the server rejects that. */
+    suspend fun leave(campaignId: String): Result<Unit>
 }
 
 class CampaignRepositoryImpl constructor(
@@ -80,6 +109,46 @@ class CampaignRepositoryImpl constructor(
     override suspend fun getCampaign(): Result<Campaign> =
         call { client.get(url(LEGACY_PATH)) }
             .map { response -> response.body<CampaignDto>().toCampaign() }
+
+    override suspend fun create(rawJson: String): Result<CampaignSummary> =
+        call {
+            client.post(url(CAMPAIGN_PATH)) {
+                setBody(TextContent(rawJson, ContentType.Application.Json))
+            }
+        }.map { response -> response.body<CampaignSummaryDto>().toDomain() }
+
+    override suspend fun replaceItems(campaignId: String, rawItemsJson: String): Result<Unit> =
+        call {
+            client.post(url("$CAMPAIGN_PATH/${campaignId.encodeURLPathPart()}/items")) {
+                setBody(TextContent(rawItemsJson, ContentType.Application.Json))
+            }
+        }.map { }
+
+    override suspend fun invite(
+        campaignId: String,
+        role: String,
+        expiresAt: Long?,
+        maxUses: Int?,
+    ): Result<String> =
+        call {
+            client.post(url("$CAMPAIGN_PATH/${campaignId.encodeURLPathPart()}/invite")) {
+                contentType(ContentType.Application.Json)
+                setBody(InviteRequestDto(role, expiresAt, maxUses))
+            }
+        }.map { response -> response.body<InviteResponseDto>().code }
+
+    override suspend fun join(code: String): Result<CampaignSummary> =
+        call {
+            client.post(url("$CAMPAIGN_PATH/join")) {
+                contentType(ContentType.Application.Json)
+                setBody(JoinRequestDto(code))
+            }
+        }.map { response -> response.body<CampaignSummaryDto>().toDomain() }
+
+    override suspend fun leave(campaignId: String): Result<Unit> =
+        call {
+            client.delete(url("$CAMPAIGN_PATH/${campaignId.encodeURLPathPart()}/members/me"))
+        }.map { }
 
     private fun url(path: String) = config.campaignBaseUrl.trimEnd('/') + path
 

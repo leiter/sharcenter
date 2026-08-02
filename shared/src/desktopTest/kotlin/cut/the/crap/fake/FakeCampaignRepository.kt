@@ -40,6 +40,45 @@ class FakeCampaignRepository(
 
     override suspend fun getCampaign(): Result<Campaign> = failure ?: Result.Success(campaign)
 
+    /** What `create`/`join` return on success. */
+    var nextSummary: CampaignSummary = summary("c1", role = "owner")
+
+    /** What `invite` returns on success. */
+    var nextInviteCode: String = "ABCD2345"
+
+    val createdJson = mutableListOf<String>()
+    val replacedItemsJson = mutableListOf<Pair<String, String>>()
+    val invitedCampaignIds = mutableListOf<String>()
+    val joinedCodes = mutableListOf<String>()
+    val leftCampaignIds = mutableListOf<String>()
+
+    override suspend fun create(rawJson: String): Result<CampaignSummary> {
+        createdJson += rawJson
+        if (failure == null) summaries = summaries + nextSummary
+        return failure ?: Result.Success(nextSummary)
+    }
+
+    override suspend fun replaceItems(campaignId: String, rawItemsJson: String): Result<Unit> {
+        replacedItemsJson += campaignId to rawItemsJson
+        return failure ?: Result.Success(Unit)
+    }
+
+    override suspend fun invite(campaignId: String, role: String, expiresAt: Long?, maxUses: Int?): Result<String> {
+        invitedCampaignIds += campaignId
+        return failure ?: Result.Success(nextInviteCode)
+    }
+
+    override suspend fun join(code: String): Result<CampaignSummary> {
+        joinedCodes += code
+        if (failure == null) summaries = summaries + nextSummary
+        return failure ?: Result.Success(nextSummary)
+    }
+
+    override suspend fun leave(campaignId: String): Result<Unit> {
+        leftCampaignIds += campaignId
+        return failure ?: Result.Success(Unit)
+    }
+
     companion object {
         fun summary(
             id: String,

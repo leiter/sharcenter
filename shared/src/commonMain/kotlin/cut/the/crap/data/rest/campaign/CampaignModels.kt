@@ -114,6 +114,23 @@ internal data class CampaignListDto(
 )
 
 @Serializable
+internal data class InviteRequestDto(
+    @SerialName("role") val role: String,
+    @SerialName("expiresAt") val expiresAt: Long? = null,
+    @SerialName("maxUses") val maxUses: Int? = null,
+)
+
+@Serializable
+internal data class InviteResponseDto(
+    @SerialName("code") val code: String = ""
+)
+
+@Serializable
+internal data class JoinRequestDto(
+    @SerialName("code") val code: String
+)
+
+@Serializable
 internal data class CampaignPostDto(
     /** Variant label as written in the source markdown, e.g. "IT-2 (breve)". */
     @SerialName("id")

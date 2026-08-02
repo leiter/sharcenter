@@ -325,4 +325,121 @@ class CampaignRepositoryTest {
             )
         }
     )
+
+    // --- Step 3: authoring, invites, join -------------------------------------
+
+    private val summaryBody = """
+        {"id":"c1","title":"New campaign","description":null,"state":"active","version":1,
+         "role":"owner","featured":false,"countryCount":1,"postCount":1,"contactCount":0}
+    """.trimIndent()
+
+    @Test
+    fun `create posts the raw json as-is and maps the returned summary`() = runTest {
+        var requestUrl = ""
+        var requestMethod = ""
+        var requestBody = ""
+        val result = repository(
+            engine = MockEngine { request ->
+                requestUrl = request.url.toString()
+                requestMethod = request.method.value
+                requestBody = (request.body as io.ktor.http.content.TextContent).text
+                respond(
+                    content = summaryBody,
+                    status = HttpStatusCode.Created,
+                    headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                )
+            }
+        ).create("""{"title":"New campaign","items":[]}""")
+
+        assertEquals("https://campaign.invalid/api/campaigns", requestUrl)
+        assertEquals("POST", requestMethod)
+        // Sent verbatim: no client-side re-encoding of the pasted JSON.
+        assertEquals("""{"title":"New campaign","items":[]}""", requestBody)
+        assertTrue(result is Result.Success)
+        assertEquals("c1", (result as Result.Success).data.id)
+        assertEquals("owner", result.data.role)
+    }
+
+    @Test
+    fun `create surfaces a validation failure as a non-retryable client error`() = runTest {
+        val result = repository(
+            engine = MockEngine { respondError(HttpStatusCode.BadRequest) }
+        ).create("""{"title":""}""")
+
+        assertTrue(result is Result.Error)
+        assertEquals(false, (result as Result.Error).retryable)
+    }
+
+    @Test
+    fun `replaceItems posts to the campaign's items path`() = runTest {
+        var requestUrl = ""
+        val result = repository(
+            engine = MockEngine { request ->
+                requestUrl = request.url.toString()
+                respond(content = """{"version":2}""", status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()))
+            }
+        ).replaceItems("c1", """{"items":[]}""")
+
+        assertEquals("https://campaign.invalid/api/campaigns/c1/items", requestUrl)
+        assertTrue(result is Result.Success)
+    }
+
+    @Test
+    fun `invite posts the role and returns the code`() = runTest {
+        val result = repository(
+            engine = MockEngine {
+                respond(content = """{"code":"ABCD2345"}""", status = HttpStatusCode.Created,
+                    headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()))
+            }
+        ).invite("c1", "member")
+
+        assertTrue(result is Result.Success)
+        assertEquals("ABCD2345", (result as Result.Success).data)
+    }
+
+    @Test
+    fun `join posts the code and maps the returned summary`() = runTest {
+        var requestUrl = ""
+        val result = repository(
+            engine = MockEngine { request ->
+                requestUrl = request.url.toString()
+                respond(
+                    content = summaryBody.replace("\"role\":\"owner\"", "\"role\":\"member\""),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                )
+            }
+        ).join("ABCD2345")
+
+        assertEquals("https://campaign.invalid/api/campaigns/join", requestUrl)
+        assertTrue(result is Result.Success)
+        assertEquals("member", (result as Result.Success).data.role)
+    }
+
+    @Test
+    fun `join surfaces an unknown code as a not-found error`() = runTest {
+        val result = repository(
+            engine = MockEngine { respondError(HttpStatusCode.NotFound) }
+        ).join("NOPENOPE")
+
+        assertEquals(AppError.NotFound(Source.CAMPAIGN), (result as Result.Error).error)
+    }
+
+    @Test
+    fun `leave issues a DELETE to the campaign's own membership`() = runTest {
+        var requestUrl = ""
+        var requestMethod = ""
+        val result = repository(
+            engine = MockEngine { request ->
+                requestUrl = request.url.toString()
+                requestMethod = request.method.value
+                respond(content = "", status = HttpStatusCode.NoContent)
+            }
+        ).leave("c1")
+
+        assertEquals("https://campaign.invalid/api/campaigns/c1/members/me", requestUrl)
+        assertEquals("DELETE", requestMethod)
+        assertTrue(result is Result.Success)
+    }
 }

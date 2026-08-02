@@ -14,6 +14,7 @@
     <string name="context_menu_post_facebook">Post on Facebook</string>
     <string name="context_menu_share">Share…</string>
     <string name="context_menu_delete">Delete</string>
+    <string name="overflow_menu_cd">More options</string>
     <string name="share_chooser_title">Share post via</string>
     <string name="menu_fire_job">Fire Job</string>
     <string name="links_bulk_favorite">Favorite selected</string>
@@ -128,6 +129,12 @@
     <string name="share_edit_dialog_title">Save link</string>
     <string name="share_edit_dialog_link_label">Link</string>
     <string name="share_edit_dialog_keywords_label">Keywords (comma-separated)</string>
+    <string name="share_edit_dialog_comment_label">Comment / quote (optional)</string>
+    <string name="share_edit_dialog_pick_campaign_text">Use campaign text…</string>
+    <string name="share_edit_dialog_save_as_post">Save as Post</string>
+    <string name="share_edit_dialog_save_to_link">Save to link</string>
+    <string name="share_edit_dialog_campaign_picker_title">Pick a campaign post</string>
+    <string name="share_edit_dialog_campaign_picker_empty">No campaign posts available</string>
     <string name="share_edit_dialog_save">Save</string>
     <string name="share_edit_dialog_cancel">Cancel</string>
 
@@ -264,6 +271,33 @@
     <string name="campaign_detail_disabled_title">This campaign was switched off</string>
     <string name="campaign_detail_disabled_body">The operator disabled it. There is nothing to do here for now.</string>
     <string name="campaign_detail_failed">Could not load this campaign.</string>
+
+    <!-- Campaign Step 3: create + join (in-app authoring, doc/CAMPAIGN_SCHEMA_SPEC.md §8 step 3). -->
+    <string name="campaign_create_dialog_cd">Create a campaign</string>
+    <string name="campaign_create_dialog_title">Create campaign</string>
+    <string name="campaign_create_dialog_paste_label">Paste the campaign JSON</string>
+    <string name="campaign_create_dialog_pick_file">Pick a file…</string>
+    <string name="campaign_create_dialog_terms">I confirm this campaign does not target private individuals.</string>
+    <string name="campaign_create_dialog_submit">Create</string>
+    <string name="campaign_create_dialog_invalid_json">That isn\'t valid JSON.</string>
+    <string name="campaign_create_dialog_error">Could not create the campaign. Check the JSON and try again.</string>
+    <string name="campaign_join_dialog_cd">Join with code</string>
+    <string name="campaign_join_dialog_title">Join a campaign</string>
+    <string name="campaign_join_dialog_code_label">Invite code</string>
+    <string name="campaign_join_dialog_submit">Join</string>
+    <string name="campaign_join_dialog_error">That code didn\'t work — it may be wrong, expired, or already used up.</string>
+    <string name="campaign_manage_replace_items">Replace items…</string>
+    <string name="campaign_manage_replace_items_error">Could not save the items. Check the JSON and try again.</string>
+    <string name="campaign_manage_generate_invite">Generate invite</string>
+    <string name="campaign_manage_invite_role_member">Member</string>
+    <string name="campaign_manage_invite_role_editor">Editor</string>
+    <string name="campaign_manage_invite_generated">Invite code: %1$s</string>
+    <string name="campaign_manage_invite_copy">Copy code</string>
+    <string name="campaign_manage_invite_error">Could not create an invite. Try again.</string>
+    <string name="campaign_manage_leave">Leave campaign</string>
+    <string name="campaign_manage_leave_confirm_title">Leave this campaign?</string>
+    <string name="campaign_manage_leave_confirm_body">You\'ll need a new invite to rejoin.</string>
+    <string name="campaign_manage_leave_error">Could not leave the campaign. Try again.</string>
 
     <string name="campaign_countries_title">Campaign countries</string>
     <string name="campaign_no_data">No campaign data available.</string>
