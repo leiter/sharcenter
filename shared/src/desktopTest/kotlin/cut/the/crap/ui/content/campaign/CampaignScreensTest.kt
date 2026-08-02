@@ -241,6 +241,55 @@ class CampaignScreensTest {
         onNodeWithContentDescription("More options").assertDoesNotExist()
     }
 
+    private fun detailManageModules(repository: CampaignRepository, urlOpener: UrlOpener) = module {
+        single<Notifier> { FlowNotifier() }
+        single { urlOpener }
+        single<CampaignRepository> { repository }
+    }
+
+    @Test
+    fun `the owner sees a delete button, a member does not`() = runComposeUiTest {
+        val ownerCampaign = campaign.copy(role = "owner")
+        setContent {
+            KoinApplication(application = { modules(detailManageModules(FakeCampaignRepository(), RecordingUrlOpener())) }) {
+                CampaignDetailScreen(
+                    navController = rememberNavController(),
+                    campaignId = "abu-safiya",
+                    viewModel = CampaignDetailViewModel(
+                        FakeCampaignRepository(campaign = ownerCampaign), "abu-safiya"
+                    ),
+                )
+            }
+        }
+        waitForIdle()
+
+        onNodeWithText("Delete campaign").assertIsDisplayed()
+    }
+
+    @Test
+    fun `confirming delete removes the campaign`() = runComposeUiTest {
+        val ownerCampaign = campaign.copy(role = "owner")
+        val repository = FakeCampaignRepository(campaign = ownerCampaign)
+        setContent {
+            KoinApplication(application = { modules(detailManageModules(repository, RecordingUrlOpener())) }) {
+                CampaignDetailScreen(
+                    navController = rememberNavController(),
+                    campaignId = "abu-safiya",
+                    viewModel = CampaignDetailViewModel(repository, "abu-safiya"),
+                )
+            }
+        }
+        waitForIdle()
+
+        onNodeWithText("Delete campaign").performClick()
+        waitForIdle()
+        onNodeWithText("Delete this campaign?").assertIsDisplayed()
+        onNodeWithText("Delete").performClick()
+        waitForIdle()
+
+        assertEquals(listOf("abu-safiya"), repository.deletedCampaignIds)
+    }
+
     @Test
     fun `a disabled campaign says a human switched it off`() = runComposeUiTest {
         val repository = FakeCampaignRepository().apply { failure = FakeCampaignRepository.disabled() }

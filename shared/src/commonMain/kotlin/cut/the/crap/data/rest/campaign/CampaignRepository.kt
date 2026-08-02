@@ -69,6 +69,9 @@ interface CampaignRepository {
 
     /** Leaves [campaignId]. The owner cannot leave their own campaign — the server rejects that. */
     suspend fun leave(campaignId: String): Result<Unit>
+
+    /** Deletes [campaignId] permanently. Owner only — the server rejects anyone else. */
+    suspend fun delete(campaignId: String): Result<Unit>
 }
 
 class CampaignRepositoryImpl constructor(
@@ -148,6 +151,11 @@ class CampaignRepositoryImpl constructor(
     override suspend fun leave(campaignId: String): Result<Unit> =
         call {
             client.delete(url("$CAMPAIGN_PATH/${campaignId.encodeURLPathPart()}/members/me"))
+        }.map { }
+
+    override suspend fun delete(campaignId: String): Result<Unit> =
+        call {
+            client.delete(url("$CAMPAIGN_PATH/${campaignId.encodeURLPathPart()}"))
         }.map { }
 
     private fun url(path: String) = config.campaignBaseUrl.trimEnd('/') + path

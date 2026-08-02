@@ -299,6 +299,11 @@
     <string name="campaign_manage_leave_confirm_title">Leave this campaign?</string>
     <string name="campaign_manage_leave_confirm_body">You\'ll need a new invite to rejoin.</string>
     <string name="campaign_manage_leave_error">Could not leave the campaign. Try again.</string>
+    <string name="campaign_manage_delete">Delete campaign</string>
+    <string name="campaign_manage_delete_confirm_title">Delete this campaign?</string>
+    <string name="campaign_manage_delete_confirm_body">This removes it and everything in it for everyone. There is no undo.</string>
+    <string name="campaign_manage_delete_error">Could not delete the campaign. Try again.</string>
+    <string name="campaign_manage_delete_confirm_action">Delete</string>
 
     <string name="campaign_countries_title">Campaign countries</string>
     <string name="campaign_no_data">No campaign data available.</string>

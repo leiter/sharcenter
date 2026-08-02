@@ -18,6 +18,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -77,6 +78,11 @@ import cut.the.crap.shared.resources.campaign_manage_invite_error
 import cut.the.crap.shared.resources.campaign_manage_invite_generated
 import cut.the.crap.shared.resources.campaign_manage_invite_role_editor
 import cut.the.crap.shared.resources.campaign_manage_invite_role_member
+import cut.the.crap.shared.resources.campaign_manage_delete
+import cut.the.crap.shared.resources.campaign_manage_delete_confirm_action
+import cut.the.crap.shared.resources.campaign_manage_delete_confirm_body
+import cut.the.crap.shared.resources.campaign_manage_delete_confirm_title
+import cut.the.crap.shared.resources.campaign_manage_delete_error
 import cut.the.crap.shared.resources.campaign_manage_leave
 import cut.the.crap.shared.resources.campaign_manage_leave_confirm_body
 import cut.the.crap.shared.resources.campaign_manage_leave_confirm_title
@@ -194,7 +200,7 @@ private fun Body(
         // "Managed from the app" (CAMPAIGN_SCHEMA_SPEC.md §8 step 3): owner/editor can push a
         // revised item set, generate invites; any member can leave.
         if (campaign.role == "owner" || campaign.role == "editor") {
-            item { ManageSection(campaignId, onChanged) }
+            item { ManageSection(campaignId, campaign.role, navController, onChanged) }
         } else if (campaign.role == "member") {
             item { LeaveSection(campaignId, navController) }
         }
@@ -273,9 +279,15 @@ private fun LaneCard(title: String, body: String, action: String?, onAction: (()
 
 /** Owner/editor management: push a revised item set, generate an invite (CAMPAIGN_SCHEMA_SPEC §8 step 3). */
 @Composable
-private fun ManageSection(campaignId: String, onChanged: () -> Unit) {
+private fun ManageSection(
+    campaignId: String,
+    role: String?,
+    navController: NavHostController,
+    onChanged: () -> Unit,
+) {
     var showReplaceItems by remember { mutableStateOf(false) }
     var showInvite by remember { mutableStateOf(false) }
+    var showDelete by remember { mutableStateOf(false) }
 
     if (showReplaceItems) {
         ReplaceItemsDialog(
@@ -286,6 +298,13 @@ private fun ManageSection(campaignId: String, onChanged: () -> Unit) {
     }
     if (showInvite) {
         InviteDialog(campaignId = campaignId, onDismiss = { showInvite = false })
+    }
+    if (showDelete) {
+        DeleteConfirmDialog(
+            campaignId = campaignId,
+            onDismiss = { showDelete = false },
+            onDeleted = { navController.popBackStack() },
+        )
     }
 
     Card(
@@ -301,6 +320,18 @@ private fun ManageSection(campaignId: String, onChanged: () -> Unit) {
             }
             OutlinedButton(onClick = { showInvite = true }) {
                 Text(stringResource(Res.string.campaign_manage_generate_invite))
+            }
+            // Deleting is unrecoverable and there is no ownership transfer, so only the owner —
+            // never an editor — can do it; an editor deleting the owner's campaign would be a
+            // privilege escalation the server itself refuses (403), but the button shouldn't even
+            // dangle there for someone who'll just get an error.
+            if (role == "owner") {
+                OutlinedButton(
+                    onClick = { showDelete = true },
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                ) {
+                    Text(stringResource(Res.string.campaign_manage_delete))
+                }
             }
         }
     }
@@ -490,6 +521,50 @@ private fun LeaveConfirmDialog(campaignId: String, onDismiss: () -> Unit, onLeft
                     }
                 },
             ) { Text(stringResource(Res.string.campaign_manage_leave)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.dialog_cancel)) }
+        },
+    )
+}
+
+/** Owner-only, permanent — the server has nothing that walks this back. */
+@Composable
+private fun DeleteConfirmDialog(campaignId: String, onDismiss: () -> Unit, onDeleted: () -> Unit) {
+    val repository: CampaignRepository = koinInject()
+    val scope = rememberCoroutineScope()
+    var submitting by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.campaign_manage_delete_confirm_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(Res.string.campaign_manage_delete_confirm_body))
+                if (submitting) CircularProgressIndicator()
+                if (error) {
+                    Text(
+                        stringResource(Res.string.campaign_manage_delete_error),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = !submitting,
+                onClick = {
+                    submitting = true
+                    error = false
+                    scope.launch {
+                        when (repository.delete(campaignId)) {
+                            is Result.Success -> onDeleted()
+                            is Result.Error -> { submitting = false; error = true }
+                        }
+                    }
+                },
+            ) { Text(stringResource(Res.string.campaign_manage_delete_confirm_action)) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(Res.string.dialog_cancel)) }

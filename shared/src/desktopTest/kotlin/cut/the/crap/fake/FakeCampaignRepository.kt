@@ -51,6 +51,7 @@ class FakeCampaignRepository(
     val invitedCampaignIds = mutableListOf<String>()
     val joinedCodes = mutableListOf<String>()
     val leftCampaignIds = mutableListOf<String>()
+    val deletedCampaignIds = mutableListOf<String>()
 
     override suspend fun create(rawJson: String): Result<CampaignSummary> {
         createdJson += rawJson
@@ -76,6 +77,12 @@ class FakeCampaignRepository(
 
     override suspend fun leave(campaignId: String): Result<Unit> {
         leftCampaignIds += campaignId
+        return failure ?: Result.Success(Unit)
+    }
+
+    override suspend fun delete(campaignId: String): Result<Unit> {
+        deletedCampaignIds += campaignId
+        if (failure == null) summaries = summaries.filterNot { it.id == campaignId }
         return failure ?: Result.Success(Unit)
     }
 

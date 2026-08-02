@@ -442,4 +442,30 @@ class CampaignRepositoryTest {
         assertEquals("DELETE", requestMethod)
         assertTrue(result is Result.Success)
     }
+
+    @Test
+    fun `delete issues a DELETE to the campaign itself`() = runTest {
+        var requestUrl = ""
+        var requestMethod = ""
+        val result = repository(
+            engine = MockEngine { request ->
+                requestUrl = request.url.toString()
+                requestMethod = request.method.value
+                respond(content = "", status = HttpStatusCode.NoContent)
+            }
+        ).delete("c1")
+
+        assertEquals("https://campaign.invalid/api/campaigns/c1", requestUrl)
+        assertEquals("DELETE", requestMethod)
+        assertTrue(result is Result.Success)
+    }
+
+    @Test
+    fun `delete by a non-owner surfaces the server's 403 as an error`() = runTest {
+        val result = repository(
+            engine = MockEngine { respondError(HttpStatusCode.Forbidden) }
+        ).delete("c1")
+
+        assertTrue(result is Result.Error)
+    }
 }
