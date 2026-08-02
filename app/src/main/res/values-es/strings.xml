@@ -1,0 +1,503 @@
+<resources>
+    <string name="app_name">ShareCenter</string>
+
+    <string name="context_menu_insert">Insertar</string>
+    <string name="context_menu_edit">Editar</string>
+    <string name="context_menu_open">Abrir</string>
+    <string name="context_menu_compose_post">Redactar publicación</string>
+    <string name="context_menu_clipboard">Portapapeles</string>
+    <string name="context_menu_show_profile">Ver perfil</string>
+    <string name="context_menu_show_channel">Ver canal</string>
+    <string name="context_menu_comment_quote">Comentar/Citar</string>
+    <string name="context_menu_post_twitter">Publicar en Twitter</string>
+    <string name="context_menu_post_facebook">Publicar en Facebook</string>
+    <string name="context_menu_share">Compartir…</string>
+    <string name="context_menu_delete">Eliminar</string>
+    <string name="share_chooser_title">Compartir publicación mediante</string>
+    <string name="menu_fire_job">Ejecutar tarea</string>
+    <string name="links_bulk_favorite">Marcar selección como favorita</string>
+    <string name="links_bulk_tag_accounts">Etiquetar cuentas (@)</string>
+    <string name="links_bulk_tag_hashtags">Etiquetar hashtags (#)</string>
+    <string name="links_bulk_tag_keywords">Etiquetar palabras clave</string>
+    <string name="links_bulk_export">Exportar selección</string>
+    <string name="links_bulk_delete">Eliminar selección</string>
+    <string name="links_bulk_deselect">Deseleccionar todo</string>
+
+    <string name="dialog_cancel">Cancelar</string>
+    <string name="dialog_abort">Cancelar</string>
+    <string name="dialog_ok">Aceptar</string>
+    <string name="dialog_delete">Eliminar</string>
+
+    <!-- Screen Titles -->
+    <string name="screen_posts">Publicaciones</string>
+    <string name="screen_links">Enlaces</string>
+    <string name="screen_profile">Perfil</string>
+
+    <!-- Date Filter -->
+    <string name="date_filter_title">Filtro de fecha</string>
+    <string name="date_filter_start_date">Fecha de inicio</string>
+    <string name="date_filter_end_date">Fecha de fin</string>
+    <string name="date_filter_error_end_before_start">La fecha de fin no puede ser anterior a la de inicio</string>
+
+    <!-- Handle/Tag Selection Dialog -->
+    <string name="tag_dialog_add_handle">Añadir identificador</string>
+    <string name="tag_dialog_add_tag">Añadir etiqueta</string>
+    <string name="tag_dialog_add_keyword">Añadir palabra clave</string>
+    <string name="tag_dialog_delete_handles">Eliminar identificadores</string>
+    <string name="tag_dialog_delete_tags">Eliminar etiquetas</string>
+    <string name="tag_dialog_delete_keywords">Eliminar palabras clave</string>
+    <string name="tag_dialog_select_handles">Seleccionar cuentas</string>
+    <string name="tag_dialog_select_tags">Seleccionar hashtags</string>
+    <string name="tag_dialog_select_keywords">Seleccionar palabras clave</string>
+    <string name="tag_dialog_select_items">Seleccionar elementos</string>
+    <string name="tag_dialog_placeholder_handle">\@usuario</string>
+    <string name="tag_dialog_placeholder_tag">#hashtag</string>
+    <string name="tag_dialog_placeholder_keyword">palabra clave</string>
+    <string name="tag_dialog_back_to_list">Volver a la lista</string>
+    <string name="tag_dialog_delete_mode">Modo eliminación</string>
+    <string name="tag_dialog_add_new">Añadir nuevo</string>
+    <string name="tag_dialog_reverse_list">Invertir lista</string>
+    <string name="tag_dialog_undo">DESHACER</string>
+    <string name="tag_dialog_enter_handle">Introduce el identificador</string>
+    <string name="tag_dialog_enter_tag">Introduce la etiqueta</string>
+    <string name="tag_dialog_prefix_help_handle">El prefijo \@ se añadirá automáticamente si no está presente.</string>
+    <string name="tag_dialog_prefix_help_tag">El prefijo # se añadirá automáticamente si no está presente.</string>
+    <string name="tag_dialog_search_placeholder">Buscar…</string>
+    <string name="tag_dialog_search">Buscar</string>
+    <string name="tag_dialog_no_items">Aún no hay elementos. Toca + para añadir.</string>
+    <string name="tag_dialog_no_matching_items">No se encontraron elementos coincidentes.</string>
+    <string name="tag_dialog_selected">Seleccionado</string>
+    <string name="tag_dialog_not_selected">No seleccionado</string>
+    <string name="tag_dialog_remove_from_favorites">Quitar de favoritos</string>
+    <string name="tag_dialog_add_to_favorites">Añadir a favoritos</string>
+    <string name="tag_dialog_selected_for_deletion">%d seleccionados para eliminar</string>
+    <string name="tag_dialog_selected_count">%d seleccionados</string>
+    <string name="tag_dialog_delete">Eliminar</string>
+    <string name="tag_dialog_button_add">AÑADIR</string>
+    <string name="tag_dialog_button_delete">ELIMINAR (%d)</string>
+    <string name="tag_dialog_button_select_items">SELECCIONAR ELEMENTOS PARA ELIMINAR</string>
+    <string name="tag_dialog_item_deleted">%s eliminado</string>
+    <string name="tag_dialog_items_deleted">%d elementos eliminados</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_posts_screen">Pantalla de publicaciones</string>
+    <string name="settings_links_screen">Pantalla de enlaces</string>
+    <string name="settings_appearance">Apariencia</string>
+    <string name="settings_display">Visualización</string>
+    <string name="settings_data_management">Gestión de datos</string>
+    <string name="settings_about">Acerca de</string>
+    <string name="settings_developer_options">Opciones de desarrollador</string>
+    <string name="settings_default_date_range">Rango de fechas predeterminado</string>
+    <string name="settings_default_favorite_filter">Filtro de favoritos predeterminado</string>
+    <string name="settings_default_sort_order">Orden de clasificación predeterminado</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_accent_color">Color de acento</string>
+    <string name="color_picker_title">Elige un color</string>
+    <string name="color_picker_confirm">Aceptar</string>
+    <string name="settings_timestamp_format">Formato de marca de tiempo</string>
+    <string name="settings_version">Versión</string>
+    <string name="settings_show_performance_metrics">Mostrar métricas de rendimiento</string>
+    <string name="settings_show_performance_metrics_desc">Mostrar FPS y uso de memoria</string>
+    <string name="settings_disable_developer_mode">Desactivar modo desarrollador</string>
+    <string name="settings_disable_developer_mode_desc">Ocultar opciones de desarrollador</string>
+    <string name="settings_import_export">Importar y exportar</string>
+    <string name="settings_import_export_desc">Gestiona la copia de seguridad y restauración de tus datos</string>
+    <string name="settings_backup_frequency">Frecuencia de copia de seguridad automática</string>
+    <string name="settings_backup_retention">Conservar copias de seguridad</string>
+    <string name="settings_manage_backups">Gestionar copias de seguridad</string>
+    <string name="settings_manage_backups_desc">Examina y elimina las copias de seguridad guardadas</string>
+
+    <!-- Backup Frequency -->
+    <string name="backup_frequency_off">Desactivado</string>
+    <string name="backup_frequency_daily">Diaria</string>
+    <string name="backup_frequency_weekly">Semanal</string>
+    <string name="backup_frequency_monthly">Mensual</string>
+
+    <!-- Backup Retention -->
+    <string name="backup_retention_all">Conservar todas</string>
+    <string name="backup_retention_5">Conservar las últimas 5</string>
+    <string name="backup_retention_10">Conservar las últimas 10</string>
+    <string name="backup_retention_30">Conservar las últimas 30</string>
+
+    <!-- Sharing -->
+    <string name="settings_sharing">Compartir</string>
+    <string name="settings_edit_shared_link">Editar enlaces antes de guardar</string>
+    <string name="settings_edit_shared_link_desc">Al compartir un enlace con la app, mostrar un diálogo editable antes de guardarlo</string>
+    <string name="share_edit_dialog_title">Guardar enlace</string>
+    <string name="share_edit_dialog_link_label">Enlace</string>
+    <string name="share_edit_dialog_keywords_label">Palabras clave (separadas por comas)</string>
+    <string name="share_edit_dialog_save">Guardar</string>
+    <string name="share_edit_dialog_cancel">Cancelar</string>
+
+    <!-- Date Range Presets -->
+    <string name="date_range_preset_7_days">7 días</string>
+    <string name="date_range_preset_30_days">30 días</string>
+    <string name="date_range_preset_90_days">90 días</string>
+    <string name="date_range_preset_all_time">Todo el tiempo</string>
+    <string name="date_range_preset_custom">Personalizado</string>
+
+    <!-- Theme Preferences -->
+    <string name="theme_preference_system">Predeterminado del sistema</string>
+    <string name="theme_preference_light">Claro</string>
+    <string name="theme_preference_dark">Oscuro</string>
+
+    <!-- Timestamp Formats -->
+    <string name="timestamp_format_relative">Relativo (hace 2 horas)</string>
+    <string name="timestamp_format_absolute">Absoluto (1 ene 2025)</string>
+
+    <!-- Favorite Filter Presets -->
+    <string name="favorite_filter_preset_all">Todos los elementos</string>
+    <string name="favorite_filter_preset_favorites_only">Solo favoritos</string>
+    <string name="favorite_filter_preset_non_favorites_only">Solo no favoritos</string>
+
+    <!-- Sort Order Presets -->
+    <string name="sort_order_preset_by_order">Por orden/posición</string>
+    <string name="sort_order_preset_by_date">Por fecha (más reciente)</string>
+
+    <!-- Settings Dialog Titles -->
+    <string name="settings_dialog_posts_date_range">Rango de fechas predeterminado de publicaciones</string>
+    <string name="settings_dialog_links_date_range">Rango de fechas predeterminado de enlaces</string>
+    <string name="settings_dialog_posts_favorite_filter">Filtro de favoritos predeterminado de publicaciones</string>
+    <string name="settings_dialog_links_favorite_filter">Filtro de favoritos predeterminado de enlaces</string>
+    <string name="settings_dialog_posts_sort_order">Orden predeterminado de publicaciones</string>
+    <string name="settings_dialog_links_sort_order">Orden predeterminado de enlaces</string>
+
+    <!-- Loading and Empty States -->
+    <string name="loading_links">Cargando enlaces…</string>
+    <string name="loading_posts">Cargando publicaciones…</string>
+    <string name="empty_links_title">Aún no hay enlaces</string>
+    <string name="empty_links_message">Añade tu primer enlace con el botón +</string>
+    <string name="empty_links_filtered_message">Ningún enlace coincide con tus filtros actuales</string>
+    <string name="empty_posts_title">Aún no hay publicaciones</string>
+    <string name="empty_posts_message">Crea tu primera publicación con el botón +</string>
+    <string name="empty_posts_filtered_message">Ninguna publicación coincide con tus filtros actuales</string>
+
+    <!-- Generic network/error messages (data layer) -->
+    <string name="error_client">Error de cliente: %1$d - %2$s</string>
+    <string name="error_server">Error del servidor: %1$d - %2$s</string>
+    <string name="error_timeout">Se agotó el tiempo de la solicitud. Comprueba tu conexión a internet.</string>
+    <string name="error_network">Error de red: %1$s</string>
+    <string name="error_network_fallback">No se pudo conectar al servidor</string>
+    <string name="error_unexpected">Error inesperado: %1$s</string>
+    <string name="error_unknown">Se produjo un error desconocido</string>
+
+    <!-- YouTube metadata errors -->
+    <string name="yt_error_invalid_url">URL de YouTube no válida: %1$s</string>
+    <string name="yt_error_no_video_id">No se pudo extraer el ID del vídeo de la URL: %1$s</string>
+    <string name="yt_error_invalid_video_id">Formato de ID de vídeo de YouTube no válido: %1$s</string>
+    <string name="yt_error_not_found">Vídeo no encontrado o privado</string>
+    <string name="yt_error_not_accessible">El vídeo no es accesible</string>
+    <string name="yt_error_server">Error del servidor de YouTube: %1$d</string>
+    <string name="yt_error_timeout">Se agotó el tiempo de la solicitud. Comprueba tu conexión.</string>
+    <string name="yt_error_unavailable">Vídeo no disponible</string>
+    <string name="yt_error_connect_fallback">No se pudo conectar</string>
+    <string name="yt_error_fetch_failed">Error al obtener los metadatos del vídeo: %1$s</string>
+
+    <!-- Bluesky metadata errors -->
+    <string name="bsky_error_invalid_url">No es una URL de publicación de Bluesky reconocida: %1$s</string>
+    <string name="bsky_error_not_found">Publicación no encontrada o no disponible</string>
+    <string name="bsky_error_server">Error del servidor de Bluesky: %1$d</string>
+    <string name="bsky_error_timeout">Se agotó el tiempo de la solicitud. Comprueba tu conexión.</string>
+    <string name="bsky_error_unavailable">Publicación no disponible</string>
+    <string name="bsky_error_fetch_failed">Error al obtener los metadatos de la publicación: %1$s</string>
+    <string name="mastodon_error_invalid_url">No es una URL de publicación de Mastodon reconocida: %1$s</string>
+    <string name="mastodon_error_not_found">Publicación no encontrada o no disponible</string>
+    <string name="mastodon_error_server">Error del servidor de Mastodon: %1$d</string>
+    <string name="mastodon_error_timeout">Se agotó el tiempo de la solicitud. Comprueba tu conexión.</string>
+    <string name="mastodon_error_unavailable">Publicación no disponible</string>
+    <string name="mastodon_error_fetch_failed">Error al obtener los metadatos de la publicación: %1$s</string>
+    <string name="tiktok_error_invalid_url">No es una URL de publicación de TikTok reconocida: %1$s</string>
+    <string name="tiktok_error_not_found">Publicación no encontrada o no disponible</string>
+    <string name="tiktok_error_server">Error del servidor de TikTok: %1$d</string>
+    <string name="tiktok_error_timeout">Se agotó el tiempo de la solicitud. Comprueba tu conexión.</string>
+    <string name="tiktok_error_unavailable">Publicación no disponible</string>
+    <string name="tiktok_error_fetch_failed">Error al obtener los metadatos de la publicación: %1$s</string>
+    <string name="reddit_error_invalid_url">No es una URL de publicación de Reddit reconocida: %1$s</string>
+    <string name="reddit_error_not_found">Publicación no encontrada o no disponible</string>
+    <string name="reddit_error_server">Error del servidor de Reddit: %1$d</string>
+    <string name="reddit_error_timeout">Se agotó el tiempo de la solicitud. Comprueba tu conexión.</string>
+    <string name="reddit_error_unavailable">Publicación no disponible</string>
+    <string name="reddit_error_fetch_failed">Error al obtener los metadatos de la publicación: %1$s</string>
+
+    <!-- ECI statistics errors -->
+    <string name="eci_error_unrecognised_url">No es una URL de iniciativa reconocida: %1$s</string>
+    <string name="eci_error_invalid_number">Número de iniciativa no válido: %1$s</string>
+    <string name="eci_error_not_found">Iniciativa %1$s/%2$s no encontrada</string>
+    <string name="eci_error_server">Error del servidor del registro de la ICE: %1$d</string>
+    <string name="eci_error_timeout">Se agotó el tiempo de la solicitud. Comprueba tu conexión.</string>
+    <string name="eci_error_unexpected_response">Respuesta inesperada del registro de la ICE</string>
+    <string name="eci_error_parse">No se pudieron analizar las estadísticas de la ICE</string>
+    <string name="eci_error_load_failed">Error al cargar las estadísticas de la ICE: %1$s</string>
+
+    <!-- Common actions -->
+    <string name="action_back">Atrás</string>
+
+    <!-- ECI statistics screen &amp; table -->
+    <string name="eci_screen_title">Firmas por país</string>
+    <string name="eci_table_title">Firmas por país</string>
+    <string name="eci_table_updated">actualizado %1$s</string>
+    <string name="eci_no_statistics">No hay estadísticas disponibles.</string>
+    <string name="eci_create_posts_cd">Crear publicaciones de motivación</string>
+    <string name="eci_col_country">País</string>
+    <string name="eci_col_signatures">Firmas</string>
+    <string name="eci_col_threshold">Umbral</string>
+    <string name="eci_col_percentage">Porcentaje</string>
+    <string name="eci_not_available">N/D</string>
+    <string name="eci_total">Total</string>
+    <string name="eci_after_submission_note">* Registrado después de presentar la iniciativa para su verificación.</string>
+
+    <!-- ECI post composer -->
+    <string name="eci_composer_title">Crear publicaciones</string>
+    <string name="eci_copy_post">Copiar publicación al portapapeles</string>
+    <string name="eci_post_copied">Publicación copiada al portapapeles</string>
+    <string name="eci_not_collecting">Esta iniciativa no está recogiendo firmas actualmente.</string>
+    <string name="eci_sort_label">Ordenar:</string>
+    <string name="eci_label_colon">%1$s:</string>
+    <string name="eci_filter_chip">%1$s (%2$d)</string>
+    <string name="eci_select_countries">Seleccionar países</string>
+    <string name="eci_variant">Variante %1$d</string>
+    <string name="eci_tone_push">Tono de impulso</string>
+    <string name="eci_tone_margin">Tono de margen</string>
+    <string name="eci_show_preview">Mostrar vista previa</string>
+    <string name="eci_hide_preview">Ocultar vista previa</string>
+    <string name="eci_row_needed">%1$s · faltan +%2$d</string>
+    <!-- Filter labels -->
+    <string name="eci_filter_none">Sin filtro</string>
+    <string name="eci_filter_eligible">Todos los elegibles</string>
+    <string name="eci_filter_below">Por debajo del umbral</string>
+    <string name="eci_filter_margin">Creando margen</string>
+    <string name="eci_filter_reached">Umbral alcanzado</string>
+    <!-- Sort labels -->
+    <string name="eci_sort_closest">Más cerca del objetivo</string>
+    <string name="eci_sort_needed">Firmas necesarias</string>
+    <string name="eci_sort_alpha">A–Z</string>
+    <string name="eci_sort_percentage">Porcentaje</string>
+    <string name="eci_sort_signatures">Firmas</string>
+    <!-- Band labels -->
+    <string name="eci_band_push">Impulso</string>
+    <string name="eci_band_margin">Margen</string>
+    <string name="eci_band_safe">Seguro</string>
+    <string name="eci_band_unknown">—</string>
+
+    <!-- Plurals -->
+    <plurals name="chars">
+        <item quantity="one">%d carácter</item>
+        <item quantity="other">%d caracteres</item>
+    </plurals>
+    <plurals name="eci_drafts_created">
+        <item quantity="one">%d borrador creado</item>
+        <item quantity="other">%d borradores creados</item>
+    </plurals>
+    <plurals name="eci_create_posts_button">
+        <item quantity="one">Crear %d publicación</item>
+        <item quantity="other">Crear %d publicaciones</item>
+    </plurals>
+
+    <!-- Shared content descriptions -->
+    <string name="cd_copy_clipboard">Copiar al portapapeles</string>
+
+    <!-- Content editor -->
+    <string name="editor_title">Redactar</string>
+    <string name="editor_placeholder">¿Qué estás pensando?</string>
+    <string name="editor_quick_actions">Acciones rápidas:</string>
+    <string name="editor_cd_clear">Borrar todo el texto</string>
+    <string name="editor_cd_add_tag">Añadir etiqueta</string>
+    <string name="editor_cd_attach">Adjuntar archivos</string>
+    <string name="editor_cd_upload">Subir archivos</string>
+    <string name="editor_cd_paste">Pegar del portapapeles</string>
+
+    <!-- Content item card -->
+    <string name="card_cd_collapse">Contraer</string>
+    <string name="card_cd_expand">Expandir</string>
+    <string name="card_cd_toggle_favorite">Alternar favorito</string>
+    <string name="card_cd_load_editor">Cargar en el editor</string>
+
+    <!-- Posts screen -->
+    <string name="posts_snackbar_cleared">Publicación vaciada</string>
+    <string name="posts_cd_collapse_filters">Contraer filtros</string>
+    <string name="posts_cd_expand_filters">Expandir filtros</string>
+    <string name="posts_cd_load_stats">Cargar estadísticas de la iniciativa</string>
+    <string name="posts_cd_create_item">Crear nuevo elemento de contenido</string>
+    <string name="posts_selection_count">%1$d seleccionados</string>
+    <string name="posts_cd_toggle_selection">Alternar selección</string>
+
+    <!-- Links screen / top bar -->
+    <string name="links_active_filters">Filtros activos:</string>
+    <string name="links_clear_all">Borrar todo</string>
+    <string name="links_deselect_all">Deseleccionar todo</string>
+    <string name="links_select_all_filtered">Seleccionar todos los filtrados</string>
+    <string name="links_cd_remove_filter">Quitar filtro</string>
+    <string name="links_cd_exit_selection">Salir del modo selección</string>
+    <string name="links_cd_remove_handle">Quitar identificador</string>
+    <string name="links_cd_remove_hashtag">Quitar hashtag</string>
+    <string name="links_cd_remove_keyword">Quitar palabra clave</string>
+    <string name="links_cd_add_accounts">Añadir cuentas</string>
+    <string name="links_cd_add_hashtags">Añadir hashtags</string>
+    <string name="links_cd_add_keywords">Añadir palabras clave</string>
+    <string name="links_cd_video_thumbnail">Miniatura del vídeo</string>
+    <string name="links_cd_filtered">Filtrado</string>
+    <string name="links_cd_selected">Seleccionado</string>
+
+    <!-- Comment/Quote dialog -->
+    <string name="links_comment_quote_title">Comentar o citar</string>
+    <string name="links_comment_quote_label">Tu comentario o cita</string>
+    <string name="links_comment_quote_placeholder">Escribe tu texto aquí…</string>
+    <string name="links_quote">Cita</string>
+    <string name="links_comment">Comentario</string>
+
+    <!-- Settings: database restore &amp; X credentials -->
+    <string name="settings_restore_title">¿Restaurar base de datos?</string>
+    <string name="settings_restore_body">Esto reemplazará TODOS los datos actuales con el contenido de la copia de seguridad seleccionada y luego reiniciará la app. Esta acción no se puede deshacer.</string>
+    <string name="settings_restore_confirm">Restaurar</string>
+    <string name="settings_backup_database">Copia de seguridad de la base de datos</string>
+    <string name="settings_backup_database_desc">Crea una copia de seguridad manual de tu base de datos</string>
+    <string name="settings_restore_database">Restaurar base de datos</string>
+    <string name="settings_restore_database_desc">Reemplaza los datos actuales con un archivo de copia .db</string>
+    <string name="settings_x_logged_in">Sesión iniciada: toca para volver a iniciar sesión</string>
+    <string name="settings_x_not_logged_in">Sin sesión: toca para iniciar sesión</string>
+    <string name="settings_x_manual_credentials">Credenciales manuales de X</string>
+    <string name="settings_x_edit_manually">Editar manualmente</string>
+    <string name="settings_x_enter_manually">Introducir cookies manualmente</string>
+    <string name="settings_x_api_credentials">Credenciales de la API de X</string>
+    <string name="settings_x_cookies_help">Introduce tus cookies de X (Twitter) de Firefox para habilitar la resolución de URL /i/status/.</string>
+    <string name="settings_x_cookies_hint">Obténlas de las cookies de Firefox para x.com</string>
+    <string name="settings_clear">Borrar</string>
+    <string name="settings_toast_x_login_success">Sesión en X iniciada correctamente</string>
+    <string name="settings_toast_x_credentials_saved">Credenciales de X guardadas</string>
+    <string name="settings_toast_x_credentials_cleared">Credenciales de X borradas</string>
+
+    <!-- Backup management -->
+    <string name="backup_delete_title">¿Eliminar copias de seguridad?</string>
+    <string name="backup_cd_delete_selected">Eliminar selección</string>
+    <string name="backup_empty_title">No se encontraron copias de seguridad</string>
+    <string name="backup_empty_message">Las copias de seguridad que crees aparecerán aquí.</string>
+    <plurals name="backup_delete_body">
+        <item quantity="one">Esto eliminará permanentemente %d copia de seguridad. Esta acción no se puede deshacer.</item>
+        <item quantity="other">Esto eliminará permanentemente %d copias de seguridad. Esta acción no se puede deshacer.</item>
+    </plurals>
+    <plurals name="backup_deleted">
+        <item quantity="one">%d copia de seguridad eliminada</item>
+        <item quantity="other">%d copias de seguridad eliminadas</item>
+    </plurals>
+
+    <!-- Import / Export -->
+    <string name="import_export_coming_soon">Esta función estará disponible pronto.\n\nAquí podrás hacer copias de seguridad y restaurar los datos de tus publicaciones y enlaces.</string>
+    <string name="import_export_export">Exportar datos</string>
+    <string name="import_export_import">Importar datos</string>
+
+    <!-- Shared dialog action -->
+    <string name="dialog_save">Guardar</string>
+
+    <!-- Edit dialog -->
+    <string name="edit_entity_title">Editar entidad</string>
+    <string name="edit_dialog_link_label">Editar enlace</string>
+    <string name="edit_dialog_description_label">Editar descripción</string>
+    <string name="edit_dialog_hide">Ocultar</string>
+    <string name="edit_dialog_confirm_delete">¿Seguro que quieres eliminar este elemento?</string>
+
+    <!-- Shared components -->
+    <string name="search_cd_search">Buscar</string>
+    <string name="speed_dial_cd">Marcación rápida</string>
+    <string name="keyword_cd_settings">Ajustes</string>
+    <string name="keyword_cd_clear_search">Borrar búsqueda</string>
+    <string name="keyword_filter_all">Filtro: Todos</string>
+    <string name="keyword_filter_favorites">Filtro: Favoritos</string>
+    <string name="keyword_filter_non_favorites">Filtro: No favoritos</string>
+    <string name="chip_from_prefix">Desde: </string>
+    <string name="chip_to_prefix">Hasta: </string>
+
+    <!-- Try Me (developer) screen -->
+    <string name="tryme_export_plain">Exportar base de datos en texto plano</string>
+    <string name="tryme_export_table">Exportar base de datos como tabla</string>
+    <string name="tryme_import_lines">Importar líneas</string>
+    <string name="tryme_import_table">Importar tabla</string>
+    <string name="tryme_tweet_id">ID del tweet</string>
+    <string name="tryme_tweet_url_param">Parámetro de URL del tweet</string>
+    <string name="tryme_tweet_comment">Comentario del tweet</string>
+    <string name="tryme_retweet">Retuitear</string>
+    <string name="tryme_quote_tweet">Citar tweet</string>
+    <string name="tryme_post_tweet">Publicar tweet</string>
+
+    <!-- X login -->
+    <string name="xlogin_title">Iniciar sesión en X</string>
+    <string name="xlogin_logged_in_as">Sesión iniciada como \@%1$s</string>
+    <string name="xlogin_session_expired">Tu sesión de X ha caducado. Inicia sesión de nuevo.</string>
+    <string name="xlogin_prompt">Inicia sesión para habilitar la resolución automática de URL</string>
+
+    <!-- Share receiver -->
+    <string name="share_toast_received_image">Imagen recibida: %1$s</string>
+    <string name="share_toast_unsupported_type">Tipo no admitido: %1$s</string>
+    <string name="share_toast_handle_saved">Identificador %1$s guardado</string>
+    <string name="share_toast_handle_exists">El identificador %1$s ya está guardado</string>
+
+    <!-- File helper -->
+    <string name="file_toast_source_missing">El archivo de origen no existe</string>
+    <string name="file_toast_copied">Archivo copiado a Descargas</string>
+    <string name="file_toast_copy_failed">Error al copiar el archivo</string>
+    <string name="file_toast_copy_error">Error al copiar el archivo</string>
+
+    <!-- Database backup / restore toasts -->
+    <string name="backup_toast_success">Copia de seguridad correcta: %1$s</string>
+    <string name="backup_toast_failed">Error en la copia de seguridad: %1$s</string>
+    <string name="restore_toast_success">Restaurado desde %1$s. Reiniciando…</string>
+    <string name="restore_toast_failed">Error en la restauración: %1$s</string>
+
+    <!-- Share / X login toasts -->
+    <string name="share_toast_x_session_expired">La sesión de X ha caducado. Inicia sesión de nuevo.</string>
+    <string name="share_toast_x_login_prompt">Inicia sesión en X para resolver esta URL</string>
+    <string name="share_toast_link_resolved_saved">Enlace resuelto y guardado</string>
+    <string name="share_toast_link_saved">Enlace guardado</string>
+
+    <!-- Color picker -->
+    <string name="color_picker_hex_label">Hex</string>
+
+    <!-- Links bulk-action snackbars -->
+    <plurals name="links_snackbar_deleted">
+        <item quantity="one">%d enlace eliminado</item>
+        <item quantity="other">%d enlaces eliminados</item>
+    </plurals>
+    <plurals name="links_snackbar_favorited">
+        <item quantity="one">%d enlace marcado como favorito</item>
+        <item quantity="other">%d enlaces marcados como favoritos</item>
+    </plurals>
+    <plurals name="links_snackbar_unfavorited">
+        <item quantity="one">%d enlace quitado de favoritos</item>
+        <item quantity="other">%d enlaces quitados de favoritos</item>
+    </plurals>
+    <plurals name="links_snackbar_tagged">
+        <item quantity="one">%d enlace etiquetado</item>
+        <item quantity="other">%d enlaces etiquetados</item>
+    </plurals>
+    <plurals name="links_snackbar_submitted">
+        <item quantity="one">%d enlace enviado a la cola de tareas</item>
+        <item quantity="other">%d enlaces enviados a la cola de tareas</item>
+    </plurals>
+    <string name="links_snackbar_submit_failed">Error al enviar: %1$s</string>
+    <string name="links_snackbar_export_failed">Error al exportar: %1$s</string>
+    <string name="links_snackbar_import_failed">Error al importar: %1$s</string>
+
+    <!-- Links import / export result messages -->
+    <string name="links_export_no_items_selected">No hay elementos seleccionados</string>
+    <string name="links_export_delimiter_conflict">Conflicto de delimitador en los datos: los elementos contienen el delimitador \'%1$s\'</string>
+    <plurals name="links_export_success">
+        <item quantity="one">%d elemento exportado correctamente</item>
+        <item quantity="other">%d elementos exportados correctamente</item>
+    </plurals>
+    <string name="links_export_unknown_error">Error de exportación desconocido</string>
+    <string name="links_import_cannot_open">No se puede abrir el archivo</string>
+    <string name="links_import_empty_file">El archivo está vacío o solo contiene metadatos</string>
+    <string name="links_import_no_valid_items">No se encontraron elementos válidos en el archivo</string>
+    <plurals name="links_import_imported">
+        <item quantity="one">%d elemento importado</item>
+        <item quantity="other">%d elementos importados</item>
+    </plurals>
+    <plurals name="links_import_skipped">
+        <item quantity="one">, %d duplicado omitido</item>
+        <item quantity="other">, %d duplicados omitidos</item>
+    </plurals>
+    <plurals name="links_import_failed_count">
+        <item quantity="one">, %d fallido</item>
+        <item quantity="other">, %d fallidos</item>
+    </plurals>
+</resources>
