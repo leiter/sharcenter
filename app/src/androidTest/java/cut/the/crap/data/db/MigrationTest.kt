@@ -121,6 +121,9 @@ class MigrationTest {
         assertEquals("https://example.com", link!!.link)
         assertEquals(1, link.id)
         assertEquals(false, link.favourite)
+        // The comment column added in the 5 -> 6 migration; the driver runs straight to the
+        // current schema version, so the v4 seed row picks it up with no value.
+        assertNull(link.comment)
 
         val post = db.contentItemQueries.getById(1, ::ContentItemDB).executeAsOneOrNull()
         assertNotNull(post)

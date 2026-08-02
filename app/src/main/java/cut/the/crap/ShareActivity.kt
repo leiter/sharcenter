@@ -3,10 +3,16 @@ package cut.the.crap
 import org.jetbrains.compose.resources.getString
 
 import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.share_edit_dialog_campaign_picker_empty
+import cut.the.crap.shared.resources.share_edit_dialog_campaign_picker_title
 import cut.the.crap.shared.resources.share_edit_dialog_cancel
+import cut.the.crap.shared.resources.share_edit_dialog_comment_label
 import cut.the.crap.shared.resources.share_edit_dialog_keywords_label
 import cut.the.crap.shared.resources.share_edit_dialog_link_label
+import cut.the.crap.shared.resources.share_edit_dialog_pick_campaign_text
 import cut.the.crap.shared.resources.share_edit_dialog_save
+import cut.the.crap.shared.resources.share_edit_dialog_save_as_post
+import cut.the.crap.shared.resources.share_edit_dialog_save_to_link
 import cut.the.crap.shared.resources.share_edit_dialog_title
 import cut.the.crap.shared.resources.share_toast_handle_exists
 import cut.the.crap.shared.resources.share_toast_handle_saved
@@ -25,24 +31,41 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import cut.the.crap.data.domain.ContentItem
+import cut.the.crap.data.domain.ContentItemRepository
 import cut.the.crap.data.preferences.SettingsRepository
+import cut.the.crap.data.rest.campaign.Campaign
+import cut.the.crap.data.rest.campaign.CampaignPost
+import cut.the.crap.data.rest.campaign.CampaignRepository
 import cut.the.crap.share.HandleResult
 import cut.the.crap.share.ResolveResult
 import cut.the.crap.share.SaveResult
@@ -66,6 +89,10 @@ class ShareReceiverActivity : ComponentActivity() {
      * and toast feedback. See [SharedUrlProcessor].
      */
     private val processor: SharedUrlProcessor by inject()
+
+    // Backs the edit dialog's optional comment/quote: "Save as Post" and the campaign-text picker.
+    private val contentItemRepository: ContentItemRepository by inject()
+    private val campaignRepository: CampaignRepository by inject()
 
     // Store pending URL for retry after login
     private var pendingUrl: String? = null
@@ -199,7 +226,10 @@ class ShareReceiverActivity : ComponentActivity() {
             // Let the user review/edit the link (and add keywords) before it's saved.
             showEditDialog(url, wasResolved, settings.themePreference)
         } else {
-            insertAndFinish(url, keywords = emptyList(), wasResolved = wasResolved)
+            insertAndFinish(
+                url, keywords = emptyList(), wasResolved = wasResolved,
+                comment = null, saveAsPost = false, saveToLink = false,
+            )
         }
     }
 
@@ -216,9 +246,10 @@ class ShareReceiverActivity : ComponentActivity() {
             MyAppTheme(themePreference = themePreference) {
                 ShareEditDialog(
                     initialUrl = url,
-                    onSave = { editedUrl, keywords ->
+                    campaignRepository = campaignRepository,
+                    onSave = { editedUrl, keywords, comment, saveAsPost, saveToLink ->
                         lifecycleScope.launch {
-                            insertAndFinish(editedUrl, keywords, wasResolved)
+                            insertAndFinish(editedUrl, keywords, wasResolved, comment, saveAsPost, saveToLink)
                         }
                     },
                     onCancel = { finish() }
@@ -230,12 +261,22 @@ class ShareReceiverActivity : ComponentActivity() {
     private suspend fun insertAndFinish(
         url: String,
         keywords: List<String>,
-        wasResolved: Boolean
+        wasResolved: Boolean,
+        comment: String?,
+        saveAsPost: Boolean,
+        saveToLink: Boolean,
     ) {
         // Insert first and toast immediately, then enrich — enrichment does network I/O, so the
         // user sees "saved" without waiting on it. lifecycleScope is cancelled on finish(), so
         // enrichSaved must complete before finish().
-        val result: SaveResult = processor.insertLink(url, keywords, wasResolved)
+        val result: SaveResult = processor.insertLink(
+            url, keywords, wasResolved,
+            comment = comment.takeIf { saveToLink },
+        )
+
+        if (saveAsPost && !comment.isNullOrBlank()) {
+            contentItemRepository.insert(ContentItem(text = comment, isActive = false))
+        }
 
         val message = if (result.wasResolved) {
             getString(Res.string.share_toast_link_resolved_saved)
@@ -270,18 +311,42 @@ class ShareReceiverActivity : ComponentActivity() {
 }
 
 /**
- * Dialog shown before saving a shared link when the user has opted in. Lets them edit
- * the link URL and add comma-separated keywords. [onSave] receives the edited URL and
- * the parsed (trimmed, non-blank) keyword list; [onCancel] discards without saving.
+ * Dialog shown before saving a shared link when the user has opted in. Lets them edit the link URL,
+ * add comma-separated keywords, and write (or pick from a campaign) a comment/quote about the link
+ * — saved by default both as a new Posts draft and attached to the link itself, each toggleable.
+ * [onSave] receives the edited URL, the parsed keyword list, the trimmed comment (or null), and the
+ * two save-destination flags; [onCancel] discards without saving anything.
  */
 @Composable
 private fun ShareEditDialog(
     initialUrl: String,
-    onSave: (url: String, keywords: List<String>) -> Unit,
+    campaignRepository: CampaignRepository,
+    onSave: (
+        url: String,
+        keywords: List<String>,
+        comment: String?,
+        saveAsPost: Boolean,
+        saveToLink: Boolean,
+    ) -> Unit,
     onCancel: () -> Unit
 ) {
     var url by remember { mutableStateOf(initialUrl) }
     var keywordsText by remember { mutableStateOf("") }
+    var commentText by remember { mutableStateOf("") }
+    var saveAsPost by remember { mutableStateOf(true) }
+    var saveToLink by remember { mutableStateOf(true) }
+    var showCampaignPicker by remember { mutableStateOf(false) }
+
+    if (showCampaignPicker) {
+        CampaignPostPickerDialog(
+            campaignRepository = campaignRepository,
+            onPick = { post ->
+                commentText = post.text
+                showCampaignPicker = false
+            },
+            onDismiss = { showCampaignPicker = false }
+        )
+    }
 
     AlertDialog(
         onDismissRequest = onCancel,
@@ -302,13 +367,33 @@ private fun ShareEditDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = commentText,
+                    onValueChange = { commentText = it },
+                    label = { Text(stringResource(Res.string.share_edit_dialog_comment_label)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                TextButton(onClick = { showCampaignPicker = true }) {
+                    Text(stringResource(Res.string.share_edit_dialog_pick_campaign_text))
+                }
+                if (commentText.isNotBlank()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = saveAsPost, onCheckedChange = { saveAsPost = it })
+                        Text(stringResource(Res.string.share_edit_dialog_save_as_post))
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = saveToLink, onCheckedChange = { saveToLink = it })
+                        Text(stringResource(Res.string.share_edit_dialog_save_to_link))
+                    }
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
                     val keywords = keywordsText.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                    onSave(url.trim(), keywords)
+                    onSave(url.trim(), keywords, commentText.trim().ifBlank { null }, saveAsPost, saveToLink)
                 },
                 enabled = url.isNotBlank()
             ) {
@@ -317,6 +402,72 @@ private fun ShareEditDialog(
         },
         dismissButton = {
             TextButton(onClick = onCancel) {
+                Text(stringResource(Res.string.share_edit_dialog_cancel))
+            }
+        }
+    )
+}
+
+/**
+ * Lets the user pick an existing campaign post's text to reuse as the comment/quote. Fetched lazily
+ * — only when this dialog opens, not on every share — since [CampaignRepository] has no persistent
+ * cache (it's a Koin `factory`, so this call gets a fresh instance either way).
+ */
+@Composable
+private fun CampaignPostPickerDialog(
+    campaignRepository: CampaignRepository,
+    onPick: (CampaignPost) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var choices by remember { mutableStateOf<List<Pair<String, CampaignPost>>?>(null) }
+
+    LaunchedEffect(Unit) {
+        val summaries = campaignRepository.list().getOrNull().orEmpty()
+        val campaigns: List<Campaign> = summaries.mapNotNull { summary ->
+            campaignRepository.get(summary.id).getOrNull()
+        }
+        choices = campaigns.flatMap { campaign ->
+            campaign.countries.flatMap { country -> country.posts }
+                .map { post -> campaign.displayTitle to post }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.share_edit_dialog_campaign_picker_title)) },
+        text = {
+            val current = choices
+            if (current == null) {
+                CircularProgressIndicator()
+            } else if (current.isEmpty()) {
+                Text(stringResource(Res.string.share_edit_dialog_campaign_picker_empty))
+            } else {
+                LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                    items(current) { (campaignTitle, post) ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onPick(post) }
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Text(
+                                "$campaignTitle — ${post.language.uppercase()} ${post.id}",
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                            Text(
+                                post.text,
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
                 Text(stringResource(Res.string.share_edit_dialog_cancel))
             }
         }

@@ -102,8 +102,8 @@ class SqlDelightMigrationTest {
     }
 
     @Test
-    fun schemaVersionIs5() {
-        assertEquals(5L, ShareDatabase.Schema.version)
+    fun schemaVersionIs6() {
+        assertEquals(6L, ShareDatabase.Schema.version)
     }
 
     @Test
@@ -111,8 +111,10 @@ class SqlDelightMigrationTest {
         createRoomV4Database()
         assertEquals(4L, userVersion())
 
-        // Run the 4 -> 5 migration (the .sqm file mirroring Room's MIGRATION_4_5).
+        // Run the 4 -> 5 migration (the .sqm file mirroring Room's MIGRATION_4_5), then 5 -> 6
+        // (adds the comment column) so the row is on the same schema the generated mapper expects.
         ShareDatabase.Schema.migrate(driver, 4, 5).value
+        ShareDatabase.Schema.migrate(driver, 5, 6).value
 
         val db = createDatabase(driver)
 
@@ -161,6 +163,7 @@ class SqlDelightMigrationTest {
             description = "d",
             favourite = true,
             hideItem = false,
+            comment = "a quote about this link",
         )
         val all = db.contentLinkQueries.getItems(
             includeFavourite = null,
@@ -176,7 +179,44 @@ class SqlDelightMigrationTest {
         assertEquals(1, all.size)
         assertEquals("https://fresh.example", all.first().link)
         assertTrue(all.first().favourite)
+        assertEquals("a quote about this link", all.first().comment)
         // AUTOINCREMENT assigned the id (Room's autoGenerate behaviour for id == 0)
         assertTrue(all.first().id > 0)
+    }
+
+    @Test
+    fun migrate5To6_addsCommentColumn() {
+        createRoomV4Database()
+        ShareDatabase.Schema.migrate(driver, 4, 5).value
+        ShareDatabase.Schema.migrate(driver, 5, 6).value
+
+        val db = createDatabase(driver)
+
+        // The v4 seed row survives with comment defaulting to null (no DEFAULT on the new column).
+        val link = db.contentLinkQueries.getById(1, ::ContentLinkDB).executeAsOneOrNull()
+        assertNotNull(link)
+        assertNull(link!!.comment)
+
+        // The new column round-trips.
+        db.contentLinkQueries.insert(
+            link = "https://example.org",
+            added = 2000,
+            position = 0,
+            description = "",
+            favourite = false,
+            hideItem = false,
+            comment = "reply text",
+        )
+        val inserted = db.contentLinkQueries.getItems(
+            includeFavourite = null,
+            includeHidden = null,
+            linkSubstring = "example.org",
+            startTime = null,
+            endTime = null,
+            sortByListPosition = false,
+            sortByDate = true,
+            mapper = ::ContentLinkDB,
+        ).executeAsList().first()
+        assertEquals("reply text", inserted.comment)
     }
 }

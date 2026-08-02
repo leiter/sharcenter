@@ -21,6 +21,7 @@ data class ContentLinkDB(
     val description: String = "",
     val favourite: Boolean = false,
     val hideItem: Boolean = false,
+    val comment: String? = null,
 )
 
 interface ContentLinkDao {

@@ -29,16 +29,16 @@ class SqlDelightContentLinkDao(
     override suspend fun insert(contentLink: ContentLinkDB) = withContext(dispatcher) {
         with(contentLink) {
             if (id == 0) {
-                queries.insert(link, added, position, description, favourite, hideItem)
+                queries.insert(link, added, position, description, favourite, hideItem, comment)
             } else {
-                queries.insertWithId(id, link, added, position, description, favourite, hideItem)
+                queries.insertWithId(id, link, added, position, description, favourite, hideItem, comment)
             }
         }
     }
 
     override suspend fun update(contentLink: ContentLinkDB) = withContext(dispatcher) {
         with(contentLink) {
-            queries.update(link, added, position, description, favourite, hideItem, id)
+            queries.update(link, added, position, description, favourite, hideItem, comment, id)
         }
     }
 

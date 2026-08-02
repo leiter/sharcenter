@@ -9,21 +9,22 @@ CREATE TABLE IF NOT EXISTS tweets_table (
     position INTEGER AS Int NOT NULL DEFAULT 0,
     description TEXT NOT NULL DEFAULT '',
     favourite INTEGER AS Boolean NOT NULL DEFAULT 0,
-    hideItem INTEGER AS Boolean NOT NULL DEFAULT 0
+    hideItem INTEGER AS Boolean NOT NULL DEFAULT 0,
+    comment TEXT
 );
 
 -- Room's @Insert(REPLACE) with autoGenerate treats id == 0 as "new row" (NULL pk).
 insert:
-INSERT OR REPLACE INTO tweets_table(link, added, position, description, favourite, hideItem)
-VALUES (?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO tweets_table(link, added, position, description, favourite, hideItem, comment)
+VALUES (?, ?, ?, ?, ?, ?, ?);
 
 insertWithId:
-INSERT OR REPLACE INTO tweets_table(id, link, added, position, description, favourite, hideItem)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO tweets_table(id, link, added, position, description, favourite, hideItem, comment)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE tweets_table
-SET link = ?, added = ?, position = ?, description = ?, favourite = ?, hideItem = ?
+SET link = ?, added = ?, position = ?, description = ?, favourite = ?, hideItem = ?, comment = ?
 WHERE id = ?;
 
 delete:

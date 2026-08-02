@@ -15,6 +15,8 @@ data class ContentLink(
     val position: Int = id,
     val favourite: Boolean = false,
     val hideItem: Boolean = false,
+    /** An optional comment/quote the user wrote (or picked from a campaign post) about this link. */
+    val comment: String? = null,
 )
 
 fun String.toContentLink(): ContentLink {
@@ -27,6 +29,8 @@ fun String.toContentLink(): ContentLink {
         position = parts[4].toInt(),
         favourite = parts[5].toInt() > 0,
         hideItem = parts[6].toInt() > 0,
+        // Absent in backups exported before the comment field existed.
+        comment = parts.getOrNull(7)?.takeIf { it.isNotEmpty() },
     )
 }
 // Integrate with db version and casting map
@@ -37,13 +41,15 @@ fun ContentLink.toLine() : String {
         "$added$DELIMITER" +
         "$position$DELIMITER" +
         "${if (favourite) 1 else 0}$DELIMITER" +
-        "${if (hideItem) 1 else 0}"
+        "${if (hideItem) 1 else 0}$DELIMITER" +
+        comment.orEmpty()
 }
 
 // Validate that delimiter doesn't appear in any of the item's fields
 fun ContentLink.validateDelimiter(): Boolean {
     return !link.contains(DELIMITER) &&
-           !description.contains(DELIMITER)
+           !description.contains(DELIMITER) &&
+           (comment == null || !comment.contains(DELIMITER))
 }
 
 // Validate all items in a list
@@ -59,7 +65,8 @@ fun ContentLinkDB.toDomain() : ContentLink {
         added,
         position,
         favourite,
-        hideItem
+        hideItem,
+        comment
     )
 }
 fun ContentLink.toDbItem() : ContentLinkDB {
@@ -68,7 +75,8 @@ fun ContentLink.toDbItem() : ContentLinkDB {
         added = added,
         description = description,
         favourite = favourite,
-        hideItem = hideItem
+        hideItem = hideItem,
+        comment = comment
     ) else {
         ContentLinkDB(
             id,
@@ -77,7 +85,8 @@ fun ContentLink.toDbItem() : ContentLinkDB {
             position,
             description,
             favourite,
-            hideItem
+            hideItem,
+            comment
         )
     }
 }

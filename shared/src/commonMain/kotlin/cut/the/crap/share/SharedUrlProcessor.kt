@@ -72,8 +72,9 @@ class SharedUrlProcessor(
         url: String,
         keywords: List<String> = emptyList(),
         wasResolved: Boolean,
+        comment: String? = null,
     ): SaveResult {
-        var contentLink = ContentLink(link = url)
+        var contentLink = ContentLink(link = url, comment = comment)
         if (keywords.isNotEmpty()) {
             contentLink = LinkMetadata.setTags(contentLink, keywords, ChipsType.KeyWords)
         }
@@ -113,8 +114,9 @@ class SharedUrlProcessor(
         url: String,
         keywords: List<String> = emptyList(),
         wasResolved: Boolean,
+        comment: String? = null,
     ): SaveResult {
-        val result = insertLink(url, keywords, wasResolved)
+        val result = insertLink(url, keywords, wasResolved, comment)
         enrichSaved(url, result.savedAt)
         return result
     }
