@@ -314,6 +314,7 @@
 
     <!-- Action campaign: post composer -->
     <string name="campaign_composer_title">Create posts</string>
+    <string name="campaign_view_details_cd">View campaign details</string>
     <string name="campaign_copy_post">Copy post to clipboard</string>
     <string name="campaign_post_copied">Post copied to clipboard</string>
     <string name="campaign_select_countries">Select countries</string>

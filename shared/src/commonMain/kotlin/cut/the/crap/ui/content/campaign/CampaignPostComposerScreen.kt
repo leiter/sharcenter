@@ -3,7 +3,6 @@ package cut.the.crap.ui.content.campaign
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +16,7 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -71,6 +71,7 @@ import cut.the.crap.shared.resources.campaign_select_countries
 import cut.the.crap.shared.resources.campaign_show_preview
 import cut.the.crap.shared.resources.campaign_variant
 import cut.the.crap.shared.resources.campaign_variant_label
+import cut.the.crap.shared.resources.campaign_view_details_cd
 import cut.the.crap.shared.resources.chars
 import cut.the.crap.shared.resources.context_menu_delete
 import cut.the.crap.shared.resources.context_menu_post_facebook
@@ -147,6 +148,17 @@ fun CampaignPostComposerScreen(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(Res.string.action_back)
                         )
+                    }
+                },
+                actions = {
+                    // Composer is now the second stop, detail the third — see NavigationGraph.kt.
+                    if (campaign != null) {
+                        IconButton(onClick = { navController.navigate("campaign_detail/$campaignId") }) {
+                            Icon(
+                                Icons.Filled.Info,
+                                contentDescription = stringResource(Res.string.campaign_view_details_cd)
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

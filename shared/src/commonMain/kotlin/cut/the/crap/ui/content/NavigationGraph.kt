@@ -3,28 +3,28 @@ package cut.the.crap.ui.content
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import cut.the.crap.ui.components.api.Action
-import cut.the.crap.ui.content.posts.PostsViewModel
-import cut.the.crap.ui.content.posts.PostsScreen
-import cut.the.crap.ui.content.posts.updateContentItemSortOrders
-import cut.the.crap.ui.content.links.LinksViewModel
-import cut.the.crap.ui.content.links.LinkScreen
-import cut.the.crap.ui.content.settings.BackupManagementScreen
-import cut.the.crap.ui.content.settings.ImportExportScreen
-import cut.the.crap.ui.content.settings.identity.IdentityScreen
-import androidx.navigation.NavType
-import androidx.savedstate.read
 import androidx.navigation.navArgument
+import androidx.savedstate.read
+import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.content.campaign.CampaignDetailScreen
 import cut.the.crap.ui.content.campaign.CampaignDetailViewModel
 import cut.the.crap.ui.content.campaign.CampaignListScreen
 import cut.the.crap.ui.content.campaign.CampaignPostComposerScreen
-import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.parameter.parametersOf
+import cut.the.crap.ui.content.links.LinkScreen
+import cut.the.crap.ui.content.links.LinksViewModel
+import cut.the.crap.ui.content.posts.PostsScreen
+import cut.the.crap.ui.content.posts.PostsViewModel
+import cut.the.crap.ui.content.posts.updateContentItemSortOrders
+import cut.the.crap.ui.content.settings.BackupManagementScreen
+import cut.the.crap.ui.content.settings.ImportExportScreen
 import cut.the.crap.ui.content.settings.SettingsScreen
 import cut.the.crap.ui.content.settings.SettingsViewModel
+import cut.the.crap.ui.content.settings.identity.IdentityScreen
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 // The [Screen] destinations now live in :shared/commonMain; this graph and the screen composables
 // it wires up stay in :app until WP7 moves the UI over.
@@ -104,8 +104,9 @@ fun NavigationGraph(
             arguments = listOf(navArgument("campaignId") { type = NavType.StringType }),
         ) { entry ->
             val campaignId = entry.arguments?.read { getStringOrNull("campaignId") }.orEmpty()
-            // Its own view model instance, but the repository serves the campaign from memory —
-            // arriving here always follows a load on the detail screen, so this costs no request.
+            // Its own view model instance. Composer is now the second stop (reached straight from
+            // the list) and detail the third, reached from here — but the repository serves the
+            // campaign from memory once loaded either way, so visiting both costs at most one request.
             val detailViewModel: CampaignDetailViewModel = koinViewModel { parametersOf(campaignId) }
             CampaignPostComposerScreen(
                 navController = navController,

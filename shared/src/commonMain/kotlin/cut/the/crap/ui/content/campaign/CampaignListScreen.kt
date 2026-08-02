@@ -63,8 +63,8 @@ import cut.the.crap.shared.resources.campaign_badge_owner
 import cut.the.crap.shared.resources.campaign_create_dialog_cd
 import cut.the.crap.shared.resources.campaign_create_dialog_error
 import cut.the.crap.shared.resources.campaign_create_dialog_invalid_json
-import cut.the.crap.shared.resources.campaign_create_dialog_paste_label
 import cut.the.crap.shared.resources.campaign_create_dialog_open_builder
+import cut.the.crap.shared.resources.campaign_create_dialog_paste_label
 import cut.the.crap.shared.resources.campaign_create_dialog_pick_file
 import cut.the.crap.shared.resources.campaign_create_dialog_submit
 import cut.the.crap.shared.resources.campaign_create_dialog_terms
@@ -85,10 +85,8 @@ import cut.the.crap.shared.resources.dialog_cancel
 import cut.the.crap.ui.components.BottomNavigationBar
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonObject
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -191,7 +189,9 @@ fun CampaignListScreen(
                 ) {
                     items(state.campaigns, key = { it.id }) { campaign ->
                         CampaignRow(campaign) {
-                            navController.navigate("campaign_detail/${campaign.id}")
+                            // Composer is the second stop now, detail the third — see
+                            // NavigationGraph.kt.
+                            navController.navigate("campaign_composer/${campaign.id}")
                         }
                     }
                 }
