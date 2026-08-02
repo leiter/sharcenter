@@ -277,6 +277,7 @@
     <string name="campaign_create_dialog_title">Create campaign</string>
     <string name="campaign_create_dialog_paste_label">Paste the campaign JSON</string>
     <string name="campaign_create_dialog_pick_file">Pick a file…</string>
+    <string name="campaign_create_dialog_open_builder">Build the JSON in your browser…</string>
     <string name="campaign_create_dialog_terms">I confirm this campaign does not target private individuals.</string>
     <string name="campaign_create_dialog_submit">Create</string>
     <string name="campaign_create_dialog_invalid_json">That isn\'t valid JSON.</string>

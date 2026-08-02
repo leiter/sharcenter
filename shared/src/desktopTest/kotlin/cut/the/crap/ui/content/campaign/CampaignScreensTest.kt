@@ -11,6 +11,7 @@ import androidx.compose.ui.test.runComposeUiTest
 import androidx.navigation.compose.rememberNavController
 import cut.the.crap.data.preferences.CampaignHiddenPostsRepository
 import cut.the.crap.data.preferences.createPreferencesStore
+import cut.the.crap.data.rest.AppConfig
 import cut.the.crap.data.rest.Result
 import cut.the.crap.data.rest.campaign.Campaign
 import cut.the.crap.data.rest.campaign.CampaignContact
@@ -274,6 +275,7 @@ class CampaignScreensTest {
         single { RecordingUrlOpener() as UrlOpener }
         single<CampaignRepository> { repository }
         single<FileAccess> { NoOpFileAccess() }
+        single { AppConfig(apiBaseUrl = "https://example.test", campaignBaseUrl = "https://example.test", isDebug = true) }
     }
 
     @Test

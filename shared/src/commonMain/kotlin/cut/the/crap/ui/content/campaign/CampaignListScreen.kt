@@ -44,10 +44,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import cut.the.crap.data.rest.AppConfig
 import cut.the.crap.data.rest.Result
 import cut.the.crap.data.rest.campaign.CampaignRepository
 import cut.the.crap.data.rest.campaign.CampaignSummary
@@ -62,6 +64,7 @@ import cut.the.crap.shared.resources.campaign_create_dialog_cd
 import cut.the.crap.shared.resources.campaign_create_dialog_error
 import cut.the.crap.shared.resources.campaign_create_dialog_invalid_json
 import cut.the.crap.shared.resources.campaign_create_dialog_paste_label
+import cut.the.crap.shared.resources.campaign_create_dialog_open_builder
 import cut.the.crap.shared.resources.campaign_create_dialog_pick_file
 import cut.the.crap.shared.resources.campaign_create_dialog_submit
 import cut.the.crap.shared.resources.campaign_create_dialog_terms
@@ -292,6 +295,8 @@ private fun Message(title: String, body: String?, onRetry: (() -> Unit)?) {
 private fun CreateCampaignDialog(onDismiss: () -> Unit, onCreated: () -> Unit) {
     val repository: CampaignRepository = koinInject()
     val fileAccess: FileAccess = koinInject()
+    val config: AppConfig = koinInject()
+    val uriHandler = LocalUriHandler.current
     val scope = rememberCoroutineScope()
     val invalidJsonMessage = stringResource(Res.string.campaign_create_dialog_invalid_json)
     val genericErrorMessage = stringResource(Res.string.campaign_create_dialog_error)
@@ -322,6 +327,13 @@ private fun CreateCampaignDialog(onDismiss: () -> Unit, onCreated: () -> Unit) {
                 )
                 OutlinedButton(onClick = { filePicker.launch() }) {
                     Text(stringResource(Res.string.campaign_create_dialog_pick_file))
+                }
+                TextButton(
+                    onClick = {
+                        uriHandler.openUri(config.campaignBaseUrl.trimEnd('/') + "/campaign-builder")
+                    },
+                ) {
+                    Text(stringResource(Res.string.campaign_create_dialog_open_builder))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
