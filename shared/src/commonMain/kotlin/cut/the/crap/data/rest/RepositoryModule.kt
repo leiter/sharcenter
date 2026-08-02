@@ -1,6 +1,8 @@
 package cut.the.crap.data.rest
 
+import cut.the.crap.data.preferences.CAMPAIGN_HIDDEN_POSTS_STORE
 import cut.the.crap.data.preferences.COLOR_HISTORY_STORE
+import cut.the.crap.data.preferences.CampaignHiddenPostsRepository
 import cut.the.crap.data.preferences.ColorHistoryRepository
 import cut.the.crap.data.preferences.SETTINGS_STORE
 import cut.the.crap.data.preferences.SettingsRepository
@@ -50,6 +52,7 @@ val repositoryModule = module {
     // `preferencesDataStore` delegate hid this by caching the store on the Context.
     single(named(SETTINGS_STORE)) { createPreferencesStore(SETTINGS_STORE) }
     single(named(COLOR_HISTORY_STORE)) { createPreferencesStore(COLOR_HISTORY_STORE) }
+    single(named(CAMPAIGN_HIDDEN_POSTS_STORE)) { createPreferencesStore(CAMPAIGN_HIDDEN_POSTS_STORE) }
 
     // Resolves /i/status/ and short links; holds a Ktor client. Was a static object.
     factoryOf(::UrlResolver)
@@ -57,4 +60,5 @@ val repositoryModule = module {
     // Previously provided implicitly by Hilt via constructors (unscoped).
     factory { SettingsRepository(get(named(SETTINGS_STORE))) }
     factory { ColorHistoryRepository(get(named(COLOR_HISTORY_STORE))) }
+    factory { CampaignHiddenPostsRepository(get(named(CAMPAIGN_HIDDEN_POSTS_STORE))) }
 }

@@ -4,6 +4,7 @@ import cut.the.crap.platform.PlatformUri
 
 import cut.the.crap.data.domain.ContentItem
 import cut.the.crap.data.domain.ContentLink
+import cut.the.crap.data.rest.campaign.CampaignPost
 import cut.the.crap.tools.TextValueWrapper
 import cut.the.crap.ui.components.MyEditDialogStyle
 
@@ -76,6 +77,18 @@ sealed interface UiAction : Action {
     data class SetDateFilter(val startTime: Long?, val endTime: Long?, val screen: Screen = Screen.Current) : UiAction
     data class ClearDateFilter(val dateType: cut.the.crap.ui.components.DateType, val screen: Screen = Screen.Current) : UiAction
     data class ExitSelectionMode(val screen: Screen = Screen.Current) : UiAction
+}
+
+// ========== Campaign Post Actions ==========
+// Actions on a single CampaignPost (per country/language, ready-to-publish text). Handled locally
+// by CampaignPostComposerScreen rather than the app-wide handleAction router — see Action.kt at
+// the top of the hierarchy for why (campaigns are not wired into App.kt's action lambda).
+sealed interface CampaignPostAction : Action {
+    data class PostOnTwitter(val post: CampaignPost) : CampaignPostAction
+    data class PostOnFacebook(val post: CampaignPost) : CampaignPostAction
+    data class ShareViaSheet(val post: CampaignPost) : CampaignPostAction
+    /** [key] is a pre-built composite key — see [cut.the.crap.data.preferences.campaignPostHideKey]. */
+    data class Hide(val key: String) : CampaignPostAction
 }
 
 enum class Screen {

@@ -24,6 +24,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.overflow_menu_cd
 import cut.the.crap.ui.components.api.Action
 
 data class MenuItem(
@@ -45,7 +47,7 @@ fun MyPopupMenu(
     Box {
         IconButton(
             onClick = { expanded = true }) {
-            Icon(Icons.Filled.Menu, contentDescription = null)
+            Icon(Icons.Filled.Menu, contentDescription = stringResource(Res.string.overflow_menu_cd))
         }
 
         DropdownMenu(

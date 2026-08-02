@@ -14,8 +14,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -31,6 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,10 +47,17 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import cut.the.crap.data.preferences.CampaignHiddenPostsRepository
+import cut.the.crap.data.preferences.campaignPostHideKey
 import cut.the.crap.data.rest.campaign.Campaign
 import cut.the.crap.data.rest.campaign.CampaignCountry
 import cut.the.crap.data.rest.campaign.CampaignPost
+import cut.the.crap.intent.FacebookIntent
+import cut.the.crap.intent.TwitterIntent
+import cut.the.crap.platform.Clipboard
 import cut.the.crap.platform.Notifier
+import cut.the.crap.platform.Sharer
+import cut.the.crap.platform.UrlOpener
 import cut.the.crap.shared.resources.Res
 import cut.the.crap.shared.resources.action_back
 import cut.the.crap.shared.resources.campaign_composer_title
@@ -62,9 +72,21 @@ import cut.the.crap.shared.resources.campaign_show_preview
 import cut.the.crap.shared.resources.campaign_variant
 import cut.the.crap.shared.resources.campaign_variant_label
 import cut.the.crap.shared.resources.chars
+import cut.the.crap.shared.resources.context_menu_delete
+import cut.the.crap.shared.resources.context_menu_post_facebook
+import cut.the.crap.shared.resources.context_menu_post_twitter
+import cut.the.crap.shared.resources.context_menu_share
+import cut.the.crap.shared.resources.facebook
+import cut.the.crap.shared.resources.share_chooser_title
+import cut.the.crap.shared.resources.x
+import cut.the.crap.ui.components.MenuItem
+import cut.the.crap.ui.components.MyPopupMenu
+import cut.the.crap.ui.components.api.CampaignPostAction
 import cut.the.crap.ui.content.Screen
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getPluralString
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -84,6 +106,10 @@ fun CampaignPostComposerScreen(
     onCreateDrafts: (List<String>) -> Unit
 ) {
     val notifier: Notifier = koinInject()
+    val urlOpener: UrlOpener = koinInject()
+    val clipboard: Clipboard = koinInject()
+    val sharer: Sharer = koinInject()
+    val hiddenPostsRepository: CampaignHiddenPostsRepository = koinInject()
     val scope = rememberCoroutineScope()
 
     var filter by remember { mutableStateOf(CountryFilter.WITH_POSTS) }
@@ -91,6 +117,12 @@ fun CampaignPostComposerScreen(
     var selected by remember { mutableStateOf<Set<String>>(emptySet()) }
     var variant by remember { mutableIntStateOf(0) }
     var expanded by remember { mutableStateOf<Set<String>>(emptySet()) }
+
+    val campaignId = campaign?.id ?: ""
+    val hiddenKeys by hiddenPostsRepository.hiddenKeys.collectAsState(initial = emptySet())
+    val postAction: (CampaignPostAction) -> Unit = remember(campaignId, urlOpener, clipboard, sharer, scope) {
+        { action -> handleCampaignPostAction(action, urlOpener, clipboard, sharer, hiddenPostsRepository, scope) }
+    }
 
     val countries = campaign?.countries ?: emptyList()
     val visibleCountries = remember(countries, filter, sort) {
@@ -128,7 +160,11 @@ fun CampaignPostComposerScreen(
                     onClick = {
                         val texts = selected
                             .mapNotNull { code -> countries.firstOrNull { it.countryCode == code } }
-                            .flatMap { country -> country.postsForVariant(variant) }
+                            .flatMap { country ->
+                                country.postsForVariant(variant).filterNot {
+                                    campaignPostHideKey(campaignId, country.countryCode, it.id) in hiddenKeys
+                                }
+                            }
                             .map { it.text }
                         onCreateDrafts(texts)
                         // The quantity is only known at click time, so the plural can't be
@@ -185,10 +221,13 @@ fun CampaignPostComposerScreen(
             LazyColumn(Modifier.fillMaxSize()) {
                 items(visibleCountries, key = { it.countryCode }) { country ->
                     SelectableCountryItem(
+                        campaignId = campaignId,
                         country = country,
                         selected = country.countryCode in selected,
                         expanded = country.countryCode in expanded,
                         variant = variant,
+                        hiddenKeys = hiddenKeys,
+                        postAction = postAction,
                         onToggleSelect = {
                             selected = if (country.countryCode in selected) {
                                 selected - country.countryCode
@@ -232,10 +271,13 @@ private fun VariantPicker(slots: Int, selectedIndex: Int, onSelect: (Int) -> Uni
 
 @Composable
 private fun SelectableCountryItem(
+    campaignId: String,
     country: CampaignCountry,
     selected: Boolean,
     expanded: Boolean,
     variant: Int,
+    hiddenKeys: Set<String>,
+    postAction: (CampaignPostAction) -> Unit,
     onToggleSelect: () -> Unit,
     onToggleExpand: () -> Unit
 ) {
@@ -248,9 +290,33 @@ private fun SelectableCountryItem(
         notifier.show(postCopiedMessage)
     }
 
-    // The chosen variant in each of the country's languages.
-    val posts: List<CampaignPost> = remember(country, variant) { country.postsForVariant(variant) }
+    // The chosen variant in each of the country's languages, minus anything the user hid.
+    val posts: List<CampaignPost> = remember(country, variant, hiddenKeys, campaignId) {
+        country.postsForVariant(variant).filterNot {
+            campaignPostHideKey(campaignId, country.countryCode, it.id) in hiddenKeys
+        }
+    }
+    val hasVisiblePosts = posts.isNotEmpty()
     val singleLanguage = posts.size == 1
+
+    fun menuItemsFor(post: CampaignPost): List<MenuItem> = listOf(
+        MenuItem(
+            Res.string.context_menu_post_twitter,
+            iconRes = Res.drawable.x,
+            actionPayload = CampaignPostAction.PostOnTwitter(post)
+        ),
+        MenuItem(
+            Res.string.context_menu_post_facebook,
+            iconRes = Res.drawable.facebook,
+            actionPayload = CampaignPostAction.PostOnFacebook(post)
+        ),
+        MenuItem(Res.string.context_menu_share, Icons.Filled.Share, CampaignPostAction.ShareViaSheet(post)),
+        MenuItem(
+            Res.string.context_menu_delete,
+            Icons.Filled.Delete,
+            CampaignPostAction.Hide(campaignPostHideKey(campaignId, country.countryCode, post.id))
+        )
+    )
 
     Card(
         modifier = Modifier
@@ -268,19 +334,19 @@ private fun SelectableCountryItem(
             Checkbox(
                 checked = selected,
                 onCheckedChange = { onToggleSelect() },
-                enabled = country.hasPosts
+                enabled = hasVisiblePosts
             )
             Column(Modifier.weight(1f)) {
                 Text(
                     "${country.flag} ${country.countryName}",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = if (country.hasPosts) MaterialTheme.colorScheme.onSurface
+                    color = if (hasVisiblePosts) MaterialTheme.colorScheme.onSurface
                     else MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 CountrySubtitle(country)
             }
-            if (country.hasPosts) {
-                // With a single language there's only one post, so offer copy directly
+            if (hasVisiblePosts) {
+                // With a single language there's only one post, so offer copy/overflow directly
                 // in the header, to the left of the expand toggle.
                 if (singleLanguage) {
                     IconButton(onClick = { copyPost(posts.first().text) }) {
@@ -289,6 +355,7 @@ private fun SelectableCountryItem(
                             contentDescription = stringResource(Res.string.campaign_copy_post)
                         )
                     }
+                    MyPopupMenu(action = { (it as? CampaignPostAction)?.let(postAction) }, menuItems = menuItemsFor(posts.first()))
                 }
                 IconButton(onClick = onToggleExpand) {
                     Icon(
@@ -302,7 +369,7 @@ private fun SelectableCountryItem(
             }
         }
 
-        if (expanded && country.hasPosts) {
+        if (expanded && hasVisiblePosts) {
             Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
                 posts.forEach { post ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -315,7 +382,7 @@ private fun SelectableCountryItem(
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.weight(1f).padding(top = 8.dp)
                         )
-                        // With multiple languages each post gets its own copy button.
+                        // With multiple languages each post gets its own copy/overflow controls.
                         if (!singleLanguage) {
                             IconButton(onClick = { copyPost(post.text) }) {
                                 Icon(
@@ -323,6 +390,7 @@ private fun SelectableCountryItem(
                                     contentDescription = stringResource(Res.string.campaign_copy_post)
                                 )
                             }
+                            MyPopupMenu(action = { (it as? CampaignPostAction)?.let(postAction) }, menuItems = menuItemsFor(post))
                         }
                     }
                     Text(
@@ -338,6 +406,41 @@ private fun SelectableCountryItem(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Handles [CampaignPostAction]s locally rather than through the app-wide `handleAction` router
+ * ([cut.the.crap.ui.AppActions.handleAction]) — campaign screens aren't wired into that router's
+ * `action` lambda, and widening its hardcoded ViewModel-only signature to reach one screen isn't
+ * worth repeating the shared/desktop signature-mismatch pitfall it's already caused once.
+ * Mirrors the equivalent `ContentItemAction` handling in `AppActions.kt`.
+ */
+private fun handleCampaignPostAction(
+    action: CampaignPostAction,
+    urlOpener: UrlOpener,
+    clipboard: Clipboard,
+    sharer: Sharer,
+    hiddenPostsRepository: CampaignHiddenPostsRepository,
+    scope: CoroutineScope,
+) {
+    when (action) {
+        is CampaignPostAction.PostOnTwitter ->
+            urlOpener.open(TwitterIntent.PostTweet(text = action.post.text).url)
+
+        is CampaignPostAction.PostOnFacebook -> {
+            // Facebook's web sharer does not reliably prefill the post text, so copy it first.
+            clipboard.copy(action.post.text)
+            urlOpener.open(FacebookIntent.SharePost(text = action.post.text).url)
+        }
+
+        is CampaignPostAction.ShareViaSheet -> scope.launch {
+            sharer.shareText(action.post.text, getString(Res.string.share_chooser_title))
+        }
+
+        is CampaignPostAction.Hide -> scope.launch {
+            hiddenPostsRepository.hide(action.key)
         }
     }
 }
