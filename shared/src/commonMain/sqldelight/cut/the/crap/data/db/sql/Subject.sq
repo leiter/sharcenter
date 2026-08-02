@@ -1,0 +1,88 @@
+import kotlin.Boolean;
+import kotlin.Int;
+
+-- Subjects: a colour (optionally named) bundling posts and links into topics,
+-- related many-to-many through the cross-ref tables below.
+CREATE TABLE IF NOT EXISTS subjects_table (
+    id INTEGER AS Int PRIMARY KEY AUTOINCREMENT NOT NULL,
+    name TEXT,
+    colorHex TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    modifiedAt INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS index_subjects_table_modifiedAt ON subjects_table(modifiedAt);
+
+CREATE TABLE IF NOT EXISTS post_subject_cross_ref (
+    postId INTEGER AS Int NOT NULL,
+    subjectId INTEGER AS Int NOT NULL,
+    PRIMARY KEY(postId, subjectId),
+    FOREIGN KEY(postId) REFERENCES content_items_table(id) ON DELETE CASCADE,
+    FOREIGN KEY(subjectId) REFERENCES subjects_table(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_post_subject_cross_ref_subjectId ON post_subject_cross_ref(subjectId);
+
+CREATE TABLE IF NOT EXISTS link_subject_cross_ref (
+    linkId INTEGER AS Int NOT NULL,
+    subjectId INTEGER AS Int NOT NULL,
+    PRIMARY KEY(linkId, subjectId),
+    FOREIGN KEY(linkId) REFERENCES tweets_table(id) ON DELETE CASCADE,
+    FOREIGN KEY(subjectId) REFERENCES subjects_table(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_link_subject_cross_ref_subjectId ON link_subject_cross_ref(subjectId);
+
+insert:
+INSERT OR REPLACE INTO subjects_table(name, colorHex, createdAt, modifiedAt)
+VALUES (?, ?, ?, ?);
+
+insertWithId:
+INSERT OR REPLACE INTO subjects_table(id, name, colorHex, createdAt, modifiedAt)
+VALUES (?, ?, ?, ?, ?);
+
+update:
+UPDATE subjects_table
+SET name = ?, colorHex = ?, createdAt = ?, modifiedAt = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM subjects_table WHERE id = ?;
+
+getById:
+SELECT * FROM subjects_table WHERE id = ?;
+
+getAllByRecency:
+SELECT * FROM subjects_table ORDER BY modifiedAt DESC;
+
+getAllByName:
+SELECT * FROM subjects_table ORDER BY COALESCE(name, colorHex) COLLATE NOCASE ASC;
+
+-- Post <-> subject
+linkPost:
+INSERT OR IGNORE INTO post_subject_cross_ref(postId, subjectId) VALUES (?, ?);
+
+unlinkPost:
+DELETE FROM post_subject_cross_ref WHERE postId = ? AND subjectId = ?;
+
+getSubjectsForPost:
+SELECT s.* FROM subjects_table s
+INNER JOIN post_subject_cross_ref x ON s.id = x.subjectId
+WHERE x.postId = ?
+ORDER BY s.modifiedAt DESC;
+
+-- Link <-> subject
+linkLink:
+INSERT OR IGNORE INTO link_subject_cross_ref(linkId, subjectId) VALUES (?, ?);
+
+unlinkLink:
+DELETE FROM link_subject_cross_ref WHERE linkId = ? AND subjectId = ?;
+
+getSubjectsForLink:
+SELECT s.* FROM subjects_table s
+INNER JOIN link_subject_cross_ref x ON s.id = x.subjectId
+WHERE x.linkId = ?
+ORDER BY s.modifiedAt DESC;
+
+lastInsertRowId:
+SELECT last_insert_rowid();

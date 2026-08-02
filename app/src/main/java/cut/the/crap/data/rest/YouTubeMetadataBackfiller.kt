@@ -1,7 +1,7 @@
 package cut.the.crap.data.rest
 
 import android.content.Context
-import android.util.Log
+import cut.the.crap.platform.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -10,11 +10,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import cut.the.crap.data.domain.ContentLinkRepository
 import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.parseSocialMediaUrl
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
-import javax.inject.Inject
-import javax.inject.Singleton
 
 private val Context.youTubeBackfillDataStore: DataStore<Preferences> by preferencesDataStore(
     name = "youtube_backfill_preferences"
@@ -31,9 +28,8 @@ private val Context.youTubeBackfillDataStore: DataStore<Preferences> by preferen
  * (e.g. offline) is retried next time; one that fails permanently (deleted/private
  * video, or a non-video URL like a community post) is recorded so it is never retried.
  */
-@Singleton
-class YouTubeMetadataBackfiller @Inject constructor(
-    @ApplicationContext private val context: Context,
+class YouTubeMetadataBackfiller constructor(
+    private val context: Context,
     private val contentRepository: ContentLinkRepository,
     private val youTubeRepository: YouTubeRepository,
 ) {
@@ -88,7 +84,7 @@ class YouTubeMetadataBackfiller @Inject constructor(
                     if (!result.retryable) {
                         newlyFailed.add(link.link)
                     }
-                    Log.w(TAG, "Skipping ${link.link} (retryable=${result.retryable}): ${result.message}")
+                    Log.w(TAG, "Skipping ${link.link} (retryable=${result.retryable}): ${result.error.debugText}")
                 }
             }
             delay(DELAY_BETWEEN_FETCHES_MS)

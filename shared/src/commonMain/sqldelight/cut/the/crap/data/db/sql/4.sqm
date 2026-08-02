@@ -1,0 +1,27 @@
+-- v4 -> v5 : mirrors Room MIGRATION_4_5 (subjects + many-to-many cross-refs)
+CREATE TABLE IF NOT EXISTS subjects_table (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    name TEXT,
+    colorHex TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    modifiedAt INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS index_subjects_table_modifiedAt ON subjects_table(modifiedAt);
+
+CREATE TABLE IF NOT EXISTS post_subject_cross_ref (
+    postId INTEGER NOT NULL,
+    subjectId INTEGER NOT NULL,
+    PRIMARY KEY(postId, subjectId),
+    FOREIGN KEY(postId) REFERENCES content_items_table(id) ON DELETE CASCADE,
+    FOREIGN KEY(subjectId) REFERENCES subjects_table(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS index_post_subject_cross_ref_subjectId ON post_subject_cross_ref(subjectId);
+
+CREATE TABLE IF NOT EXISTS link_subject_cross_ref (
+    linkId INTEGER NOT NULL,
+    subjectId INTEGER NOT NULL,
+    PRIMARY KEY(linkId, subjectId),
+    FOREIGN KEY(linkId) REFERENCES tweets_table(id) ON DELETE CASCADE,
+    FOREIGN KEY(subjectId) REFERENCES subjects_table(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS index_link_subject_cross_ref_subjectId ON link_subject_cross_ref(subjectId);

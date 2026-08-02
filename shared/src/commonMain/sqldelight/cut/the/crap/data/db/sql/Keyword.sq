@@ -1,0 +1,74 @@
+import kotlin.Boolean;
+import kotlin.Int;
+
+-- Keywords (accounts / hashtags / tags). Legacy table name preserved.
+CREATE TABLE IF NOT EXISTS handle_tag_table (
+    id INTEGER AS Int PRIMARY KEY AUTOINCREMENT NOT NULL,
+    text TEXT NOT NULL,
+    type INTEGER AS Int NOT NULL,
+    created INTEGER NOT NULL,
+    lastUsed INTEGER NOT NULL,
+    usageCount INTEGER AS Int NOT NULL,
+    isFavorite INTEGER AS Boolean NOT NULL,
+    category TEXT,
+    color TEXT,
+    isArchived INTEGER AS Boolean NOT NULL,
+    sortOrder INTEGER AS Int NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS index_handle_tag_table_type ON handle_tag_table(type);
+CREATE INDEX IF NOT EXISTS index_handle_tag_table_lastUsed ON handle_tag_table(lastUsed);
+CREATE UNIQUE INDEX IF NOT EXISTS index_handle_tag_table_text_type ON handle_tag_table(text, type);
+
+insert:
+INSERT OR REPLACE INTO handle_tag_table(text, type, created, lastUsed, usageCount, isFavorite, category, color, isArchived, sortOrder)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+insertWithId:
+INSERT OR REPLACE INTO handle_tag_table(id, text, type, created, lastUsed, usageCount, isFavorite, category, color, isArchived, sortOrder)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE handle_tag_table
+SET text = ?, type = ?, created = ?, lastUsed = ?, usageCount = ?, isFavorite = ?,
+    category = ?, color = ?, isArchived = ?, sortOrder = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM handle_tag_table WHERE id = ?;
+
+getById:
+SELECT * FROM handle_tag_table WHERE id = ?;
+
+getByType:
+SELECT * FROM handle_tag_table
+WHERE type = :keywordType
+  AND isArchived = 0
+ORDER BY
+  CASE WHEN :sortByFavorite THEN isFavorite END DESC,
+  CASE WHEN :sortByUsage THEN usageCount END DESC,
+  CASE WHEN :sortByRecent THEN lastUsed END DESC,
+  CASE WHEN :sortByManual THEN sortOrder END ASC;
+
+getAll:
+SELECT * FROM handle_tag_table
+WHERE isArchived = 0
+ORDER BY
+  isFavorite DESC,
+  usageCount DESC,
+  lastUsed DESC;
+
+incrementUsage:
+UPDATE handle_tag_table
+SET usageCount = usageCount + 1,
+    lastUsed = :timestamp
+WHERE id = :keywordId;
+
+toggleFavorite:
+UPDATE handle_tag_table SET isFavorite = ? WHERE id = ?;
+
+setArchived:
+UPDATE handle_tag_table SET isArchived = ? WHERE id = ?;
+
+deleteAllByType:
+DELETE FROM handle_tag_table WHERE type = ?;

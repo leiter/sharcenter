@@ -1,13 +1,49 @@
 # TODO List - BasicStateCodelab
 
-> Last updated: 2026-07-07
+> Last updated: 2026-08-01
 
 ## Critical / High Priority
+
+- [x] ~~**Campaign list 401s on a fresh install — release blocker**~~ — FIXED (step 2a).
+  Both campaign reads now use `signed_user_optional`, so an install with no identity sees the
+  `featured` campaigns and can open them; a **bad** signature is still 401. Spec:
+  `CAMPAIGN_SCHEMA_SPEC.md` §4.1 and `IDENTITY_SPEC.md` §4.5. No client code changed.
+  Covered by 9 new checks in `test_campaigns.py` plus a no-`register()` case in
+  `CampaignIntegrationTest` that was confirmed to fail against the pre-fix routes.
+  **Ships only once the server is deployed** — see below.
+
+### Deploy the campaign/identity server
+The app changes for identity and campaigns are all merged, but the server they talk to is not
+deployed. Until it is, a new build's campaign screen talks to routes that do not exist yet.
+
+- [ ] `./deploy.sh` (PyNaCl is already installed on the host as `python3-nacl`).
+- [ ] `python3 scripts/import_abu_safiya.py --owner <user_id>` so the campaign exists in the store.
+- [ ] Verify with curl that the anonymous path works on the live host:
+      `GET /api/campaigns/mine` and `GET /api/campaigns/abu-safiya` both **200 without a signature**,
+      and `GET /api/abu-safiya` still byte-identical for shipped installs.
+
+### Campaign screens have never run on a device
+`campaign_list` and `campaign_detail` are covered by headless render tests only. The spec asks for a
+desktop + Android runtime check that has not happened.
+- [ ] Open both screens on Android and on the desktop app at least once.
 
 ### Production Deployment
 - [ ] **Update production API URL** - `app/build.gradle.kts:41`
   - Current: `http://192.168.1.100:8080`
   - Needs: Production server URL before deploying
+
+### iOS Share Extension — verification (code landed, commit `cc4afc6`)
+Needs a Mac/Xcode; the Kotlin side is compile-verified but the Swift/Xcode side is unbuilt off-macOS.
+- [ ] **Register `group.cut.the.crap` App Group in the Apple Developer account** for device builds
+  (the simulator is lenient without it). Must match the entitlements on both targets and
+  `APP_GROUP_ID` in `shared/src/iosMain/.../share/ShareInbox.kt`.
+- [ ] **Regenerate the Xcode project**: `cd iosApp && xcodegen generate`, then build both targets.
+- [ ] **Simulator smoke-tests** (per `~/.claude/plans/plan-the-share-extension-parsed-bee.md`):
+  - [ ] Extension shows in the share sheet (Safari → Share → ShareCenter) and dismisses.
+  - [ ] Link appears on next app open (snackbar + in the links list).
+  - [ ] Foreground case: share while app is open, switch back → inbox drains.
+  - [ ] Queue case: share 3 URLs while app closed → all 3 saved, no duplicates.
+  - [ ] Handle case: share an X/Twitter profile URL → lands in the keyword/handle pool, not links.
 
 ### Crash Risk
 - [ ] **ExportLinks dialog** - `MyEditDialog.kt:144`
@@ -98,14 +134,20 @@
   - `MainActivity.handleAction()` is large
   - Could extract into handler interfaces
 
+- [ ] **Client/server versioning** — see `doc/VERSIONING.md` for the findings and an ordered
+  checklist. Two items are cheap now and expensive later: the `X-CTC-Client` telemetry header
+  (nothing else is decidable without it) and `v=1` in the `CTC-Sig` params (inert today, but
+  a v2 signing string cannot be introduced safely without it).
+
 - [ ] **Add use case/interactor layer**
   - ViewModels directly access repositories
   - Could add intermediate layer for complex business logic
 
 ### Testing
 - [ ] **Add UI tests**
-  - No Compose UI tests exist
-  - Priority: Navigation tests, critical user flows
+  - Started: `IdentityScreenTest` (4) and `CampaignScreensTest` (6) render for real via
+    `runComposeUiTest` in `desktopTest`, and assert taps reach their destination
+  - Still missing: navigation tests, and the older Links/Posts screens have none
 
 ### Documentation
 - [ ] **Architecture decision records (ADRs)**
@@ -149,7 +191,7 @@
 
 | Category | Count |
 |----------|-------|
-| Critical | 2 |
+| Critical | 5 |
 | Medium | 9 |
 | Low/Nice to Have | 15+ |
 

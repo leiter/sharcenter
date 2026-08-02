@@ -1,5 +1,11 @@
 package cut.the.crap.data.backup
 
+import cut.the.crap.platform.toPlatformUri
+
+import cut.the.crap.platform.toAndroidUri
+
+import cut.the.crap.platform.PlatformUri
+
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
@@ -8,52 +14,36 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
+import cut.the.crap.platform.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import cut.the.crap.data.db.AppDatabase
+import app.cash.sqldelight.db.SqlDriver
 import cut.the.crap.data.preferences.SettingsRepository
 import cut.the.crap.ui.content.settings.BackupFrequency
-import dagger.Lazy
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
+import cut.the.crap.tools.formatTimestampForFileName
+import cut.the.crap.tools.formatTimestampIsoLike
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import javax.inject.Inject
-import javax.inject.Singleton
-
-/**
- * Metadata for a single backup file stored in Downloads.
- *
- * @property uri location used to open/delete the file (a MediaStore content Uri on
- *   Android 10+, or a `file://` Uri on Android 9 and below).
- * @property displayName the file name, e.g. `ShareCenter_Backup_2026-06-25_083000.db`.
- * @property sizeBytes file size in bytes.
- * @property lastModified last-modified time in epoch milliseconds.
- */
-data class BackupInfo(
-    val uri: Uri,
-    val displayName: String,
-    val sizeBytes: Long,
-    val lastModified: Long
-)
 
 private val Context.backupDataStore: DataStore<Preferences> by preferencesDataStore(name = "backup_preferences")
 
-@Singleton
-class DatabaseBackupManager @Inject constructor(
-    @ApplicationContext private val context: Context,
+/**
+ * Android implementation of [BackupManager], backed by MediaStore (API 29+) and SAF.
+ *
+ * All the `content://` Uri handling stays inside this class: the interface speaks [PlatformUri],
+ * so the UI never learns what a ContentResolver is.
+ */
+class DatabaseBackupManager constructor(
+    private val context: Context,
     // Lazy so injecting the manager doesn't eagerly open the database.
-    private val database: Lazy<AppDatabase>,
+    private val database: Lazy<SqlDriver>,
     private val settingsRepository: SettingsRepository
-) {
+) : BackupManager {
     private object PreferencesKeys {
         val LAST_BACKUP_TIMESTAMP = longPreferencesKey("last_backup_timestamp")
     }
@@ -64,10 +54,10 @@ class DatabaseBackupManager @Inject constructor(
         private const val BACKUP_PREFIX = "ShareCenter_Backup"
         private const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000
 
-        // Keep in sync with the @Database(version = ...) value in AppDatabase.
+        // Keep in sync with the SQLDelight schema version (see DatabaseFactory).
         // A backup whose user_version is higher than this would require a
-        // downgrade, which Room cannot do — such backups are rejected.
-        private const val CURRENT_SCHEMA_VERSION = 4
+        // downgrade, which we cannot do — such backups are rejected.
+        private const val CURRENT_SCHEMA_VERSION = cut.the.crap.data.db.CURRENT_SCHEMA_VERSION
     }
 
     /**
@@ -75,7 +65,7 @@ class DatabaseBackupManager @Inject constructor(
      * [BackupFrequency]) and performs it if necessary.
      * @return true if backup was performed, false otherwise
      */
-    suspend fun performDailyBackupIfNeeded(): Boolean {
+    override suspend fun performDailyBackupIfNeeded(): Boolean {
         return try {
             val frequency = settingsRepository.settingsFlow.first().backupFrequency
             if (frequency == BackupFrequency.OFF) {
@@ -147,8 +137,7 @@ class DatabaseBackupManager @Inject constructor(
             }
 
             // Generate filename with timestamp
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.getDefault())
-            val formattedDate = dateFormat.format(Date(timestamp))
+            val formattedDate = formatTimestampForFileName(timestamp)
             val backupFileName = "${BACKUP_PREFIX}_${formattedDate}.db"
 
             val backupResult = copyDatabaseToDownloads(dbFile, backupFileName)
@@ -240,7 +229,7 @@ class DatabaseBackupManager @Inject constructor(
      * Lists all existing `ShareCenter_Backup_*.db` files in Downloads, newest first.
      * Returns an empty list if none exist or the query fails.
      */
-    suspend fun listBackups(): List<BackupInfo> {
+    override suspend fun listBackups(): List<BackupInfo> {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 queryMediaStoreBackups()
@@ -264,7 +253,8 @@ class DatabaseBackupManager @Inject constructor(
      * @return [Result.success] with the number of files actually deleted, or
      *         [Result.failure] if the operation could not be carried out at all.
      */
-    suspend fun deleteBackups(uris: List<Uri>): Result<Int> {
+    override suspend fun deleteBackups(uris: List<PlatformUri>): Result<Int> {
+        val uris = uris.map { it.toAndroidUri() }
         return try {
             var deleted = 0
             for (uri in uris) {
@@ -328,7 +318,7 @@ class DatabaseBackupManager @Inject constructor(
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idColumn)
                 backups += BackupInfo(
-                    uri = ContentUris.withAppendedId(collection, id),
+                    uri = ContentUris.withAppendedId(collection, id).toPlatformUri(),
                     displayName = cursor.getString(nameColumn),
                     sizeBytes = cursor.getLong(sizeColumn),
                     // DATE_MODIFIED is in seconds since epoch; convert to millis.
@@ -351,7 +341,7 @@ class DatabaseBackupManager @Inject constructor(
         return files
             .map { file ->
                 BackupInfo(
-                    uri = Uri.fromFile(file),
+                    uri = Uri.fromFile(file).toPlatformUri(),
                     displayName = file.name,
                     sizeBytes = file.length(),
                     lastModified = file.lastModified()
@@ -364,7 +354,7 @@ class DatabaseBackupManager @Inject constructor(
      * Forces an immediate backup regardless of the last backup time.
      * Useful for manual backup triggers.
      */
-    suspend fun performManualBackup(): Result<String> {
+    override suspend fun performManualBackup(): Result<String> {
         Log.d(TAG, "Manual backup requested")
         return performBackup(System.currentTimeMillis())
     }
@@ -382,7 +372,8 @@ class DatabaseBackupManager @Inject constructor(
      *         [Result.failure] if the file is missing, not a valid/compatible DB,
      *         or the copy failed (in which case the existing DB is left untouched).
      */
-    suspend fun restoreFromBackup(uri: Uri): Result<String> {
+    override suspend fun restoreFromBackup(uri: PlatformUri): Result<String> {
+        val uri = uri.toAndroidUri()
         Log.d(TAG, "Restore requested from: $uri")
         // Stage the picked file in cache so we can validate it before touching the live DB.
         val tempFile = File(context.cacheDir, "restore_candidate.db")
@@ -395,8 +386,8 @@ class DatabaseBackupManager @Inject constructor(
             val validation = validateBackup(tempFile)
             validation.exceptionOrNull()?.let { return Result.failure(it) }
 
-            // Replace the live database file. Close Room first so the file isn't held open.
-            database.get().close()
+            // Replace the live database file. Close the driver first so the file isn't held open.
+            database.value.close()
 
             val dbFile = context.getDatabasePath(DATABASE_NAME)
             dbFile.parentFile?.mkdirs()
@@ -467,7 +458,7 @@ class DatabaseBackupManager @Inject constructor(
         return if (timestamp == 0L) {
             "Never"
         } else {
-            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(timestamp))
+            formatTimestampIsoLike(timestamp)
         }
     }
 }

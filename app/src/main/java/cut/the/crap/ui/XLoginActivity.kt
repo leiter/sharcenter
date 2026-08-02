@@ -1,10 +1,12 @@
 package cut.the.crap.ui
 
+import org.jetbrains.compose.resources.getString
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import cut.the.crap.platform.Log
 import android.webkit.CookieManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -19,24 +21,27 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import cut.the.crap.R
+import org.jetbrains.compose.resources.stringResource
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.dialog_cancel
+import cut.the.crap.shared.resources.settings_toast_x_login_success
+import cut.the.crap.shared.resources.xlogin_logged_in_as
+import cut.the.crap.shared.resources.xlogin_prompt
+import cut.the.crap.shared.resources.xlogin_session_expired
+import cut.the.crap.shared.resources.xlogin_title
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
 import cut.the.crap.data.preferences.SettingsRepository
 import cut.the.crap.ui.theme.MyAppTheme
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 private const val TAG = "XLoginActivity"
 
-@AndroidEntryPoint
 class XLoginActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository by inject()
 
     companion object {
         const val EXTRA_REASON = "reason"
@@ -77,9 +82,9 @@ class XLoginActivity : ComponentActivity() {
         lifecycleScope.launch {
             settingsRepository.updateXCredentials(authToken, ct0Token)
             val message = if (screenName != null) {
-                getString(R.string.xlogin_logged_in_as, screenName)
+                getString(Res.string.xlogin_logged_in_as, screenName)
             } else {
-                getString(R.string.settings_toast_x_login_success)
+                getString(Res.string.settings_toast_x_login_success)
             }
             Toast.makeText(this@XLoginActivity, message, Toast.LENGTH_SHORT).show()
             setResult(RESULT_LOGIN_SUCCESS)
@@ -101,17 +106,17 @@ private fun XLoginScreen(
     val context = LocalContext.current
 
     val reasonMessage = when (reason) {
-        XLoginActivity.REASON_AUTH_EXPIRED -> stringResource(R.string.xlogin_session_expired)
-        else -> stringResource(R.string.xlogin_prompt)
+        XLoginActivity.REASON_AUTH_EXPIRED -> stringResource(Res.string.xlogin_session_expired)
+        else -> stringResource(Res.string.xlogin_prompt)
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.xlogin_title)) },
+                title = { Text(stringResource(Res.string.xlogin_title)) },
                 navigationIcon = {
                     IconButton(onClick = onCancel) {
-                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.dialog_cancel))
+                        Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.dialog_cancel))
                     }
                 }
             )

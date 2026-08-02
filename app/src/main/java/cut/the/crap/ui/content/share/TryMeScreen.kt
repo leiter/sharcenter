@@ -1,9 +1,7 @@
 package cut.the.crap.ui.content.share
 
-import android.app.Activity
-import android.content.Intent
-import android.util.Log
-import androidx.activity.compose.LocalActivity
+import cut.the.crap.platform.ExternalApp
+import cut.the.crap.platform.UrlOpener
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,23 +26,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import cut.the.crap.R
+import org.jetbrains.compose.resources.stringResource
+import cut.the.crap.shared.resources.Res
+import cut.the.crap.shared.resources.tryme_export_plain
+import cut.the.crap.shared.resources.tryme_export_table
+import cut.the.crap.shared.resources.tryme_import_lines
+import cut.the.crap.shared.resources.tryme_import_table
+import cut.the.crap.shared.resources.tryme_post_tweet
+import cut.the.crap.shared.resources.tryme_quote_tweet
+import cut.the.crap.shared.resources.tryme_retweet
+import cut.the.crap.shared.resources.tryme_tweet_comment
+import cut.the.crap.shared.resources.tryme_tweet_id
+import cut.the.crap.shared.resources.tryme_tweet_url_param
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import cut.the.crap.intent.TwitterIntent
 import cut.the.crap.data.domain.ContentLink
 import cut.the.crap.intent.extractTweetId
 import cut.the.crap.data.storage.FileHelper
 import cut.the.crap.tools.CONTENT
-import cut.the.crap.tools.TWITTER_PACKAGE
-import cut.the.crap.tools.InstalledCheck
 import cut.the.crap.ui.components.BottomNavigationBar
 import cut.the.crap.ui.components.MySpeedDialFab
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.content.links.LinksViewModel
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,7 +101,13 @@ fun TryMeScreen(
             FileHelper(context).readFile(CONTENT).split("\n")
         }
 
-        val activity = LocalActivity.current
+        val urlOpener: UrlOpener = koinInject()
+
+        // These three flows deliberately prefer the native X client when it is installed; the
+        // opener falls back to the browser when it is not.
+        val tweet: (TwitterIntent) -> Unit = { intent ->
+            urlOpener.open(intent.url, preferApp = ExternalApp.X)
+        }
 
         val updateTextField: (String, Int) -> Unit = { text, id ->
             when (id) {
@@ -130,7 +142,7 @@ fun TryMeScreen(
                     }
                 }
             ) {
-                Text(text = stringResource(R.string.tryme_export_plain))
+                Text(text = stringResource(Res.string.tryme_export_plain))
             }
             ElevatedButton(
                 modifier = customButtonModifier,
@@ -138,7 +150,7 @@ fun TryMeScreen(
 
                 }
             ) {
-                Text(text = stringResource(R.string.tryme_export_table))
+                Text(text = stringResource(Res.string.tryme_export_table))
             }
             ElevatedButton(
                 modifier = customButtonModifier,
@@ -146,7 +158,7 @@ fun TryMeScreen(
 
                 }
             ) {
-                Text(text = stringResource(R.string.tryme_import_lines))
+                Text(text = stringResource(Res.string.tryme_import_lines))
             }
             ElevatedButton(
                 modifier = customButtonModifier,
@@ -154,7 +166,7 @@ fun TryMeScreen(
 
                 }
             ) {
-                Text(text = stringResource(R.string.tryme_import_table))
+                Text(text = stringResource(Res.string.tryme_import_table))
             }
 
             Spacer(modifier = Modifier.height(144.dp))
@@ -170,7 +182,7 @@ fun TryMeScreen(
                     },
                     modifier = Modifier.width(144.dp),
                     maxLines = 1,
-                    placeholder = { Text(text = stringResource(R.string.tryme_tweet_id))}
+                    placeholder = { Text(text = stringResource(Res.string.tryme_tweet_id))}
                 )
                 TextField(
                     value = tweetUrl,
@@ -178,7 +190,7 @@ fun TryMeScreen(
                         updateTextField(id, TWEET_URL_PARAM)
                     },
                     maxLines = 1,
-                    placeholder = { Text(text = stringResource(R.string.tryme_tweet_url_param))}
+                    placeholder = { Text(text = stringResource(Res.string.tryme_tweet_url_param))}
 
                 )
             }
@@ -191,31 +203,24 @@ fun TryMeScreen(
                 modifier = Modifier
                     .height(144.dp)
                     .fillMaxWidth(),
-                placeholder = { Text(text = stringResource(R.string.tryme_tweet_comment))}
+                placeholder = { Text(text = stringResource(Res.string.tryme_tweet_comment))}
             )
 
             TextButton(
-                onClick = {
-                    val tweet = TwitterIntent.Retweet(tweetIdString)
-                    activity?.tweet(tweet) ?: Log.w("TryMeScreen", "Retweet didn't happen.")
-                }
+                onClick = { tweet(TwitterIntent.Retweet(tweetIdString)) }
             ) {
-                Text(text = stringResource(R.string.tryme_retweet))
+                Text(text = stringResource(Res.string.tryme_retweet))
             }
             TextButton(
-                onClick = {
-                    activity?.tweet(TwitterIntent.QuoteTweet(tweetIdString, tweetComment))
-                        ?: Log.w("TryMeScreen", "Quote didn't happen.")
-            }) {
-                Text(text = stringResource(R.string.tryme_quote_tweet))
+                onClick = { tweet(TwitterIntent.QuoteTweet(tweetIdString, tweetComment)) }
+            ) {
+                Text(text = stringResource(Res.string.tryme_quote_tweet))
             }
 
             TextButton(
-                onClick = {
-                    val tweet = TwitterIntent.PostTweet(tweetComment, tweetUrl)
-                    activity?.tweet(tweet) ?: Log.w("TryMeScreen", "Post didn't happen.")
-            }) {
-                Text(text = stringResource(R.string.tryme_post_tweet))
+                onClick = { tweet(TwitterIntent.PostTweet(tweetComment, tweetUrl)) }
+            ) {
+                Text(text = stringResource(Res.string.tryme_post_tweet))
             }
 
         }
@@ -225,16 +230,3 @@ fun TryMeScreen(
 private const val TWEET_ID = 0
 private const val TWEET_COMMENT = 1
 private const val TWEET_URL_PARAM = 2
-
-private fun Activity.tweet(twitterIntent: TwitterIntent) {
-    if (InstalledCheck.isTwitterInstalled(this)) {
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = twitterIntent.url.toUri()
-        intent.setPackage(TWITTER_PACKAGE)
-        startActivity(intent, null)
-    } else {
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = twitterIntent.url.toUri()
-        startActivity(intent, null)
-    }
-}

@@ -2,13 +2,13 @@ import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("dagger.hilt.android.plugin")
-    id("kotlin-kapt")
-    id("org.jetbrains.kotlin.plugin.serialization")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.compose.multiplatform)
 }
+
 
 android {
     namespace = "cut.the.crap"
@@ -24,11 +24,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
-        }
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments["room.schemaLocation"] = "$projectDir/schemas"
-            }
         }
     }
 
@@ -58,6 +53,9 @@ android {
             // Debug API URL - typically points to local development server
             // Example: "http://192.168.1.100:8080" or "http://10.0.2.2:8080" for Android emulator
             buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.100:8080\"")
+            // Action campaign site (a different host from the job-queue backend above).
+            // Point this at the local Flask server while working on the campaign.
+            buildConfigField("String", "CAMPAIGN_BASE_URL", "\"https://cutthecrap.link\"")
         }
         release {
 
@@ -68,12 +66,28 @@ android {
             // TODO: Update this to your production server URL when deploying
             // Example: "https://api.yourapp.com"
             buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.100:8080\"")
+            buildConfigField("String", "CAMPAIGN_BASE_URL", "\"https://cutthecrap.link\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+        // Non-minified variant used only to run instrumented (androidTest) tests.
+        // The `debug` type deliberately minifies/obfuscates, which strips Kotlin
+        // stdlib the AndroidX test runner needs; testing against this variant keeps
+        // that production-like obfuscation intact while letting tests actually run.
+        create("instrumentation") {
+            initWith(getByName("debug"))
+            isMinifyEnabled = false
+            isShrinkResources = false
+            // Dependencies (e.g. SQLDelight's AAR) only publish debug/release variants,
+            // so resolve this custom build type against their debug variant.
+            matchingFallbacks += "debug"
+        }
     }
+    // Run instrumented tests against the non-minified `instrumentation` build type.
+    testBuildType = "instrumentation"
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -88,6 +102,10 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            // Bouncy Castle (the identity layer's Ed25519) and jspecify both ship an OSGi
+            // manifest under the same multi-release path, which the merger will not resolve on
+            // its own. None of it is used at runtime on Android.
+            excludes += "/META-INF/versions/9/OSGI-INF/MANIFEST.MF"
         }
     }
 
@@ -99,62 +117,68 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.17.0")
-    implementation("androidx.activity:activity-compose:1.13.0")
-    implementation(platform("androidx.compose:compose-bom:2025.10.01"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.navigation:navigation-compose:2.9.8")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
+    // Compose Multiplatform (replaces the AndroidX compose-bom). On Android these
+    // resolve to the same androidx.compose artifacts, so behaviour is unchanged.
+    implementation(compose.runtime)
+    implementation(compose.foundation)
+    implementation(compose.material3)
+    implementation(compose.ui)
+    implementation(compose.uiTooling)
+    // String/drawable catalogue; the `Res` class itself is generated in :shared.
+    implementation(compose.components.resources)
+    // Compose Multiplatform navigation — same androidx.navigation package names,
+    // so the call sites are unchanged.
+    implementation(libs.navigation.compose)
+    implementation(libs.lifecycle.viewmodel.compose)
 
-    val hiltVersion = "2.56.2"
-    implementation ("androidx.hilt:hilt-navigation-compose:1.3.0")
-    kapt ("androidx.hilt:hilt-compiler:1.3.0")
-    kapt ("com.google.dagger:hilt-android-compiler:$hiltVersion")
-    implementation ("com.google.dagger:hilt-android:$hiltVersion")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
-    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+    implementation(libs.lifecycle.viewmodel.ktx)
+    implementation(libs.lifecycle.runtime.ktx)
 
-    val roomVersion = "2.8.4" // Check for the latest version
-    implementation("androidx.room:room-runtime:$roomVersion")
-    kapt ("androidx.room:room-compiler:$roomVersion" )
-    // Optional: Room Kotlin Extensions and Coroutines support
-    implementation( "androidx.room:room-ktx:$roomVersion")
+    // Multiplatform core: SQLDelight persistence + domain models/repositories
+    implementation(project(":shared"))
 
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.compose.icons.extended)
 
     // DataStore for settings persistence
-    implementation("androidx.datastore:datastore-preferences:1.2.1")
+    implementation(libs.datastore.preferences)
 
-    implementation("io.ktor:ktor-client-core:2.3.5")
-    implementation("io.ktor:ktor-client-okhttp:2.3.5") // or ktor-client-cio for other engines
-    implementation("io.ktor:ktor-client-content-negotiation:2.3.5")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.5")
-    implementation("io.ktor:ktor-client-logging:2.3.5")
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp) // or ktor-client-cio for other engines
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.logging)
 
     // Kotlinx Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+    implementation(libs.kotlinx.serialization.json)
 
-    // Coil for image loading (thumbnails)
-    implementation("io.coil-kt:coil-compose:2.7.0")
+    // Coil 3 for image loading (thumbnails). Coil 3 ships no network fetcher, so the
+    // Ktor 2 one is added explicitly — it reuses the HTTP stack the app already has.
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.ktor2)
 
-    testImplementation("junit:junit:4.13.2")
+    testImplementation(libs.junit)
     // Coroutines testing
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+    testImplementation(libs.kotlinx.coroutines.test)
     // MockK for Kotlin mocking
-    testImplementation("io.mockk:mockk:1.14.11")
+    testImplementation(libs.mockk)
     // Turbine for Flow testing
-    testImplementation("app.cash.turbine:turbine:1.2.1")
+    testImplementation(libs.turbine)
     // Architecture components testing
-    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    testImplementation(libs.androidx.arch.core.testing)
     // Truth assertions for readability
-    testImplementation("com.google.truth:truth:1.4.5")
+    testImplementation(libs.truth)
+    // Koin dependency-graph verification
+    testImplementation(libs.koin.test)
+    testImplementation(libs.koin.test.junit4)
 
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.10.01"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.tooling)
+    debugImplementation(libs.compose.ui.test.manifest)
 }

@@ -1,0 +1,67 @@
+import kotlin.Boolean;
+import kotlin.Int;
+
+-- Posts.
+CREATE TABLE IF NOT EXISTS content_items_table (
+    id INTEGER AS Int PRIMARY KEY AUTOINCREMENT NOT NULL,
+    text TEXT NOT NULL,
+    created INTEGER NOT NULL,
+    lastModified INTEGER NOT NULL,
+    sortOrder INTEGER AS Int NOT NULL,
+    isFavorite INTEGER AS Boolean NOT NULL,
+    category TEXT,
+    isActive INTEGER AS Boolean NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS index_content_items_table_created ON content_items_table(created);
+CREATE INDEX IF NOT EXISTS index_content_items_table_lastModified ON content_items_table(lastModified);
+CREATE INDEX IF NOT EXISTS index_content_items_table_sortOrder ON content_items_table(sortOrder);
+
+insert:
+INSERT OR REPLACE INTO content_items_table(text, created, lastModified, sortOrder, isFavorite, category, isActive)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+insertWithId:
+INSERT OR REPLACE INTO content_items_table(id, text, created, lastModified, sortOrder, isFavorite, category, isActive)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE content_items_table
+SET text = ?, created = ?, lastModified = ?, sortOrder = ?, isFavorite = ?, category = ?, isActive = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM content_items_table WHERE id = ?;
+
+getById:
+SELECT * FROM content_items_table WHERE id = ?;
+
+getItems:
+SELECT * FROM content_items_table
+WHERE (:includeFavorite IS NULL OR isFavorite = :includeFavorite)
+  AND (:startTime IS NULL OR created >= :startTime)
+  AND (:endTime IS NULL OR created <= :endTime)
+ORDER BY
+  CASE WHEN :sortByOrder THEN sortOrder END ASC,
+  CASE WHEN :sortByDate THEN created END DESC;
+
+getActiveItem:
+SELECT * FROM content_items_table WHERE isActive = 1 LIMIT 1;
+
+clearActiveItem:
+UPDATE content_items_table SET isActive = 0 WHERE isActive = 1;
+
+setActiveItem:
+UPDATE content_items_table SET isActive = 1 WHERE id = ?;
+
+toggleFavorite:
+UPDATE content_items_table SET isFavorite = ? WHERE id = ?;
+
+updateSortOrder:
+UPDATE content_items_table SET sortOrder = ? WHERE id = ?;
+
+deleteAll:
+DELETE FROM content_items_table;
+
+lastInsertRowId:
+SELECT last_insert_rowid();

@@ -1,0 +1,2 @@
+-- v5 -> v6 : adds an optional user comment/quote saved alongside a link
+ALTER TABLE tweets_table ADD COLUMN comment TEXT;
