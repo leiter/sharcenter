@@ -18,6 +18,8 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -152,12 +154,25 @@ fun CampaignPostComposerScreen(
                 },
                 actions = {
                     // Composer is now the second stop, detail the third — see NavigationGraph.kt.
+                    // A badge on the info icon surfaces contact actions (mailto links, lookup
+                    // pages) that live on the detail screen, since this screen only renders
+                    // posts — without it, a campaign with contacts but few/no posts reads as if
+                    // there's nothing to do here beyond drafting.
                     if (campaign != null) {
+                        val contactCount = campaign.countriesWithContacts.sumOf { it.contacts.size }
                         IconButton(onClick = { navController.navigate("campaign_detail/$campaignId") }) {
-                            Icon(
-                                Icons.Filled.Info,
-                                contentDescription = stringResource(Res.string.campaign_view_details_cd)
-                            )
+                            BadgedBox(
+                                badge = {
+                                    if (contactCount > 0) {
+                                        Badge { Text(contactCount.toString()) }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Filled.Info,
+                                    contentDescription = stringResource(Res.string.campaign_view_details_cd)
+                                )
+                            }
                         }
                     }
                 },

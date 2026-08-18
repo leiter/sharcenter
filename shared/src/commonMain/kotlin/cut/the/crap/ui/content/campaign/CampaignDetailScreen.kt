@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -576,46 +577,82 @@ private fun DeleteConfirmDialog(campaignId: String, onDismiss: () -> Unit, onDel
 private fun CountryRow(country: CampaignCountry, urlOpener: UrlOpener) {
     val hasPage = country.url.isNotBlank()
     val openCountry = stringResource(Res.string.campaign_detail_open_country, country.countryName)
+    val contacts = country.contacts
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(
-                // Only clickable when there is something to open — a row that reacts to a tap by
-                // doing nothing is exactly what made the old screen feel broken.
-                if (hasPage) Modifier.clickable { urlOpener.open(country.url) } else Modifier
-            )
-            .padding(vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(
-                "${country.flag} ${country.countryName}",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = if (country.hasPosts) MaterialTheme.colorScheme.onSurface
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            CountrySubtitle(country)
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    // Only clickable when there is something to open — a row that reacts to a tap
+                    // by doing nothing is exactly what made the old screen feel broken.
+                    if (hasPage) Modifier.clickable { urlOpener.open(country.url) } else Modifier
+                )
+                .padding(vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "${country.flag} ${country.countryName}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = if (country.hasPosts) MaterialTheme.colorScheme.onSurface
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                CountrySubtitle(country)
+            }
+
+            // A single contact (abu-safiya's one-MdB-lookup-link-per-country shape) still fits
+            // inline, as before. More than one is rendered as its own list below instead — see
+            // the block after this Row.
+            if (contacts.size == 1) {
+                AssistChip(
+                    onClick = { urlOpener.open(contacts[0].url) },
+                    label = { Text(contacts[0].label ?: stringResource(Res.string.campaign_parliament_badge)) },
+                    colors = AssistChipDefaults.assistChipColors(
+                        labelColor = MaterialTheme.colorScheme.primary,
+                    ),
+                )
+            }
+            if (hasPage) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                    contentDescription = openCountry,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
         }
 
-        // The parliament chip, with a destination at last.
-        country.contacts.firstOrNull()?.let { contact ->
-            AssistChip(
-                onClick = { urlOpener.open(contact.url) },
-                label = { Text(contact.label ?: stringResource(Res.string.campaign_parliament_badge)) },
-                colors = AssistChipDefaults.assistChipColors(
-                    labelColor = MaterialTheme.colorScheme.primary,
-                ),
-            )
-        }
-        if (hasPage) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                contentDescription = openCountry,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 8.dp),
-            )
+        // More than one contact (e.g. gaza-politik's per-target list of Fraktionen/parties,
+        // unlike abu-safiya's single MdB-lookup link) doesn't fit in the header row. The old
+        // code took contacts.firstOrNull() here, which silently dropped every contact past the
+        // first — for a country with 19 contacts, 18 were simply unreachable in the app.
+        if (contacts.size > 1) {
+            Column(modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)) {
+                contacts.forEach { contact ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { urlOpener.open(contact.url) }
+                            .padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            contact.label ?: contact.url,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                            contentDescription = contact.label ?: contact.url,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
+            }
         }
     }
 }
