@@ -2,6 +2,7 @@ package cut.the.crap.ui.content.campaign
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -232,13 +233,14 @@ class CampaignScreensTest {
         onNodeWithContentDescription("More options").performClick()
         waitForIdle()
         onNodeWithText("Delete").performClick()
-        waitForIdle()
-        // The hide write goes through a DataStore Flow — one idle pass processes the click's
-        // recomposition, a second lets the write land and the Flow re-emit into collectAsState.
-        waitForIdle()
 
-        // Hidden posts vanish immediately — no post left means no copy/overflow controls at all.
-        onNodeWithContentDescription("More options").assertDoesNotExist()
+        // The hide write goes through a DataStore Flow on a real IO dispatcher, outside the test
+        // clock — waitForIdle() only drains Compose's own work, so it can return before the write
+        // has landed and the Flow re-emitted into collectAsState. Poll for the result instead.
+        // Hidden posts vanish immediately: no post left means no copy/overflow controls at all.
+        waitUntil {
+            onAllNodesWithContentDescription("More options").fetchSemanticsNodes().isEmpty()
+        }
     }
 
     private fun detailManageModules(repository: CampaignRepository, urlOpener: UrlOpener) = module {
