@@ -280,13 +280,13 @@
     <string name="campaign_create_dialog_open_builder">Build the JSON in your browser…</string>
     <string name="campaign_create_dialog_terms">I confirm this campaign does not target private individuals.</string>
     <string name="campaign_create_dialog_submit">Create</string>
-    <string name="campaign_create_dialog_invalid_json">That isn\'t valid JSON.</string>
+    <string name="campaign_create_dialog_invalid_json">That isn't valid JSON.</string>
     <string name="campaign_create_dialog_error">Could not create the campaign. Check the JSON and try again.</string>
     <string name="campaign_join_dialog_cd">Join with code</string>
     <string name="campaign_join_dialog_title">Join a campaign</string>
     <string name="campaign_join_dialog_code_label">Invite code</string>
     <string name="campaign_join_dialog_submit">Join</string>
-    <string name="campaign_join_dialog_error">That code didn\'t work — it may be wrong, expired, or already used up.</string>
+    <string name="campaign_join_dialog_error">That code didn't work — it may be wrong, expired, or already used up.</string>
     <string name="campaign_manage_replace_items">Replace items…</string>
     <string name="campaign_manage_replace_items_error">Could not save the items. Check the JSON and try again.</string>
     <string name="campaign_manage_generate_invite">Generate invite</string>
@@ -297,7 +297,7 @@
     <string name="campaign_manage_invite_error">Could not create an invite. Try again.</string>
     <string name="campaign_manage_leave">Leave campaign</string>
     <string name="campaign_manage_leave_confirm_title">Leave this campaign?</string>
-    <string name="campaign_manage_leave_confirm_body">You\'ll need a new invite to rejoin.</string>
+    <string name="campaign_manage_leave_confirm_body">You'll need a new invite to rejoin.</string>
     <string name="campaign_manage_leave_error">Could not leave the campaign. Try again.</string>
     <string name="campaign_manage_delete">Delete campaign</string>
     <string name="campaign_manage_delete_confirm_title">Delete this campaign?</string>
@@ -406,7 +406,7 @@
 
     <!-- Content editor -->
     <string name="editor_title">Compose</string>
-    <string name="editor_placeholder">What\'s on your mind?</string>
+    <string name="editor_placeholder">What's on your mind?</string>
     <string name="editor_quick_actions">Quick actions:</string>
     <string name="editor_cd_clear">Clear all text</string>
     <string name="editor_cd_add_tag">Add tag</string>
@@ -490,7 +490,7 @@
     </plurals>
 
     <!-- Import / Export -->
-    <string name="import_export_coming_soon">This feature is coming soon.\n\nYou\'ll be able to backup and restore your posts and links data here.</string>
+    <string name="import_export_coming_soon">This feature is coming soon.\n\nYou'll be able to backup and restore your posts and links data here.</string>
     <string name="import_export_export">Export Data</string>
     <string name="import_export_import">Import Data</string>
 
@@ -587,7 +587,7 @@
 
     <!-- Links import / export result messages -->
     <string name="links_export_no_items_selected">No items selected</string>
-    <string name="links_export_delimiter_conflict">Delimiter conflict in data: Items contain the delimiter \'%1$s\'</string>
+    <string name="links_export_delimiter_conflict">Delimiter conflict in data: Items contain the delimiter '%1$s'</string>
     <plurals name="links_export_success">
         <item quantity="one">Exported %1$d item successfully</item>
         <item quantity="other">Exported %1$d items successfully</item>
@@ -680,7 +680,7 @@
     <string name="identity_notice_phrase_checksum">Those 24 words are not a valid phrase. Check the order and the spelling.</string>
     <string name="identity_notice_reset">Identity reset</string>
     <string name="identity_notice_no_identity">There is no identity on this device.</string>
-    <string name="identity_notice_not_authenticated">The server did not accept this device\'s key.</string>
+    <string name="identity_notice_not_authenticated">The server did not accept this device's key.</string>
     <string name="identity_notice_network">Could not reach the server.</string>
     <string name="identity_notice_server">The server could not handle that. Try again later.</string>
 </resources>
