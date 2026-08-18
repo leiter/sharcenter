@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main, kmp-migration]
+  pull_request:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # JVM side: the shared module's common + desktop tests and the Android unit tests.
+  jvm-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+
+      # :shared:desktopTest contains Compose UI tests (runComposeUiTest — CampaignScreensTest,
+      # IdentityScreenTest). Those go through Skiko/AWT, which needs an X display: on a bare
+      # ubuntu runner they fail before the first assertion. xvfb-run supplies a virtual one.
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      # commonTest runs here too (via the desktop + androidUnitTest targets).
+      - name: Shared + Android unit tests
+        run: xvfb-run -a ./gradlew :shared:desktopTest :app:testDebugUnitTest --stacktrace
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jvm-test-reports
+          path: |
+            shared/build/reports/tests/
+            app/build/reports/tests/
+          retention-days: 7
+
+  # iOS side: the native unit tests (commonTest + iosTest on the simulator) and — just as important —
+  # that the Shared framework actually LINKS. Several deps in this project compile but only fail at
+  # Kotlin/Native link time (see doc/IOS_IMPLEMENTATION_PLAN.md §3), which the JVM build never catches.
+  # Requires a macOS runner (Xcode + iOS simulator toolchain); macos-latest is Apple silicon, so
+  # iosSimulatorArm64 matches the runner architecture.
+  ios-tests:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: iOS unit tests (simulator)
+        run: ./gradlew :shared:iosSimulatorArm64Test --stacktrace
+      - name: Link Shared framework (catches native-only link errors)
+        run: ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 --stacktrace
