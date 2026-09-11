@@ -1,0 +1,69 @@
+import kotlin.Boolean;
+import kotlin.Int;
+
+-- Action reminders: a schedule that surfaces a prepared campaign post as a notification.
+-- Times are wall-clock minutes after local midnight, evaluated in the device's current zone.
+-- See doc/ACTION_REMINDER_SPEC.md §3.
+CREATE TABLE IF NOT EXISTS action_reminders_table (
+    id INTEGER AS Int PRIMARY KEY AUTOINCREMENT NOT NULL,
+    campaignId TEXT NOT NULL,
+    countryCode TEXT NOT NULL,
+    language TEXT NOT NULL,
+    postToX INTEGER AS Boolean NOT NULL,
+    postToFacebook INTEGER AS Boolean NOT NULL,
+    -- 'RECURRING' (uses daysOfWeek) or 'ONCE' (uses onceDate)
+    scheduleType TEXT NOT NULL,
+    -- bitmask, Monday = 1 ... Sunday = 64
+    daysOfWeek INTEGER AS Int NOT NULL DEFAULT 0,
+    -- ISO yyyy-MM-dd
+    onceDate TEXT,
+    windowStartMinute INTEGER AS Int NOT NULL,
+    windowEndMinute INTEGER AS Int NOT NULL,
+    -- snapshot of the country + language's posts: [{"id":"DE-1","text":"..."}, ...]
+    postsJson TEXT NOT NULL,
+    campaignVersion INTEGER AS Int NOT NULL,
+    nextPostIndex INTEGER AS Int NOT NULL DEFAULT 0,
+    enabled INTEGER AS Boolean NOT NULL DEFAULT 1,
+    lastFiredAt INTEGER,
+    createdAt INTEGER NOT NULL,
+    modifiedAt INTEGER NOT NULL
+);
+
+insert:
+INSERT INTO action_reminders_table(
+    campaignId, countryCode, language, postToX, postToFacebook, scheduleType, daysOfWeek,
+    onceDate, windowStartMinute, windowEndMinute, postsJson, campaignVersion, nextPostIndex,
+    enabled, lastFiredAt, createdAt, modifiedAt
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE action_reminders_table
+SET campaignId = ?, countryCode = ?, language = ?, postToX = ?, postToFacebook = ?,
+    scheduleType = ?, daysOfWeek = ?, onceDate = ?, windowStartMinute = ?, windowEndMinute = ?,
+    postsJson = ?, campaignVersion = ?, nextPostIndex = ?, enabled = ?, lastFiredAt = ?,
+    createdAt = ?, modifiedAt = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM action_reminders_table WHERE id = ?;
+
+getById:
+SELECT * FROM action_reminders_table WHERE id = ?;
+
+getAll:
+SELECT * FROM action_reminders_table ORDER BY createdAt ASC;
+
+getEnabled:
+SELECT * FROM action_reminders_table WHERE enabled = 1;
+
+setEnabled:
+UPDATE action_reminders_table SET enabled = ?, modifiedAt = ? WHERE id = ?;
+
+-- Worker bookkeeping after a notification was shown; deliberately leaves modifiedAt alone,
+-- which tracks user edits.
+recordFired:
+UPDATE action_reminders_table SET nextPostIndex = ?, lastFiredAt = ?, enabled = ? WHERE id = ?;
+
+lastInsertRowId:
+SELECT last_insert_rowid();

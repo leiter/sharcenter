@@ -3,10 +3,12 @@ package cut.the.crap.di
 import app.cash.sqldelight.db.SqlDriver
 import cut.the.crap.data.backup.BackupManager
 import cut.the.crap.data.backup.DatabaseBackupManager
+import cut.the.crap.data.db.ActionReminderDao
 import cut.the.crap.data.db.ContentItemDao
 import cut.the.crap.data.db.ContentLinkDao
 import cut.the.crap.data.db.KeywordDao
 import cut.the.crap.data.db.SubjectDao
+import cut.the.crap.data.db.SqlDelightActionReminderDao
 import cut.the.crap.data.db.SqlDelightContentItemDao
 import cut.the.crap.data.db.SqlDelightContentLinkDao
 import cut.the.crap.data.db.SqlDelightKeywordDao
@@ -15,6 +17,8 @@ import cut.the.crap.data.db.createDatabase
 import cut.the.crap.data.db.createDriver
 import cut.the.crap.data.db.sql.ShareDatabase
 import kotlinx.coroutines.Dispatchers
+import cut.the.crap.data.domain.ActionReminderRepository
+import cut.the.crap.data.domain.ActionReminderRepositoryImpl
 import cut.the.crap.data.domain.ContentItemRepository
 import cut.the.crap.data.domain.ContentItemRepositoryImpl
 import cut.the.crap.data.domain.ContentLinkRepository
@@ -44,6 +48,7 @@ val databaseModule = module {
     single<KeywordDao> { SqlDelightKeywordDao(get<ShareDatabase>().keywordQueries, Dispatchers.IO) }
     single<ContentItemDao> { SqlDelightContentItemDao(get<ShareDatabase>().contentItemQueries, Dispatchers.IO) }
     single<SubjectDao> { SqlDelightSubjectDao(get<ShareDatabase>().subjectQueries, Dispatchers.IO) }
+    single<ActionReminderDao> { SqlDelightActionReminderDao(get<ShareDatabase>().actionReminderQueries, Dispatchers.IO) }
 
     // Lazy handle so injecting the backup manager doesn't eagerly open the database.
     single<Lazy<SqlDriver>> { lazy { get<SqlDriver>() } }
@@ -52,6 +57,7 @@ val databaseModule = module {
     singleOf(::KeywordRepositoryImpl) bind KeywordRepository::class
     singleOf(::ContentItemRepositoryImpl) bind ContentItemRepository::class
     singleOf(::SubjectRepositoryImpl) bind SubjectRepository::class
+    singleOf(::ActionReminderRepositoryImpl) bind ActionReminderRepository::class
 
     singleOf(::DatabaseBackupManager) bind BackupManager::class
 }

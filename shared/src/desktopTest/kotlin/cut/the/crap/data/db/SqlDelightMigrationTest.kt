@@ -102,8 +102,45 @@ class SqlDelightMigrationTest {
     }
 
     @Test
-    fun schemaVersionIs6() {
-        assertEquals(6L, ShareDatabase.Schema.version)
+    fun schemaVersionIs7() {
+        assertEquals(7L, ShareDatabase.Schema.version)
+    }
+
+    @Test
+    fun migrate6To7_addsActionRemindersTable() {
+        createRoomV4Database()
+        ShareDatabase.Schema.migrate(driver, 4, 7).value
+
+        val db = createDatabase(driver)
+
+        // Earlier data is untouched.
+        assertNotNull(db.contentLinkQueries.getById(1, ::ContentLinkDB).executeAsOneOrNull())
+
+        // The new table accepts a row and reads it back through the column adapters.
+        db.actionReminderQueries.insert(
+            campaignId = "abu-safiya",
+            countryCode = "DE",
+            language = "de",
+            postToX = true,
+            postToFacebook = false,
+            scheduleType = "RECURRING",
+            daysOfWeek = 0b0010001,
+            onceDate = null,
+            windowStartMinute = 18 * 60,
+            windowEndMinute = 20 * 60,
+            postsJson = "[]",
+            campaignVersion = 1,
+            nextPostIndex = 0,
+            enabled = true,
+            lastFiredAt = null,
+            createdAt = 1000,
+            modifiedAt = 1000,
+        )
+        val row = db.actionReminderQueries.getAll(::ActionReminderDB).executeAsList().single()
+        assertEquals("DE", row.countryCode)
+        assertEquals(20 * 60, row.windowEndMinute)
+        assertTrue(row.enabled)
+        assertNull(row.lastFiredAt)
     }
 
     @Test

@@ -2,6 +2,7 @@ package cut.the.crap.data.db
 
 import app.cash.sqldelight.adapter.primitive.IntColumnAdapter
 import app.cash.sqldelight.db.SqlDriver
+import cut.the.crap.data.db.sql.Action_reminders_table
 import cut.the.crap.data.db.sql.Content_items_table
 import cut.the.crap.data.db.sql.Handle_tag_table
 import cut.the.crap.data.db.sql.Link_subject_cross_ref
@@ -29,6 +30,14 @@ val CURRENT_SCHEMA_VERSION: Long get() = ShareDatabase.Schema.version
  */
 fun createDatabase(driver: SqlDriver): ShareDatabase = ShareDatabase(
     driver = driver,
+    action_reminders_tableAdapter = Action_reminders_table.Adapter(
+        idAdapter = IntColumnAdapter,
+        daysOfWeekAdapter = IntColumnAdapter,
+        windowStartMinuteAdapter = IntColumnAdapter,
+        windowEndMinuteAdapter = IntColumnAdapter,
+        campaignVersionAdapter = IntColumnAdapter,
+        nextPostIndexAdapter = IntColumnAdapter,
+    ),
     content_items_tableAdapter = Content_items_table.Adapter(
         idAdapter = IntColumnAdapter,
         sortOrderAdapter = IntColumnAdapter,
