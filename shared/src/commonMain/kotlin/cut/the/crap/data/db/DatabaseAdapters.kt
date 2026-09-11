@@ -13,8 +13,12 @@ import cut.the.crap.data.db.sql.Tweets_table
 /** Physical database file name — unchanged from Room, so existing installs keep their data. */
 const val DATABASE_NAME = "app_database"
 
-/** Schema version, kept in sync with the SQLDelight migrations (1..4.sqm -> version 5). */
-const val CURRENT_SCHEMA_VERSION = 5
+/**
+ * Schema version of this build, read from the generated schema rather than hardcoded — a
+ * hardcoded copy was left at 5 after `5.sqm` landed, and the backup restore guard then rejected
+ * every backup this build made as "from a newer app version".
+ */
+val CURRENT_SCHEMA_VERSION: Long get() = ShareDatabase.Schema.version
 
 /**
  * Builds the generated database from a platform-provided [SqlDriver], supplying the

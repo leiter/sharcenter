@@ -21,6 +21,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import app.cash.sqldelight.db.SqlDriver
+import cut.the.crap.data.db.CURRENT_SCHEMA_VERSION
 import cut.the.crap.data.preferences.SettingsRepository
 import cut.the.crap.ui.content.settings.BackupFrequency
 import kotlinx.coroutines.flow.first
@@ -53,11 +54,6 @@ class DatabaseBackupManager constructor(
         private const val DATABASE_NAME = "app_database"
         private const val BACKUP_PREFIX = "ShareCenter_Backup"
         private const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000
-
-        // Keep in sync with the SQLDelight schema version (see DatabaseFactory).
-        // A backup whose user_version is higher than this would require a
-        // downgrade, which we cannot do — such backups are rejected.
-        private const val CURRENT_SCHEMA_VERSION = cut.the.crap.data.db.CURRENT_SCHEMA_VERSION
     }
 
     /**
