@@ -24,3 +24,6 @@ __pycache__/
 # Claude Code skill files
 .agents/
 skills-lock.json
+
+# local credentials / API dev scratch (never commit or upload)
+.secrets/
