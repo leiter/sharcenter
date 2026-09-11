@@ -59,6 +59,7 @@ navigation-compose = { group = "org.jetbrains.androidx.navigation", name = "navi
 # single import changing, and on Android it still resolves to the real androidx implementation.
 lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleCompose" }
 lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "lifecycleCompose" }
+lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleCompose" }
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }
 # Multiplatform Koin: the module DSL, the common `viewModel`/`viewModelOf` bindings (which

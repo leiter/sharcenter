@@ -30,6 +30,8 @@ import cut.the.crap.platform.PlatformUri
 import cut.the.crap.platform.Sharer
 import cut.the.crap.platform.UrlOpener
 import okio.Path.Companion.toPath
+import cut.the.crap.platform.ReminderScheduler
+import cut.the.crap.platform.UnsupportedReminderScheduler
 import org.koin.compose.KoinApplication
 import org.koin.dsl.module
 import java.nio.file.Files
@@ -57,6 +59,8 @@ class CampaignScreensTest {
 
     private fun testModules(urlOpener: UrlOpener) = module {
         single<Notifier> { FlowNotifier() }
+        // The detail screen asks whether to offer reminders; desktop's real answer is no.
+        single<ReminderScheduler> { UnsupportedReminderScheduler }
         single { urlOpener }
     }
 
@@ -245,6 +249,7 @@ class CampaignScreensTest {
 
     private fun detailManageModules(repository: CampaignRepository, urlOpener: UrlOpener) = module {
         single<Notifier> { FlowNotifier() }
+        single<ReminderScheduler> { UnsupportedReminderScheduler }
         single { urlOpener }
         single<CampaignRepository> { repository }
     }

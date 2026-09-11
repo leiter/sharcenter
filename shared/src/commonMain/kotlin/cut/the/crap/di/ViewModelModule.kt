@@ -1,9 +1,14 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package cut.the.crap.di
 
 import cut.the.crap.data.rest.YouTubePreviewViewModel
 import cut.the.crap.ui.components.ColorHistoryViewModel
 import cut.the.crap.ui.content.campaign.CampaignDetailViewModel
 import cut.the.crap.ui.content.campaign.CampaignListViewModel
+import cut.the.crap.data.preferences.CampaignHiddenPostsRepository
+import cut.the.crap.ui.NavigationRequests
+import cut.the.crap.ui.content.reminder.ActionRemindersViewModel
 import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.posts.PostsViewModel
 import cut.the.crap.ui.content.settings.BackupViewModel
@@ -44,4 +49,19 @@ val viewModelModule = module {
     // The campaign id comes from the navigation route, not from the graph, so it is passed in
     // rather than resolved — hence the explicit factory over viewModelOf.
     viewModel { (campaignId: String) -> CampaignDetailViewModel(get(), campaignId) }
+    // Explicit factory: hidden posts arrive as a flow (testable without DataStore), and the clock
+    // and time zone keep their defaults.
+    viewModel {
+        ActionRemindersViewModel(
+            repository = get(),
+            campaignRepository = get(),
+            dispatcher = get(),
+            scheduleSync = get(),
+            notifier = get(),
+            hiddenPostKeys = get<CampaignHiddenPostsRepository>().hiddenKeys,
+        )
+    }
+
+    // App-wide, so the Android launcher and App() see the same pending route.
+    single { NavigationRequests() }
 }

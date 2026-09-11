@@ -2,6 +2,7 @@ package cut.the.crap
 
 
 import android.app.Application
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,8 +21,11 @@ import cut.the.crap.data.preferences.initPreferencesPath
 import cut.the.crap.data.rest.YouTubeMetadataBackfiller
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.ShareLinksTask
+import cut.the.crap.reminder.ACTION_REMINDERS_ROUTE
+import cut.the.crap.reminder.AndroidReminderNotifier
 import cut.the.crap.reminder.ReminderScheduleSync
 import cut.the.crap.ui.App
+import cut.the.crap.ui.NavigationRequests
 
 import cut.the.crap.data.rest.networkModule
 import cut.the.crap.data.rest.repositoryModule
@@ -106,6 +110,8 @@ class MainActivity : ComponentActivity() {
 
     val reminderScheduleSync: ReminderScheduleSync by inject()
 
+    val navigationRequests: NavigationRequests by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
 
         enableEdgeToEdge()
@@ -142,6 +148,23 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // A recreated activity (rotation, process restore) already navigated for this intent.
+        if (savedInstanceState == null) handleOpenRoute(intent)
+
         setContent { App() }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleOpenRoute(intent)
+    }
+
+    /**
+     * Opens the screen a reminder notification's tap asked for. Only known routes: this activity is
+     * the exported launcher, so any app can put extras on its intent.
+     */
+    private fun handleOpenRoute(intent: Intent?) {
+        val route = intent?.getStringExtra(AndroidReminderNotifier.EXTRA_OPEN_ROUTE) ?: return
+        if (route == ACTION_REMINDERS_ROUTE) navigationRequests.request(route)
     }
 }

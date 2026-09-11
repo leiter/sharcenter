@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.savedstate.read
+import cut.the.crap.reminder.ACTION_REMINDERS_ROUTE
 import cut.the.crap.ui.components.api.Action
 import cut.the.crap.ui.content.campaign.CampaignDetailScreen
 import cut.the.crap.ui.content.campaign.CampaignDetailViewModel
@@ -18,6 +19,7 @@ import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.posts.PostsScreen
 import cut.the.crap.ui.content.posts.PostsViewModel
 import cut.the.crap.ui.content.posts.updateContentItemSortOrders
+import cut.the.crap.ui.content.reminder.ActionRemindersScreen
 import cut.the.crap.ui.content.settings.BackupManagementScreen
 import cut.the.crap.ui.content.settings.ImportExportScreen
 import cut.the.crap.ui.content.settings.SettingsScreen
@@ -113,6 +115,11 @@ fun NavigationGraph(
                 campaign = detailViewModel.state.collectAsState().value.campaign,
                 onCreateDrafts = { texts -> postsViewModel.createDraftPosts(texts) }
             )
+        }
+        // Reached from the campaign detail screen, which hides the entry where the platform has no
+        // reminder support, and from a reminder notification's tap (App's NavigationRequests).
+        composable(ACTION_REMINDERS_ROUTE) {
+            ActionRemindersScreen(navController = navController)
         }
     }
 }

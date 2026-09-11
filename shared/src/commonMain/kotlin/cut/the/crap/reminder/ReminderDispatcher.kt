@@ -5,7 +5,6 @@ package cut.the.crap.reminder
 import cut.the.crap.data.domain.ActionReminder
 import cut.the.crap.data.domain.ActionReminderRepository
 import cut.the.crap.data.domain.ReminderSchedule
-import cut.the.crap.data.preferences.campaignPostHideKey
 import cut.the.crap.intent.FacebookIntent
 import cut.the.crap.intent.TwitterIntent
 import cut.the.crap.platform.ReminderNotification
@@ -60,9 +59,7 @@ class ReminderDispatcher(
         hidden: Set<String>,
         spendOnce: Boolean,
     ): Boolean {
-        val visible = reminder.posts.filter {
-            campaignPostHideKey(reminder.campaignId, reminder.countryCode, it.id) !in hidden
-        }
+        val visible = reminder.visiblePosts(hidden)
         // Every post hidden: nothing worth showing. Rotation is left alone so un-hiding resumes it.
         if (visible.isEmpty()) return false
 

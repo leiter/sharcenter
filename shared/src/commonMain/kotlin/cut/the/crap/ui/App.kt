@@ -34,6 +34,7 @@ import cut.the.crap.ui.content.links.LinksViewModel
 import cut.the.crap.ui.content.posts.PostsViewModel
 import cut.the.crap.ui.content.settings.SettingsViewModel
 import cut.the.crap.ui.theme.MyAppTheme
+import kotlinx.coroutines.flow.filterNotNull
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -60,6 +61,7 @@ fun App() {
     val notifier: Notifier = koinInject()
     val backupManager: BackupManager = koinInject()
     val appRestarter: AppRestarter = koinInject()
+    val navigationRequests: NavigationRequests = koinInject()
 
     val settings by settingsViewModel.settings.collectAsState()
 
@@ -69,6 +71,16 @@ fun App() {
         val scope = rememberCoroutineScope()
         val focusManager = LocalFocusManager.current
         val snackbarHostState = remember { SnackbarHostState() }
+
+        // Routes requested from outside the UI (a reminder notification's tap). Effects run after
+        // the composition that set up the NavHost's graph, so navigating here is safe even for a
+        // request that was already pending on a cold start.
+        LaunchedEffect(navigationRequests) {
+            navigationRequests.pending.filterNotNull().collect { route ->
+                navController.navigate(route) { launchSingleTop = true }
+                navigationRequests.consume(route)
+            }
+        }
 
         // Render Notifier messages on the targets that have no system Toast. Android's binding is a
         // plain Notifier (the OS draws the Toast above the app), so this is a no-op there; iOS and

@@ -96,6 +96,11 @@ import cut.the.crap.shared.resources.share_edit_dialog_save
 import cut.the.crap.ui.components.BottomNavigationBar
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import androidx.compose.material.icons.filled.NotificationsActive
+import cut.the.crap.data.rest.campaign.CampaignRepositoryImpl
+import cut.the.crap.platform.ReminderScheduler
+import cut.the.crap.reminder.ACTION_REMINDERS_ROUTE
+import cut.the.crap.shared.resources.reminders_open_cd
 import org.koin.compose.koinInject
 
 /**
@@ -115,6 +120,7 @@ fun CampaignDetailScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val urlOpener: UrlOpener = koinInject()
+    val reminderScheduler: ReminderScheduler = koinInject()
     val campaign = state.campaign
 
     Scaffold(
@@ -130,6 +136,16 @@ fun CampaignDetailScreen(
                     }
                 },
                 actions = {
+                    // Reminders are made from the bundled campaign only for now (spec R9), and not
+                    // at all where the platform cannot run them.
+                    if (reminderScheduler.isSupported && campaignId == CampaignRepositoryImpl.BUNDLED_CAMPAIGN_ID) {
+                        IconButton(onClick = { navController.navigate(ACTION_REMINDERS_ROUTE) }) {
+                            Icon(
+                                imageVector = Icons.Filled.NotificationsActive,
+                                contentDescription = stringResource(Res.string.reminders_open_cd),
+                            )
+                        }
+                    }
                     if (campaign != null && campaign.countriesWithPosts.isNotEmpty()) {
                         IconButton(onClick = { navController.navigate("campaign_composer/$campaignId") }) {
                             Icon(
