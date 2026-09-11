@@ -135,9 +135,11 @@ class AndroidReminderNotifier(private val context: Context) : ReminderNotifier {
         /** Extra on the launcher intent naming the route `App()` should navigate to. */
         const val EXTRA_OPEN_ROUTE = "cut.the.crap.reminder.OPEN_ROUTE"
 
+        /** Tag of every reminder notification; the id is the reminder's. */
+        const val NOTIFICATION_TAG = "action_reminder"
+
         private const val TAG = "AndroidReminderNotifier"
         private const val CHANNEL_ID = "campaign_reminders"
-        private const val NOTIFICATION_TAG = "action_reminder"
         private const val PENDING_FLAGS = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
 
         private const val SLOT_BODY = 0
