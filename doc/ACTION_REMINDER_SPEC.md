@@ -1,6 +1,7 @@
 # Action Reminder Spec — Scheduled Campaign Posting Reminders
 
-**Status:** Specification only. No code yet.
+**Status:** §8 steps 0–4 implemented on Android (branch `feature/action-reminders`). Step 5 —
+instrumented tests and the on-device check — still open.
 **Depends on:** `CAMPAIGN_SCHEMA_SPEC.md` — the campaign payload and `CampaignPost` model.
 **Scope:** `:shared` (commonMain + androidMain) and `:app` (DI, manifest, one activity). Android
 first; desktop and iOS declare the feature unsupported (§5.3).
@@ -26,7 +27,7 @@ one tap opens X or Facebook with the text already in place.
 | R3 | **Both recurring and one-off schedules.** | Recurring (weekdays + time window) is the habit; one-off (date + time window) is the "there is a debate on Thursday" case. |
 | R4 | **Each reminder rotates through its posts.** | X rejects a status whose text duplicates an earlier one, and the same post every day reads as spam anyway. Hidden posts (`CampaignHiddenPostsRepository`) are skipped. |
 | R5 | **Posts are snapshotted into the reminder row.** | `CampaignRepositoryImpl` caches only in memory, so a background worker would find nothing and would need the network at fire time. The snapshot makes the worker offline and deterministic; it is refreshed opportunistically (§3.2). |
-| R6 | **Notification buttons launch their target directly.** | Android 12+ forbids notification "trampolines" (a receiver/service that then starts an activity). The X button's `PendingIntent` *is* the X intent; the Facebook button targets a tiny activity of ours because it must copy the text first (§5.2). |
+| R6 | **Both notification buttons open an invisible activity of ours — never a receiver.** | Android 12+ forbids notification "trampolines" through a receiver or service; an activity is allowed. Going through one is also the only way to dismiss the notification once a button was tapped (a `PendingIntent` straight to X would leave it showing), and to copy the text first for Facebook (§5.2). |
 | R7 | **WorkManager, inexact, one periodic dispatcher.** | "Sometime between 18:00 and 20:00" does not need exact alarms, which would cost the `SCHEDULE_EXACT_ALARM` permission and Play review friction. One periodic worker that asks "what is due?" survives reboots and app updates on its own and keeps all timing logic in testable common code. |
 | R8 | **Rotation advances when the notification is shown, not when the user acts.** | We cannot observe whether a post was actually published. Advancing on show keeps the next reminder fresh without pretending to track completion. |
 | R9 | **Abu-Safiya only in v1; the schema is campaign-agnostic.** | `campaignId` is stored per row, so opening this to other campaigns later is a UI change, not a migration. |
@@ -221,26 +222,26 @@ platform side only wraps them.
 | `AndroidReminderScheduler` | shared/androidMain | `WorkManager.enqueueUniquePeriodicWork` |
 | `ReminderWorker` | shared/androidMain | `CoroutineWorker` + `KoinComponent`; calls `dispatcher.dispatch(Clock.System.now())` |
 | `AndroidReminderNotifier` | shared/androidMain | `NotificationCompat`; creates the channel; `canNotify` = `areNotificationsEnabled()` |
-| `ReminderFacebookActivity` | :app, next to `ShareActivity` | Transparent, `exported=false`: copies text via `Clipboard`, opens `FacebookIntent.SharePost` via `UrlOpener`, `finish()` |
+| `ReminderActionActivity` | shared/androidMain, declared in its own manifest | Translucent, `exported=false`, own task affinity: copies the text when asked (Facebook), opens the URL via `UrlOpener` (native app when installed), cancels the notification, `finish()` |
 | Permission requester | shared/androidMain | `ActivityResultContracts.RequestPermission(POST_NOTIFICATIONS)` on API 33+; granted below |
 | DI | `PlatformModule.kt` | bind scheduler + notifier; dispatcher + repository in the common modules |
 
-- **X button:** `PendingIntent.getActivity` wrapping the same `ACTION_VIEW` intent
-  `AndroidUrlOpener` builds. Extract that intent construction (package pin when X is installed)
-  into a shared helper so both use one code path.
-- **Body tap:** `PendingIntent` to `MainActivity` with an extra naming the route. `MainActivity`
+- **Buttons:** `PendingIntent.getActivity` to `ReminderActionActivity` carrying the prepared URL,
+  the preferred app and, for Facebook, the text to copy (R6).
+- **Body tap:** `PendingIntent` to the app's launch intent — resolved through the package manager,
+  because `:shared` cannot see `MainActivity` — with an extra naming the route. `MainActivity`
   has no intent handling today; add `onCreate`/`onNewIntent` handling that publishes to a small
   Koin-held `NavigationRequests` flow which `App()` collects and forwards to its `NavController` —
   this keeps `App()`'s signature unchanged for desktop and iOS.
 - `PendingIntent` flags: `FLAG_IMMUTABLE | FLAG_UPDATE_CURRENT`; request codes unique per
   reminder × action.
-- **Manifest:** `POST_NOTIFICATIONS`; the Facebook activity. No `RECEIVE_BOOT_COMPLETED` — WorkManager
+- **Manifest:** `POST_NOTIFICATIONS` in `:app`; `ReminderActionActivity` in `:shared`'s androidMain
+  manifest, next to its class. No `RECEIVE_BOOT_COMPLETED` — WorkManager
   declares its own.
-- **Small icon:** none exists (`app/src/main/res` has only mipmaps). Add a monochrome vector
-  `ic_stat_reminder`.
+- **Small icon:** none existed (`app/src/main/res` has only mipmaps). A monochrome vector
+  `ic_stat_reminder` lives in `:shared`'s androidMain resources, where the notifier can reach it.
 - **Dependency:** `androidx.work:work-runtime-ktx` in `shared` androidMain, `work-testing` for
-  androidTest. 2.9.0 is already in the local Gradle cache; pick the newest release that still builds
-  on AGP 8.10.1 — most bumps in this project are gated on the AGP 9 migration.
+  androidTest — 2.11.2, the newest stable release, which builds on AGP 8.10.1.
 
 ### 5.3 Desktop and iOS
 
