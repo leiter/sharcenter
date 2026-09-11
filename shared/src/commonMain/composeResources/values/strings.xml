@@ -683,4 +683,11 @@
     <string name="identity_notice_not_authenticated">The server did not accept this device's key.</string>
     <string name="identity_notice_network">Could not reach the server.</string>
     <string name="identity_notice_server">The server could not handle that. Try again later.</string>
+
+    <!-- Action reminders (doc/ACTION_REMINDER_SPEC.md) -->
+    <string name="reminder_notification_title">Your campaign post is ready (%1$s)</string>
+    <string name="reminder_channel_name">Campaign reminders</string>
+    <string name="reminder_channel_description">Reminders to publish a prepared campaign post at the times you chose.</string>
+    <string name="reminder_action_post_x">Post on X</string>
+    <string name="reminder_action_post_facebook">Post on Facebook</string>
 </resources>

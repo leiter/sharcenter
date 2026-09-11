@@ -135,6 +135,8 @@ kotlin {
             // The FilePicker actual registers an activity-result contract; that lives here,
             // not in Compose itself.
             implementation(libs.androidx.activity.compose)
+            // Background dispatch of action reminders (doc/ACTION_REMINDER_SPEC.md §5.2).
+            implementation(libs.androidx.work.runtime.ktx)
         }
         val desktopMain by getting {
             dependencies {

@@ -21,7 +21,10 @@ import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.JobQueueRepositoryImpl
 import cut.the.crap.data.rest.tiktok.TikTokRepository
 import cut.the.crap.data.rest.tiktok.TikTokRepositoryImpl
+import cut.the.crap.reminder.ReminderDispatcher
+import cut.the.crap.reminder.ReminderScheduleSync
 import cut.the.crap.tools.UrlResolver
+import kotlinx.coroutines.flow.first
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
@@ -61,4 +64,12 @@ val repositoryModule = module {
     factory { SettingsRepository(get(named(SETTINGS_STORE))) }
     factory { ColorHistoryRepository(get(named(COLOR_HISTORY_STORE))) }
     factory { CampaignHiddenPostsRepository(get(named(CAMPAIGN_HIDDEN_POSTS_STORE))) }
+
+    // Action reminders (doc/ACTION_REMINDER_SPEC.md §4.3). The platform supplies the scheduler and
+    // notifier; hidden posts reach the dispatcher as a function so it is testable without DataStore.
+    factory {
+        val hiddenPosts = get<CampaignHiddenPostsRepository>()
+        ReminderDispatcher(get(), get(), { hiddenPosts.hiddenKeys.first() })
+    }
+    factoryOf(::ReminderScheduleSync)
 }

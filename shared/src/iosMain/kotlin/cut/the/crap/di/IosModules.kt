@@ -38,7 +38,11 @@ import cut.the.crap.platform.IosSharer
 import cut.the.crap.platform.IosUrlOpener
 import cut.the.crap.platform.LoginFlow
 import cut.the.crap.platform.Notifier
+import cut.the.crap.platform.ReminderNotifier
+import cut.the.crap.platform.ReminderScheduler
 import cut.the.crap.platform.Sharer
+import cut.the.crap.platform.UnsupportedReminderNotifier
+import cut.the.crap.platform.UnsupportedReminderScheduler
 import cut.the.crap.platform.UrlOpener
 import cut.the.crap.tools.defaultIoDispatcher
 import org.koin.core.module.dsl.singleOf
@@ -52,6 +56,9 @@ import org.koin.dsl.module
  */
 val iosPlatformModule = module {
     single<Notifier> { IosNotifier() }
+    // Not implemented on iOS yet (spec §5.3), so action reminders are declared unsupported and hidden.
+    single<ReminderScheduler> { UnsupportedReminderScheduler }
+    single<ReminderNotifier> { UnsupportedReminderNotifier }
     single<FileAccess> { IosFileAccess() }
     single<Clipboard> { IosClipboard() }
     single<UrlOpener> { IosUrlOpener() }

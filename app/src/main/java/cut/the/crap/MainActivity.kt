@@ -20,6 +20,7 @@ import cut.the.crap.data.preferences.initPreferencesPath
 import cut.the.crap.data.rest.YouTubeMetadataBackfiller
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.ShareLinksTask
+import cut.the.crap.reminder.ReminderScheduleSync
 import cut.the.crap.ui.App
 
 import cut.the.crap.data.rest.networkModule
@@ -103,6 +104,8 @@ class MainActivity : ComponentActivity() {
 
     val youTubeMetadataBackfiller: YouTubeMetadataBackfiller by inject()
 
+    val reminderScheduleSync: ReminderScheduleSync by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
 
         enableEdgeToEdge()
@@ -117,6 +120,12 @@ class MainActivity : ComponentActivity() {
         // Backfill YouTube metadata for older links that were saved without it
         lifecycleScope.launch {
             youTubeMetadataBackfiller.backfillMissing()
+        }
+
+        // Make sure the reminder job is scheduled exactly while some reminder is enabled — also
+        // re-establishes it after a backup restore brought reminders back.
+        lifecycleScope.launch {
+            reminderScheduleSync.sync()
         }
 
         // DEV: Submit test job to job queue server on app start (debug builds only)

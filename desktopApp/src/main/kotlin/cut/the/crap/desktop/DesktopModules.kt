@@ -42,7 +42,11 @@ import cut.the.crap.platform.LoginFlow
 import cut.the.crap.platform.IdentityKeyStore
 import cut.the.crap.platform.JvmCryptoProvider
 import cut.the.crap.platform.Notifier
+import cut.the.crap.platform.ReminderNotifier
+import cut.the.crap.platform.ReminderScheduler
 import cut.the.crap.platform.Sharer
+import cut.the.crap.platform.UnsupportedReminderNotifier
+import cut.the.crap.platform.UnsupportedReminderScheduler
 import cut.the.crap.platform.UrlOpener
 import kotlinx.coroutines.Dispatchers
 import org.koin.core.module.dsl.singleOf
@@ -81,6 +85,9 @@ private fun appDataDirectory(): File {
  */
 val desktopPlatformModule = module {
     single<Notifier> { DesktopNotifier() }
+    // No background execution here, so action reminders are declared unsupported and hidden.
+    single<ReminderScheduler> { UnsupportedReminderScheduler }
+    single<ReminderNotifier> { UnsupportedReminderNotifier }
     single<FileAccess> { DesktopFileAccess() }
     single<Clipboard> { DesktopClipboard() }
     single<UrlOpener> { DesktopUrlOpener() }

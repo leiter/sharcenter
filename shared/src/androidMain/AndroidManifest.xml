@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Reminder notification buttons (doc/ACTION_REMINDER_SPEC.md §5.2). Invisible and
+             out of the app's task, so opening X or Facebook does not bring the app forward. -->
+        <activity
+            android:name="cut.the.crap.reminder.ReminderActionActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+    </application>
+
+</manifest>

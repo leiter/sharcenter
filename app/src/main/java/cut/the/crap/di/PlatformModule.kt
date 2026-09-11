@@ -16,8 +16,12 @@ import cut.the.crap.platform.IdentityKeyStore
 import cut.the.crap.platform.JvmCryptoProvider
 import cut.the.crap.platform.LoginFlow
 import cut.the.crap.platform.Notifier
+import cut.the.crap.platform.ReminderNotifier
+import cut.the.crap.platform.ReminderScheduler
 import cut.the.crap.platform.Sharer
 import cut.the.crap.platform.UrlOpener
+import cut.the.crap.reminder.AndroidReminderNotifier
+import cut.the.crap.reminder.AndroidReminderScheduler
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -42,6 +46,8 @@ val platformModule = module {
     single<Sharer> { AndroidSharer(androidContext()) }
     single<LoginFlow> { AndroidLoginFlow(androidContext()) }
     single<AppRestarter> { AndroidAppRestarter(androidContext()) }
+    single<ReminderScheduler> { AndroidReminderScheduler(androidContext()) }
+    single<ReminderNotifier> { AndroidReminderNotifier(androidContext()) }
 
     // Identity key material. The seed is wrapped by a non-exportable Android Keystore
     // key and kept out of the app database, so DatabaseBackupManager's daily copy into
