@@ -12,6 +12,10 @@ import cut.the.crap.shared.resources.links_import_imported
 import cut.the.crap.shared.resources.links_import_no_valid_items
 import cut.the.crap.shared.resources.links_import_skipped
 import cut.the.crap.shared.resources.links_snackbar_deleted
+import cut.the.crap.shared.resources.share_toast_handle_exists
+import cut.the.crap.shared.resources.share_toast_handle_saved
+import cut.the.crap.shared.resources.share_toast_link_resolved_saved
+import cut.the.crap.shared.resources.share_toast_link_saved
 import cut.the.crap.shared.resources.links_snackbar_export_failed
 import cut.the.crap.shared.resources.links_snackbar_favorited
 import cut.the.crap.shared.resources.links_snackbar_import_failed
@@ -48,6 +52,16 @@ suspend fun LinksSnackbar.localizedText(): String = when (this) {
 
     is LinksSnackbar.SubmitFailed ->
         getString(Res.string.links_snackbar_submit_failed, error.localizedText())
+
+    // Manual add — reuses the share-sheet's own wording for the same outcomes.
+    is LinksSnackbar.LinkAdded -> getString(
+        if (resolved) Res.string.share_toast_link_resolved_saved else Res.string.share_toast_link_saved,
+    )
+
+    is LinksSnackbar.HandleAdded -> getString(
+        if (alreadyExisted) Res.string.share_toast_handle_exists else Res.string.share_toast_handle_saved,
+        handle,
+    )
 
     // Export
     is LinksSnackbar.ExportSucceeded ->

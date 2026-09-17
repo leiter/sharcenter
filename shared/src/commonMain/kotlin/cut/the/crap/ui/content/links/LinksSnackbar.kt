@@ -19,6 +19,11 @@ sealed interface LinksSnackbar {
     data class Submitted(val count: Int) : LinksSnackbar
     data class SubmitFailed(val error: AppError) : LinksSnackbar
 
+    // Manual add (paste-a-link dialog)
+    /** [resolved] mirrors the share-sheet feedback: the URL was expanded from a redirect/short link. */
+    data class LinkAdded(val resolved: Boolean) : LinksSnackbar
+    data class HandleAdded(val handle: String, val alreadyExisted: Boolean) : LinksSnackbar
+
     // Export
     data class ExportSucceeded(val count: Int) : LinksSnackbar
     data object ExportNoItemsSelected : LinksSnackbar

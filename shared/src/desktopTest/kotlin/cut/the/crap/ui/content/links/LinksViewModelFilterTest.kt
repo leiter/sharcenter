@@ -9,6 +9,8 @@ import cut.the.crap.fake.FakeJobQueueRepository
 import cut.the.crap.fake.FakeKeywordRepository
 import cut.the.crap.fake.FakeMessageRepository
 import cut.the.crap.fake.FakeYouTubeRepository
+import cut.the.crap.share.GenericSharedLinkHandler
+import cut.the.crap.share.SharedUrlProcessor
 import cut.the.crap.testutils.MainDispatcherRule
 import cut.the.crap.testutils.TestData
 import cut.the.crap.tools.DescriptionParser
@@ -79,6 +81,9 @@ class LinksViewModelFilterTest {
             keywordRepository = keywordRepository,
             jobQueueRepository = jobQueueRepository,
             youTubeRepository = youTubeRepository,
+            sharedUrlProcessor = SharedUrlProcessor(
+                contentLinkRepository, keywordRepository, listOf(GenericSharedLinkHandler()),
+            ),
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             ioDispatcher = mainDispatcherRule.testDispatcher
         )

@@ -19,6 +19,7 @@ data class LinksScreenState(
     val textInputExpanded: Boolean = false,
     val showEditDialog: MyEditDialogStyle? = null,
     val showCommentQuoteDialog: ContentLink? = null,  // If not null, shows the comment/quote dialog for this link
+    val showAddLinkDialog: Boolean = false,
     val showDateFilterSheet: Boolean = false,
     val selectedDateType: DateType = DateType.START,  // Track which date tab to show
     val startTime: Long? = null,

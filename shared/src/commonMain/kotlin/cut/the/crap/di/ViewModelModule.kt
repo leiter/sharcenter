@@ -38,6 +38,7 @@ val viewModelModule = module {
             keywordRepository = get(),
             jobQueueRepository = get(),
             youTubeRepository = get(),
+            sharedUrlProcessor = get(),
         )
     }
     viewModelOf(::PostsViewModel)

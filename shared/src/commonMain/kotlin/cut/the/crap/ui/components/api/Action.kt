@@ -154,6 +154,11 @@ sealed interface ListAction : Action {
     /** Add [tags] of the given [type] to every currently selected item. */
     data class TagSelected(val type: ChipsType, val tags: List<String>) : ListAction
     data object FireJob : ListAction
+
+    /** Opens or closes the "paste a link" dialog (manual entry — see [AddLink]). */
+    data class ShowAddLinkDialog(val show: Boolean) : ListAction
+    /** Saves [text] as a link, or — if it's an `@handle` — to the keyword pool instead. */
+    data class AddLink(val text: String) : ListAction
 }
 
 // ========== File Actions ==========

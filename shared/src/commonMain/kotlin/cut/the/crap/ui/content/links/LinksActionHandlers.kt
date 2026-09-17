@@ -7,6 +7,7 @@ import cut.the.crap.ui.components.DateType
 import cut.the.crap.ui.components.FilterState
 import cut.the.crap.ui.components.MyEditDialogStyle
 import cut.the.crap.data.rest.task.ShareLinksTask
+import cut.the.crap.share.ResolveResult
 import cut.the.crap.ui.components.api.*
 import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.ensureTrailingSpace
@@ -493,6 +494,36 @@ internal fun LinksViewModel.handleListAction(action: ListAction) {
                         }
                     }
                 }
+            }
+        }
+
+        is ListAction.ShowAddLinkDialog -> internalScreenState.update {
+            it.copy(showAddLinkDialog = action.show)
+        }
+
+        is ListAction.AddLink -> {
+            val text = action.text.trim()
+            if (text.isEmpty()) return
+            internalScreenState.update { it.copy(showAddLinkDialog = false) }
+            viewModelScope.launch {
+                // Reuses exactly the pipeline the share sheet drives — see SharedUrlProcessor's
+                // own doc comment — so a pasted @handle lands in the keyword pool exactly as it
+                // would coming from another app, instead of getting saved as a junk "link".
+                val handle = sharedUrlProcessor.handleToSaveInstead(text)
+                if (handle != null) {
+                    val result = sharedUrlProcessor.saveHandle(handle)
+                    emitSnackBarMessage(LinksSnackbar.HandleAdded(handle, result.alreadyExisted))
+                    return@launch
+                }
+                val ready = when (val resolved = sharedUrlProcessor.resolve(text)) {
+                    is ResolveResult.Ready -> resolved
+                    // No interactive sign-in prompt from a paste dialog: fall back to saving the
+                    // raw text unresolved, the same fallback SharedUrlProcessor documents for a
+                    // caller that declines to prompt for auth.
+                    is ResolveResult.AuthRequired -> ResolveResult.Ready(resolved.url, wasResolved = false)
+                }
+                sharedUrlProcessor.saveLink(ready.url, wasResolved = ready.wasResolved)
+                emitSnackBarMessage(LinksSnackbar.LinkAdded(ready.wasResolved))
             }
         }
 

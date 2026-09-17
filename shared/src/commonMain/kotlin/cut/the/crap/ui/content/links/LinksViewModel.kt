@@ -17,6 +17,7 @@ import cut.the.crap.data.rest.YouTubeRepository
 import cut.the.crap.data.rest.YouTubeUrlParser
 import cut.the.crap.data.rest.task.JobQueueRepository
 import cut.the.crap.data.rest.task.ShareLinksTask
+import cut.the.crap.share.SharedUrlProcessor
 import cut.the.crap.tools.DescriptionParser
 import cut.the.crap.tools.LinkMetadata
 import cut.the.crap.tools.isBlueskyUrl
@@ -59,6 +60,10 @@ class LinksViewModel constructor(
     internal val keywordRepository: cut.the.crap.data.domain.KeywordRepository,
     internal val jobQueueRepository: JobQueueRepository,
     internal val youTubeRepository: YouTubeRepository,
+    // Reuses the exact "a URL arrived" pipeline the share sheet drives (redirect resolution,
+    // @handle detection, enrichment) so manually pasting a link behaves identically — see
+    // ListAction.AddLink in LinksActionHandlers.kt.
+    internal val sharedUrlProcessor: SharedUrlProcessor,
     // Injected rather than hardcoded, for two reasons: `Dispatchers.IO` does not exist in
     // commonMain (WP6 moves this class there), and hardcoding `Dispatchers.Default` races
     // `advanceUntilIdle` in tests, which made the suite intermittently flaky.

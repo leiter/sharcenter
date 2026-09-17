@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -44,8 +45,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import cut.the.crap.shared.resources.Res
 import cut.the.crap.shared.resources.app_name
+import cut.the.crap.shared.resources.links_add_link_cd
 import cut.the.crap.data.domain.ContentLink
+import cut.the.crap.platform.Clipboard
 import cut.the.crap.tools.LinkMetadata
+import cut.the.crap.tools.urlSchemeAndHost
 //import cut.the.crap.mockedLinkItems
 import cut.the.crap.ui.components.BottomNavigationBar
 import cut.the.crap.ui.components.DateFilterBottomSheet
@@ -65,6 +69,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +85,7 @@ fun LinkScreen(
     val snackBarHostState = remember { SnackbarHostState() }
     val stateList = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    val clipboard: Clipboard = koinInject()
 
     // Extract screen state early for use in action handler
     val currentScreenState = screenState.collectAsState().value
@@ -176,6 +183,24 @@ fun LinkScreen(
             onQuote = { link, quote ->
                 actionHandler(ContentLinkAction.CreateQuote(link, quote))
             }
+        )
+    }
+
+    // Show Add Link Dialog — manual entry for a link that never went through the share sheet.
+    if (currentScreenState.showAddLinkDialog) {
+        // Pre-filled only when the clipboard actually looks like something worth pasting (a real
+        // URL, or an @handle) — otherwise the field opens empty rather than showing the user's
+        // last-copied random text back at them.
+        val clipped = remember(currentScreenState.showAddLinkDialog) { clipboard.paste()?.trim().orEmpty() }
+        val initialText = if (clipped.isNotEmpty() && (urlSchemeAndHost(clipped) != null || clipped.startsWith("@"))) {
+            clipped
+        } else {
+            ""
+        }
+        AddLinkDialog(
+            initialText = initialText,
+            onDismiss = { actionHandler(ListAction.ShowAddLinkDialog(false)) },
+            onSave = { text -> actionHandler(ListAction.AddLink(text)) },
         )
     }
 
@@ -330,6 +355,11 @@ fun LinkScreen(
                 MySpeedDialFab(
                     action = actionHandler,
                     actions = listOf(
+                        MenuItem(
+                            title = Res.string.links_add_link_cd,
+                            icon = Icons.Filled.Link,
+                            actionPayload = ListAction.ShowAddLinkDialog(true)
+                        ),
                         MenuItem(
                             title = Res.string.app_name,
                             icon = Icons.Filled.ArrowUpward,

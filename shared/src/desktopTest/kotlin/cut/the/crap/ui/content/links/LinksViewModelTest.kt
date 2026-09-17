@@ -12,6 +12,8 @@ import cut.the.crap.fake.FakeJobQueueRepository
 import cut.the.crap.fake.FakeKeywordRepository
 import cut.the.crap.fake.FakeMessageRepository
 import cut.the.crap.fake.FakeYouTubeRepository
+import cut.the.crap.share.GenericSharedLinkHandler
+import cut.the.crap.share.SharedUrlProcessor
 import cut.the.crap.testutils.MainDispatcherRule
 import cut.the.crap.testutils.TestData
 import cut.the.crap.ui.components.api.ContentLinkAction
@@ -74,6 +76,9 @@ class LinksViewModelTest {
             keywordRepository = keywordRepository,
             jobQueueRepository = jobQueueRepository,
             youTubeRepository = youTubeRepository,
+            sharedUrlProcessor = SharedUrlProcessor(
+                contentLinkRepository, keywordRepository, listOf(GenericSharedLinkHandler()),
+            ),
             defaultDispatcher = testDispatcher,
             ioDispatcher = testDispatcher
         )
@@ -304,6 +309,9 @@ class LinksViewModelTest {
             keywordRepository = keywordRepository,
             jobQueueRepository = jobQueueRepository,
             youTubeRepository = youTubeRepository,
+            sharedUrlProcessor = SharedUrlProcessor(
+                contentLinkRepository, keywordRepository, listOf(GenericSharedLinkHandler()),
+            ),
             defaultDispatcher = testDispatcher,
             ioDispatcher = testDispatcher
         )
@@ -370,6 +378,9 @@ class LinksViewModelTest {
             keywordRepository = keywordRepository,
             jobQueueRepository = jobQueueRepository,
             youTubeRepository = youTubeRepository,
+            sharedUrlProcessor = SharedUrlProcessor(
+                contentLinkRepository, keywordRepository, listOf(GenericSharedLinkHandler()),
+            ),
             defaultDispatcher = testDispatcher,
             ioDispatcher = testDispatcher
         )
@@ -443,6 +454,9 @@ class LinksViewModelTest {
             keywordRepository = keywordRepository,
             jobQueueRepository = jobQueueRepository,
             youTubeRepository = youTubeRepository,
+            sharedUrlProcessor = SharedUrlProcessor(
+                contentLinkRepository, keywordRepository, listOf(GenericSharedLinkHandler()),
+            ),
             defaultDispatcher = testDispatcher,
             ioDispatcher = testDispatcher
         )
@@ -498,6 +512,9 @@ class LinksViewModelTest {
             keywordRepository = keywordRepository,
             jobQueueRepository = jobQueueRepository,
             youTubeRepository = youTubeRepository,
+            sharedUrlProcessor = SharedUrlProcessor(
+                contentLinkRepository, keywordRepository, listOf(GenericSharedLinkHandler()),
+            ),
             defaultDispatcher = testDispatcher,
             ioDispatcher = testDispatcher
         )
@@ -527,5 +544,54 @@ class LinksViewModelTest {
 
         collectListJob.cancel()
         collectScreenJob.cancel()
+    }
+
+    // ========== Add Link Dialog (manual entry — no share sheet involved) ==========
+
+    @Test
+    fun `ShowAddLinkDialog toggles screenState`() = runTest(testDispatcher) {
+        advanceUntilIdle()
+
+        viewModel.consumeAction(ListAction.ShowAddLinkDialog(true))
+        advanceUntilIdle()
+        assertThat(viewModel.internalScreenState.value.showAddLinkDialog).isTrue()
+
+        viewModel.consumeAction(ListAction.ShowAddLinkDialog(false))
+        advanceUntilIdle()
+        assertThat(viewModel.internalScreenState.value.showAddLinkDialog).isFalse()
+    }
+
+    @Test
+    fun `AddLink saves the pasted text as a link, closes the dialog and reports success`() =
+        runTest(testDispatcher) {
+            advanceUntilIdle()
+            viewModel.consumeAction(ListAction.ShowAddLinkDialog(true))
+            advanceUntilIdle()
+
+            viewModel.snackBarMessage.test {
+                viewModel.consumeAction(ListAction.AddLink("https://example.com/page"))
+                advanceUntilIdle()
+
+                assertThat(awaitItem()).isEqualTo(LinksSnackbar.LinkAdded(resolved = false))
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            assertThat(viewModel.internalScreenState.value.showAddLinkDialog).isFalse()
+            assertThat(contentLinkRepository.getStoredItems().map { it.link })
+                .contains("https://example.com/page")
+        }
+
+    @Test
+    fun `AddLink with blank text does nothing`() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        viewModel.consumeAction(ListAction.ShowAddLinkDialog(true))
+        advanceUntilIdle()
+
+        viewModel.consumeAction(ListAction.AddLink("   "))
+        advanceUntilIdle()
+
+        // The dialog stays open — a blank Save is treated as a no-op, not a confirmed empty entry.
+        assertThat(viewModel.internalScreenState.value.showAddLinkDialog).isTrue()
+        assertThat(contentLinkRepository.getStoredItems()).isEmpty()
     }
 }

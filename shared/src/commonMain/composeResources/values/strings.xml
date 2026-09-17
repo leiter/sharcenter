@@ -447,6 +447,13 @@
     <string name="links_cd_filtered">Filtered</string>
     <string name="links_cd_selected">Selected</string>
 
+    <!-- Add link dialog (manual entry — paste a link the share sheet never saw) -->
+    <string name="links_add_link_title">Add link</string>
+    <string name="links_add_link_field">Link</string>
+    <string name="links_add_link_placeholder">Paste or type a link…</string>
+    <string name="links_add_link_save">Save</string>
+    <string name="links_add_link_cd">Add link</string>
+
     <!-- Comment/Quote dialog -->
     <string name="links_comment_quote_title">Comment or Quote</string>
     <string name="links_comment_quote_label">Your comment or quote</string>
