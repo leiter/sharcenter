@@ -9,10 +9,13 @@ import cut.the.crap.data.domain.KeywordRepository
 import cut.the.crap.data.rest.networkModule
 import cut.the.crap.data.rest.repositoryModule
 import cut.the.crap.identity.identityModule
+import cut.the.crap.reminder.HiddenPostKeys
 import cut.the.crap.share.SharedUrlProcessor
 import cut.the.crap.share.shareModule
+import cut.the.crap.ui.content.reminder.ActionRemindersViewModel
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
+import kotlinx.coroutines.flow.Flow
 import org.junit.Test
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.dsl.module
@@ -64,6 +67,9 @@ class KoinGraphTest {
                 // No other definition constructor-injects a raw String/Boolean, so nothing real is hidden.
                 String::class,
                 Boolean::class,
+                // Built from CampaignHiddenPostsRepository inside ReminderDispatcher's factory
+                // lambda, not resolved via get() — same shape as the dispatcher params above.
+                HiddenPostKeys::class,
             ),
             // SharedUrlProcessor takes a List<SharedLinkHandler>. Constructor reflection carries the
             // generic arg (List<SharedLinkHandler>), but the shareModule binding is keyed under the
@@ -75,6 +81,9 @@ class KoinGraphTest {
                     KeywordRepository::class,
                     List::class,
                 ),
+                // hiddenPostKeys is built from CampaignHiddenPostsRepository.hiddenKeys inside the
+                // explicit factory lambda, not resolved via get() — so nothing binds a bare Flow.
+                definition<ActionRemindersViewModel>(Flow::class),
             ),
         )
     }

@@ -13,18 +13,28 @@ import kotlinx.datetime.TimeZone
 import kotlin.time.Instant
 
 /**
+ * The user's hidden campaign posts (`campaignPostHideKey` format).
+ *
+ * A `fun interface` rather than a bare `suspend () -> Set<String>` so tests need no DataStore
+ * (any lambda still SAM-converts at the call site) — and, unlike a raw suspend function type, its
+ * classifier reflects cleanly: Koin's static `verify()` reads every bound class's constructor via
+ * `kotlin-reflect`, and a suspend function type's classifier comes back null there, which crashes
+ * with a `ClassCastException` rather than a normal "missing definition" report.
+ */
+fun interface HiddenPostKeys {
+    suspend fun get(): Set<String>
+}
+
+/**
  * Decides which reminders fire and shows them — spec §4.3.
  *
  * All the timing and rotation logic lives here in common code so it is testable on the desktop
  * target; the Android worker is a thin shell that calls [dispatch].
- *
- * @param hiddenPostKeys The user's hidden campaign posts (`campaignPostHideKey` format). A function
- *   rather than the DataStore-backed repository so tests need no DataStore.
  */
 class ReminderDispatcher(
     private val repository: ActionReminderRepository,
     private val notifier: ReminderNotifier,
-    private val hiddenPostKeys: suspend () -> Set<String>,
+    private val hiddenPostKeys: HiddenPostKeys,
     private val timeZone: () -> TimeZone = { TimeZone.currentSystemDefault() },
 ) {
 
@@ -39,7 +49,7 @@ class ReminderDispatcher(
         val tz = timeZone()
         val due = repository.getEnabled().filter { it.isDue(now, tz) }
         if (due.isEmpty()) return 0
-        val hidden = hiddenPostKeys()
+        val hidden = hiddenPostKeys.get()
         return due.count { fire(it, now, hidden, spendOnce = true) }
     }
 
@@ -50,7 +60,7 @@ class ReminderDispatcher(
     suspend fun sendNow(reminderId: Int, now: Instant): Boolean {
         if (!notifier.canNotify) return false
         val reminder = repository.getById(reminderId) ?: return false
-        return fire(reminder, now, hiddenPostKeys(), spendOnce = false)
+        return fire(reminder, now, hiddenPostKeys.get(), spendOnce = false)
     }
 
     private suspend fun fire(
