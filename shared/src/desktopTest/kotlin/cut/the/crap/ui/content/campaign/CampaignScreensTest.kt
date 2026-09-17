@@ -79,6 +79,8 @@ class CampaignScreensTest {
         single { urlOpener }
         single<Clipboard> { NoOpClipboard() }
         single<Sharer> { NoOpSharer() }
+        // The composer now offers the reminder entry point too; desktop's real answer is no.
+        single<ReminderScheduler> { UnsupportedReminderScheduler }
         single {
             val path = "${Files.createTempDirectory("campaign_hidden_posts_test")}/hidden.preferences_pb".toPath()
             CampaignHiddenPostsRepository(createPreferencesStore(name = "campaign_hidden_posts_test", path = path))

@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -56,10 +57,13 @@ import cut.the.crap.data.rest.campaign.CampaignCountry
 import cut.the.crap.data.rest.campaign.CampaignPost
 import cut.the.crap.intent.FacebookIntent
 import cut.the.crap.intent.TwitterIntent
+import cut.the.crap.data.rest.campaign.CampaignRepositoryImpl
 import cut.the.crap.platform.Clipboard
 import cut.the.crap.platform.Notifier
+import cut.the.crap.platform.ReminderScheduler
 import cut.the.crap.platform.Sharer
 import cut.the.crap.platform.UrlOpener
+import cut.the.crap.reminder.ACTION_REMINDERS_ROUTE
 import cut.the.crap.shared.resources.Res
 import cut.the.crap.shared.resources.action_back
 import cut.the.crap.shared.resources.campaign_composer_title
@@ -80,6 +84,7 @@ import cut.the.crap.shared.resources.context_menu_post_facebook
 import cut.the.crap.shared.resources.context_menu_post_twitter
 import cut.the.crap.shared.resources.context_menu_share
 import cut.the.crap.shared.resources.facebook
+import cut.the.crap.shared.resources.reminders_open_cd
 import cut.the.crap.shared.resources.share_chooser_title
 import cut.the.crap.shared.resources.x
 import cut.the.crap.ui.components.MenuItem
@@ -113,6 +118,7 @@ fun CampaignPostComposerScreen(
     val clipboard: Clipboard = koinInject()
     val sharer: Sharer = koinInject()
     val hiddenPostsRepository: CampaignHiddenPostsRepository = koinInject()
+    val reminderScheduler: ReminderScheduler = koinInject()
     val scope = rememberCoroutineScope()
 
     var filter by remember { mutableStateOf(CountryFilter.WITH_POSTS) }
@@ -153,6 +159,18 @@ fun CampaignPostComposerScreen(
                     }
                 },
                 actions = {
+                    // Reminders are made from the bundled campaign only for now (spec R9), and not
+                    // at all where the platform cannot run them. Offered here too, not just on the
+                    // detail screen one tap further in, because this is the screen a campaign
+                    // actually opens onto.
+                    if (reminderScheduler.isSupported && campaignId == CampaignRepositoryImpl.BUNDLED_CAMPAIGN_ID) {
+                        IconButton(onClick = { navController.navigate(ACTION_REMINDERS_ROUTE) }) {
+                            Icon(
+                                Icons.Filled.NotificationsActive,
+                                contentDescription = stringResource(Res.string.reminders_open_cd),
+                            )
+                        }
+                    }
                     // Composer is now the second stop, detail the third — see NavigationGraph.kt.
                     // A badge on the info icon surfaces contact actions (mailto links, lookup
                     // pages) that live on the detail screen, since this screen only renders
