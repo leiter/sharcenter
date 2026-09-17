@@ -29,7 +29,6 @@ private const val API_BASE_URL = "http://192.168.1.100:8080"
  * campaign itself.
  */
 private const val CAMPAIGN_BASE_URL = "https://cutthecrap.link"
-private const val IS_DEBUG = true
 
 /**
  * The desktop entry point. Starts the shared Koin graph (desktop bindings + the common modules),
@@ -47,7 +46,6 @@ fun main() {
                     AppConfig(
                         apiBaseUrl = API_BASE_URL,
                         campaignBaseUrl = CAMPAIGN_BASE_URL,
-                        isDebug = IS_DEBUG,
                     )
                 }
             },

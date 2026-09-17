@@ -2,6 +2,7 @@ package cut.the.crap.data.rest
 
 import cut.the.crap.identity.RequestSigner
 import cut.the.crap.platform.CryptoProvider
+import cut.the.crap.platform.isDebugBuild
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -17,8 +18,9 @@ import org.koin.dsl.module
 
 /**
  * Shared Ktor [HttpClient], on the per-platform [httpClientEngine] and the injected [AppConfig]
- * (base URL + debug flag) — no `BuildConfig`, so this lives in commonMain. `single` to mirror the
- * previous `@Singleton` scope.
+ * (base URLs) — no `BuildConfig`, so this lives in commonMain. The debug flag comes from
+ * [isDebugBuild] (expect/actual) rather than `AppConfig`. `single` to mirror the previous
+ * `@Singleton` scope.
  */
 val networkModule = module {
     single {
@@ -57,7 +59,7 @@ val networkModule = module {
             }
 
             // Logging (only in debug builds)
-            if (config.isDebug) {
+            if (isDebugBuild) {
                 install(Logging) {
                     logger = Logger.DEFAULT
                     level = LogLevel.INFO

@@ -42,7 +42,6 @@ class CampaignIntegrationTest {
         val config = AppConfig(
             apiBaseUrl = "http://127.0.0.1:1",
             campaignBaseUrl = baseUrl!!,
-            isDebug = false,
         )
         val manager = IdentityManager(FakeIdentityKeyStore(), JvmCryptoProvider())
         val client = HttpClient(OkHttp) {

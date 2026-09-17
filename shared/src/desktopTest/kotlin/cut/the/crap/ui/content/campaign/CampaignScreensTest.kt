@@ -333,7 +333,7 @@ class CampaignScreensTest {
         single { RecordingUrlOpener() as UrlOpener }
         single<CampaignRepository> { repository }
         single<FileAccess> { NoOpFileAccess() }
-        single { AppConfig(apiBaseUrl = "https://example.test", campaignBaseUrl = "https://example.test", isDebug = true) }
+        single { AppConfig(apiBaseUrl = "https://example.test", campaignBaseUrl = "https://example.test") }
     }
 
     @Test

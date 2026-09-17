@@ -57,7 +57,6 @@ class IdentityRepositoryTest {
             config = AppConfig(
                 apiBaseUrl = "https://api.example.test",
                 campaignBaseUrl = "https://cutthecrap.link/",
-                isDebug = false,
             ),
             identityManager = IdentityManager(FakeIdentityKeyStore(), JvmCryptoProvider()),
         )

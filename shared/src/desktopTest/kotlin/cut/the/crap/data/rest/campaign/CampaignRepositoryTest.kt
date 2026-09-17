@@ -29,7 +29,6 @@ class CampaignRepositoryTest {
     private val config = AppConfig(
         apiBaseUrl = "http://jobs.invalid",
         campaignBaseUrl = "https://campaign.invalid/",
-        isDebug = false,
     )
 
     /** Trimmed from the live endpoint: a single-language country, a bilingual one, and an empty one. */

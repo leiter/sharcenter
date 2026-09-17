@@ -47,7 +47,6 @@ fun setupKoin() {
                     AppConfig(
                         apiBaseUrl = DEV_API_BASE_URL,
                         campaignBaseUrl = CAMPAIGN_BASE_URL,
-                        isDebug = true,
                     )
                 }
             },
