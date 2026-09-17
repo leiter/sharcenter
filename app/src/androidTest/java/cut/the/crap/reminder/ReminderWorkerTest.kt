@@ -29,6 +29,7 @@ import kotlinx.datetime.LocalTime
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -140,7 +141,10 @@ class ReminderWorkerTest {
         scheduler.ensureScheduled()
         val scheduled = workManager.getWorkInfosForUniqueWork(AndroidReminderScheduler.WORK_NAME).get()
         assertEquals(1, scheduled.size)
-        assertEquals(WorkInfo.State.ENQUEUED, scheduled.single().state)
+        // Not a specific state: the test WorkManager executor may already have moved a periodic
+        // job from ENQUEUED to RUNNING (or beyond) by the time this reads it. The property under
+        // test is uniqueness — that KEEP didn't add a second job — not which state it is in.
+        assertTrue(scheduled.single().state != WorkInfo.State.CANCELLED)
 
         scheduler.cancel()
         val cancelled = workManager.getWorkInfosForUniqueWork(AndroidReminderScheduler.WORK_NAME).get()
